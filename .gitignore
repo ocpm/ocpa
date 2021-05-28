@@ -60,5 +60,5 @@ venv.bak/
 /lib
 
 # Examples
-/example_logs
-/examples
+# /example_logs
+# /examples
