@@ -7,9 +7,9 @@
 
 ### Contributors
 
-Newyork Adams
+- Newyork Adams, M.Sc. Mult.
 
-Genau Park
+- Genau Park, M.Sc.
 
 ### Vision
 
