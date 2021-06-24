@@ -1,6 +1,6 @@
-from oppa.objects.log.importer.ocel import factory as ocel_import_factory
-from oppa.algo.discovery.ocpn import algorithm as ocpn_discovery_factory
-from oppa.visualization.oc_petri_net import factory as pn_vis_factory
+from ocpa.objects.log.importer.ocel import factory as ocel_import_factory
+from ocpa.algo.discovery.ocpn import algorithm as ocpn_discovery_factory
+from ocpa.visualization.oc_petri_net import factory as pn_vis_factory
 
 filename = "../example_logs/jsonocel/simulated-logs.jsonocel"
 # log = ocel.import_log(filename)
