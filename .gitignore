@@ -62,3 +62,6 @@ venv.bak/
 # Examples
 # /example_logs
 # /examples
+
+/build
+/dist
