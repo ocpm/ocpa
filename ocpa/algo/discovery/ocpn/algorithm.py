@@ -5,5 +5,5 @@ INDUCTIVE_AND_TR = "inductive_and_tr"
 VERSIONS = {INDUCTIVE_AND_TR: inductive_and_tr.apply}
 
 
-def apply(df, variant=INDUCTIVE_AND_TR, parameters=None):
-    return VERSIONS[variant](df, parameters=parameters)
+def apply(ocel, variant=INDUCTIVE_AND_TR, parameters=None):
+    return VERSIONS[variant](ocel.log, parameters=parameters)

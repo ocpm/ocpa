@@ -1,6 +1,9 @@
+from ocpa.objects.ocel.obj import OCEL
+
+
 def generalize(ocel, generalization_mapping):
-    sublog = ocel.copy()
-    object_types = [c for c in ocel.columns if not c.startswith("event_")]
+    sublog = ocel.log.copy()
+    object_types = ocel.object_types
     for ot in object_types:
             sublog[ot] = sublog[ot].apply(tuple) 
     for mapping in generalization_mapping:
@@ -11,4 +14,4 @@ def generalize(ocel, generalization_mapping):
     for ot in object_types:
         sublog[ot] = sublog[ot].apply(list) 
     sublog = sublog.drop(columns=["group"])
-    return sublog
+    return OCEL(sublog, object_types=ocel.object_types)

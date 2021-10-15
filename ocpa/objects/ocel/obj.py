@@ -4,15 +4,21 @@ from more_itertools import unique_everseen as mi_unique_everseen
 
 
 class OCEL():
-    def __init__(self, log, object_types=None):
+    def __init__(self, log, object_types=None, precalc = False):
         self._log = log
         if object_types != None:
             self._object_types = object_types
         else:
             self._object_types = [c for c in self._log.columns if not c.startswith("event_")]
-        self._eog = self.eog_from_log()
-        self._cases = self.calculate_cases()
-        self._variants, self._variant_frequency = self.calculate_variants()
+        if precalc:
+            self._eog = self.eog_from_log()
+            self._cases = self.calculate_cases()
+            self._variants, self._variant_frequency = self.calculate_variants()
+        else:
+            self._eog = None
+            self._cases = None
+            self._variants = None
+            self._variant_frequency = None
 
     def _get_log(self):
         return self._log

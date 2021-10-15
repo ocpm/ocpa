@@ -163,6 +163,9 @@ def apply(df, discovery_algorithm=discover_inductive, parameters=None):
     arcs = []
     for index, persp in enumerate(nets):
         net, im, fm = nets[persp]
+        for tr in net.transitions:
+            if not (tr.label != "" and tr.label != None):
+                tr.name = persp + tr.name
         pl_count = 1
         tr_count = 1
         arc_count = 1
