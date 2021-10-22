@@ -94,12 +94,6 @@ class ObjectCentricEventLog:
         self.meta.locs = {}
 
 
-def sort_events(data: ObjectCentricData) -> None:
-    events = data.raw.events
-    data.raw.events = {k: event for k, event in sorted(
-        events.items(), key=lambda item: item[1].time)}
-
-
 class OCEL():
     def __init__(self, log, object_types=None, precalc=False):
         self._log = log
