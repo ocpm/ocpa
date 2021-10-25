@@ -155,6 +155,7 @@ def discover_nets(df, discovery_algorithm=discover_inductive, parameters=None):
 
 def apply(df, discovery_algorithm=discover_inductive, parameters=None):
     ret = discover_nets(df, discovery_algorithm, parameters)
+    print("HIHIHIHIHIHIHIHIHIHIHI")
     nets = ret["nets"]
     group_size_hist_persp = ret["group_size_hist"]
     transitions = {}
@@ -244,5 +245,5 @@ def apply(df, discovery_algorithm=discover_inductive, parameters=None):
                 t.in_arcs.add(a)
                 arcs.append(a)
     ocpn = ObjectCentricPetriNet(
-        places=set(places), transitions=set(transition_list), arcs=set(arcs), nets=nets)
+        places=places, transitions=transition_list, arcs=arcs, nets=nets)
     return ocpn
