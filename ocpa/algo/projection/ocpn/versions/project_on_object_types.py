@@ -5,6 +5,7 @@ def apply(ocpn: ObjectCentricPetriNet, parameters):
 
     if 'selected_object_types' in parameters:
         selected_object_types = parameters['selected_object_types']
+        print("You selected: {}".format(selected_object_types))
     else:
         selected_object_types = ocpn.object_types
 

@@ -13,13 +13,11 @@ def apply(ocpn: ObjectCentricPetriNet, parameters):
                     selected_transitions.add(t)
         # selected_transitions = set(
         #     [t for t in ocpn.transitions for l in selected_transition_labels if t.label == l])
-    else:
-        selected_transitions = ocpn.transitions
-
-    if 'selected_transitions' in parameters:
+    elif 'selected_transitions' in parameters:
         selected_transitions = set(parameters['selected_transitions'])
     else:
         selected_transitions = ocpn.transitions
+    print("You selected: {}".format(selected_transitions))
 
     for t in ocpn.transitions:
         if t in selected_transitions:

@@ -346,13 +346,28 @@ class Subprocess(object):
         return self._sound
 
     def __post_init__(self):
-        self._transitions = [self._ocpn.find_transition(
-            act) for act in self._activities]
+        if self._object_types != None:
+            self._object_types = self._object_types
+        else:
+            self._object_types = self._ocpn.object_type
 
-        in_tpl = {tr: [arc.source for arc in tr.in_arcs]
-                  for tr in self._transitions}
-        out_tpl = {tr: [arc.target for arc in tr.out_arcs]
-                   for tr in self._transitions}
-        tpl = {tr: in_tpl[tr]+out_tpl[tr] for tr in self._transitions}
-        self._sound = True if all(any(
-            True if p.object_type in self._object_types else False for p in tpl[tr]) for tr in self._transitions) else False
+        if self._activities != None:
+            self._transitions = [self._ocpn.find_transition(
+                act) for act in self._activities]
+
+            in_tpl = {tr: [arc.source for arc in tr.in_arcs]
+                      for tr in self._transitions}
+            out_tpl = {tr: [arc.target for arc in tr.out_arcs]
+                       for tr in self._transitions}
+            tpl = {tr: in_tpl[tr]+out_tpl[tr] for tr in self._transitions}
+            self._sound = True if all(any(
+                True if p.object_type in self._object_types else False for p in tpl[tr]) for tr in self._transitions) else False
+        else:
+            in_tpl = {tr: [arc.source for arc in tr.in_arcs]
+                      for tr in self._ocpn.transitions}
+            out_tpl = {tr: [arc.target for arc in tr.out_arcs]
+                       for tr in self._ocpn.transitions}
+            tpl = {tr: in_tpl[tr]+out_tpl[tr] for tr in self._ocpn.transitions}
+            self._transitions = list(set(
+                [tr for tr in self._ocpn.transitions for p in tpl[tr] if p.object_type in self._object_types]))
+            self._sound = True

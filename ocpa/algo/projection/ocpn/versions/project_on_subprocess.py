@@ -14,7 +14,6 @@ def apply(ocpn: ObjectCentricPetriNet, parameters):
         #     [t for t in ocpn.transitions for l in selected_transition_labels if t.label == l])
     else:
         selected_transitions = ocpn.transitions
-    print(selected_transitions)
 
     temp_new_places = list()
     for t in selected_transitions:

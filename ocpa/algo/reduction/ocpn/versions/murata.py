@@ -304,13 +304,93 @@ def FPP(ocpn, sacred_nodes):
     return ocpn, None
 
 
+def EST(ocpn, sacred_nodes):
+    for t in ocpn.transitions:
+        #  Check whether the place is sacred. Should not be.
+        if t in sacred_nodes:
+            continue
+
+        # Check the input arc. There should be only one, it should be regular, and it weight should be one.
+        preset = t.in_arcs
+        if len(preset) != 1:
+            continue
+
+        in_arc = list(preset)[0]
+
+        # Check the output arc. There should be only one, it should be regular, and its weight should be one.
+        postset = t.out_arcs
+        if len(postset) != 1:
+            continue
+        out_arc = list(postset)[0]
+        if in_arc.weight != out_arc.weight:
+            continue
+
+        # Check wether self loop.
+        if in_arc.source != out_arc.target:
+            continue
+
+        # Check whether place has other output transitions that needs at least as much tokens as this transition.
+        in_p_postset = in_arc.source.out_arcs
+        if len(in_p_postset) < 2:
+            continue
+        ok = False
+        for arc in in_p_postset:
+            if ok:
+                continue
+            if arc == in_arc:
+                continue
+            if arc.weight >= in_arc.weight:
+                ok = True
+
+        if ok:
+            log = """<elt transition="{}">""".format(t.name)
+            # We have a self loop for a transition. Remove the transition.
+            ocpn.remove_transition(t)
+            return ocpn, log
+    return ocpn, None
+
+
+def ESP(ocpn, sacred_nodes):
+    for p in ocpn.places:
+        #  Check whether the place is sacred. Should not be.
+        if p in sacred_nodes:
+            continue
+
+        # Check the input arc. There should be only one and it should be
+        preset = p.in_arcs
+        if len(preset) != 1:
+            continue
+
+        in_arc = list(preset)[0]
+
+        # Check the output arc. There should be only one, it should be regular, and its weight should be identical.
+        postset = p.out_arcs
+        if len(postset) != 1:
+            continue
+        out_arc = list(postset)[0]
+
+        if in_arc.weight != out_arc.weight:
+            continue
+
+        # Check wether self loop.
+        if in_arc.source != out_arc.target:
+            continue
+
+        # (Skip) Check whether tokens exceed weight.
+        log = """<elp place="{}">""".format(p.name)
+        # We have a self loop for a marked place. Remove the place from the copy net. First, update the place map.
+        ocpn.remove_place(p)
+        return ocpn, log
+    return ocpn, None
+
+
 def apply(ocpn: ObjectCentricPetriNet, parameters):
     visible_transitions = [t for t in ocpn.transitions if t.silent != True]
     initial_final_marking_places = [
         p for p in ocpn.places if p.initial == True or p.final == True]
     sacred_nodes = visible_transitions + initial_final_marking_places
 
-    reduction_rules = [FST, FSP, FPT, FPP]
+    reduction_rules = [FST, FSP, FPT, FPP, EST, ESP]
 
     log = ""
     while True:
