@@ -1,7 +1,7 @@
 import pandas as pd
 import networkx as nx
 from more_itertools import unique_everseen as mi_unique_everseen
-
+import time
 
 class OCEL():
     def __init__(self, log, object_types=None, precalc = False):
@@ -64,18 +64,20 @@ class OCEL():
         ocel = self.log.copy()
         EOG = nx.DiGraph()
         EOG.add_nodes_from(ocel["event_id"].to_list())
-        # add edges for each shared object und dircetly follows
-        all_obs = set()
-        for ot in self.object_types:
-            ocel[ot].apply(lambda x: [all_obs.add((ot, o)) for o in x])
-        ocel["event_objects"] = ocel.apply(lambda x: [(ot, o) for ot in self.object_types for o in x[ot]], axis=1)
-        exploded_log = ocel.explode("event_objects")
-        for (ot, o) in all_obs:
-            filtered_list = exploded_log[exploded_log["event_objects"] == (ot, o)]["event_id"].to_list()
-            filtered_list = list(mi_unique_everseen(filtered_list))
-            edge_list = [(a, b) for a, b in zip(filtered_list[:-1], filtered_list[1:])]
-            EOG.add_edges_from(edge_list)
-        ocel = ocel.drop(columns=["event_objects"])
+        edge_list = []
+        ot_index = {ot: list(ocel.columns.values).index(ot) for ot in self.object_types}
+        event_index = list(ocel.columns.values).index("event_id")
+        arr = ocel.to_numpy()
+        last_ev = {}
+        for i in range(0,len(arr)):
+            for ot in self.object_types:
+                for o in arr[i][ot_index[ot]]:
+                    if (ot,o) in last_ev.keys():
+                        edge_source = arr[last_ev[(ot,o)]][event_index]
+                        edge_target = arr[i][event_index]
+                        edge_list += [(edge_source,edge_target)]
+                    last_ev[(ot,o)] = i
+        EOG.add_edges_from(edge_list)
         return EOG
 
     def calculate_cases(self):
@@ -107,7 +109,8 @@ class OCEL():
             case = self._project_subgraph_on_activity(self.eog.subgraph(v_g))
             variant = nx.weisfeiler_lehman_graph_hash(case, node_attr="label",
                                                       edge_attr="type")  # sorted(list(nx.generate_edgelist(case)))
-            variant_string = ','.join(variant)
+            #variant_string = ','.join(variant)
+            variant_string = variant
             if variant_string not in variants_dict:
                 variants_dict[variant_string] = []
                 variant_graphs[variant_string] = case  # EOG.subgraph(v_g)#case
