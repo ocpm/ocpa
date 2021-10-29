@@ -108,6 +108,7 @@ class OCEL():
             case = self._project_subgraph_on_activity(self.eog.subgraph(v_g),mapping_objects,mapping_activity)
             variant = nx.weisfeiler_lehman_graph_hash(case, node_attr="label",
                                                       edge_attr="type")
+
             #variant_string = ','.join(variant)
             variant_string = variant
             if variant_string not in variants_dict:
@@ -118,11 +119,14 @@ class OCEL():
         variant_frequencies = {v: len(variants_dict[v]) / len(self.cases) for v in variants_dict.keys()}
         variants, v_freq_list = map(list,
                                     zip(*sorted(list(variant_frequencies.items()), key=lambda x: x[1], reverse=True)))
+        variant_event_map = {}
         for v_id in range(0, len(variants)):
             v = variants[v_id]
             cases = [self.cases[c_id] for c_id in variants_dict[v]]
-            events = list(set().union(*cases))
-            self.log.loc[self.log["event_id"].isin(events), "event_variant"] = v_id
+            events = set().union(*cases)
+            for e in events:
+                variant_event_map[e] = v_id
+        self.log["event_variant"] = self.log["event_id"].map(variant_event_map)
         self.log["event_variant"] = self.log["event_variant"].astype(int)
         #for i in range(0, 10):
         #    print("Class number " + str(i + 1) + " with frequency " + str(v_freq_list[i]))
