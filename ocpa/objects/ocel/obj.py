@@ -85,12 +85,9 @@ class OCEL():
         cases = sorted(nx.weakly_connected_components(self.eog), key=len, reverse=True)
         return cases
 
-    def _project_subgraph_on_activity(self, v_g):
-        # grpah mit aktivitäten
-        mapping = dict(zip(self.log["event_id"], self.log["event_activity"]))
-        mapping_objects = dict(zip(self.log["event_id"], self.log["event_objects"]))
+    def _project_subgraph_on_activity(self, v_g,mapping_objects,mapping_activity):
         for node in v_g.nodes():
-            v_g.nodes[node]['label'] = mapping[node]
+            v_g.nodes[node]['label'] = mapping_activity[node]
         for edge in v_g.edges():
             source, target = edge
             v_g.edges[edge]['type'] = ": ".join(
@@ -105,10 +102,12 @@ class OCEL():
         variants_dict = dict()
         variant_graphs = dict()
         case_id = 0
+        mapping_activity = dict(zip(self.log["event_id"], self.log["event_activity"]))
+        mapping_objects = dict(zip(self.log["event_id"], self.log["event_objects"]))
         for v_g in self.cases:
-            case = self._project_subgraph_on_activity(self.eog.subgraph(v_g))
+            case = self._project_subgraph_on_activity(self.eog.subgraph(v_g),mapping_objects,mapping_activity)
             variant = nx.weisfeiler_lehman_graph_hash(case, node_attr="label",
-                                                      edge_attr="type")  # sorted(list(nx.generate_edgelist(case)))
+                                                      edge_attr="type")
             #variant_string = ','.join(variant)
             variant_string = variant
             if variant_string not in variants_dict:
