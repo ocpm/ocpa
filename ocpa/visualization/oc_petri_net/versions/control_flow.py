@@ -17,9 +17,12 @@ def apply(obj, parameters=None):
         image_format = parameters["format"]
 
     filename = tempfile.NamedTemporaryFile(suffix='.gv').name
+
     g = Digraph("", filename=filename, engine='dot',
                 graph_attr={'bgcolor': 'transparent'})
-
+    if "ratio" in parameters:
+        ratio = parameters["ratio"]
+        g.attr(ratio = ratio)
     all_objs = {}
     trans_names = {}
 
@@ -56,14 +59,18 @@ def apply(obj, parameters=None):
         this_uuid = "t%d" % (tr_count)
         tr_count += 1
         if tr.silent == True:
-            g.node(this_uuid, this_uuid, fontcolor="#FFFFFF", shape="box",
+            #g.node(this_uuid, this_uuid, fontcolor="#FFFFFF", shape="box",
+            #       fillcolor="#000000", style="filled", xlabel="Test", labelfontsize="18.0")
+            g.node(tr.name, this_uuid, fontcolor="#FFFFFF", shape="box",
                    fillcolor="#000000", style="filled", xlabel="Test", labelfontsize="18.0")
-            all_objs[tr] = this_uuid
+            all_objs[tr] = tr.name#this_uuid
         elif tr.name not in trans_names:
-            g.node(this_uuid, "%s \n (%s)" % (tr.name, this_uuid), shape="box", fontsize="36.0",
-                   labelfontsize="36.0")
-            trans_names[tr.name] = this_uuid
-            all_objs[tr] = this_uuid
+            #g.node(this_uuid, "%s \n (%s)" % (tr.name, this_uuid), shape="box", fontsize="36.0",
+            #       labelfontsize="36.0")
+            g.node(tr.name, tr.name, shape="box", fontsize="36.0",
+                  labelfontsize="36.0")
+            trans_names[tr.name] = tr.name#this_uuid
+            all_objs[tr] = tr.name#this_uuid
         else:
             all_objs[tr] = trans_names[tr.name]
 
@@ -82,10 +89,10 @@ def apply(obj, parameters=None):
 
         if arc.variable == True:
             g.edge(all_objs[source_node], all_objs[target_node],
-                   label="", color=color + ":white:" + color, fontsize="13.0")
+                   label="", color=color + ":white:" + color, fontsize="13.0", arrowhead = "None")
         else:
             g.edge(all_objs[source_node], all_objs[target_node],
-                   label="", color=color, fontsize="13.0")
+                   label="", color=color, fontsize="13.0", arrowhead = "None")
 
         all_objs[arc] = this_uuid
 

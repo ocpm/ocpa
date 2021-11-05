@@ -75,7 +75,7 @@ class ObjectCentricPetriNet(object):
         name = property(__get_name, __set_name)
 
     class Transition(object):
-        def __init__(self, name, label=None, in_arcs=None, out_arcs=None, properties=None, silent=None):
+        def __init__(self, name, label=None, in_arcs=None, out_arcs=None, properties=None, silent=False):
             self.__name = name
             self.__label = None if label is None else label
             self.__in_arcs = set() if in_arcs is None else in_arcs
