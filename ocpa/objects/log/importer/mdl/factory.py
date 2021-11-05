@@ -2,18 +2,30 @@ import pandas as pd
 from copy import deepcopy
 from pm4py.util.constants import PARAMETER_CONSTANT_CASEID_KEY, PARAMETER_CONSTANT_ATTRIBUTE_KEY
 from pm4py.algo.discovery.dfg.adapters.pandas import df_statistics
+from ast import literal_eval
 
 
-def apply(all_df, return_obj_dataframe=False, parameters=None):
+def apply(all_df, parameters=None):
     if parameters is None:
         parameters = {}
 
-    eve_cols = [x for x in all_df.columns if not x.startswith("object_")]
-    obj_cols = [x for x in all_df.columns if x.startswith("object_")]
-    df = all_df[eve_cols]
-    obj_df = pd.DataFrame()
+    eve_cols = [x for x in all_df.columns if x.startswith("event_")]
+    obj_cols = [x for x in all_df.columns if not x.startswith("event_")]
+    # df = all_df[eve_cols]
+    df = all_df
+    # obj_df = pd.DataFrame()
+
+    def _eval(x):
+        try:
+            return literal_eval(x.replace('set()', '{}'))
+        except:
+            return None
+
     if obj_cols:
-        obj_df = all_df[obj_cols]
+        # obj_df = all_df[obj_cols]
+        for c in obj_cols:
+            df[c] = df[c].apply(_eval)
+
     df["event_timestamp"] = pd.to_datetime(df["event_timestamp"])
     if "event_start_timestamp" in df.columns:
         df["event_start_timestamp"] = pd.to_datetime(
@@ -22,9 +34,9 @@ def apply(all_df, return_obj_dataframe=False, parameters=None):
     df["event_id"] = df["event_id"].astype(str)
     df.type = "succint"
 
-    if return_obj_dataframe:
-        obj_df = obj_df.dropna(subset=["object_id"])
-        return df, obj_df
+    # if return_obj_dataframe:
+    #     obj_df = obj_df.dropna(subset=["object_id"])
+    #     return df, obj_df
 
     return df
 
@@ -55,7 +67,7 @@ def succint_stream_to_exploded_stream(stream):
 
         for k in object_keys:
             if type(ev[k]) is str:
-                if ev[k][0] == "[":
+                if ev[k][0] == "{":
                     ev[k] = eval(ev[k])
                     #ev[k] = ev[k][1:-1].split(",")
             values = ev[k]

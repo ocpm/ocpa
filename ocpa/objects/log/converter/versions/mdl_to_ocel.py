@@ -1,12 +1,82 @@
 from typing import Dict, List, Any
 import pandas as pd
+from pandas import to_datetime
 from datetime import datetime
+import itertools
 
 from ocpa.objects.log.importer.ocel.parameters import JsonParseParameters
 from ocpa.objects.log.obj import Event, Obj, ObjectCentricEventLog, MetaObjectCentricData, RawObjectCentricData
 
+import math
 
-def apply(df: pd.DataFrame, parameters=None) -> ObjectCentricEventLog:
+
+def add_event(events: Dict[str, Event], index, row, cfg) -> None:
+    events[str(index)] = Event(
+        id=str(index),
+        act=row[cfg["act_name"]],
+        time=to_datetime(row[cfg["time_name"]]),
+        omap=list(itertools.chain.from_iterable(
+            [safe_split(row[obj])
+             for obj in cfg["obj_names"] if (row[obj] != '{}' and str(row[obj]).lower() != "nan")]
+        )),
+        vmap={attr: row[attr] for attr in cfg["val_names"]})
+
+
+def safe_split(row_obj):
+    try:
+        if '{' in row_obj:
+            return row_obj[1:-1].split(',')
+        else:
+            return row_obj.split(',')
+    except TypeError:
+        return []  # f'NA-{next(counter)}'
+
+
+def add_obj(objects: Dict[str, Obj], objs: List[str]) -> None:
+    for obj_id_typ in objs:
+        obj_id_typ = obj_id_typ.split('/')  # Unpack
+        obj_id = obj_id_typ[0]  # First entry is the id
+        obj_typ = obj_id_typ[1]  # second entry is the object type
+        if obj_id not in objects:
+            objects[obj_id] = Obj(id=obj_id, type=obj_typ, ovmap={})
+
+
+def apply(df: pd.DataFrame, parameters: Dict) -> ObjectCentricEventLog:
+    if parameters is None:
+        raise ValueError("Specify parsing parameters")
+    events = {}
+    objects = {}
+    acts = set()
+    for index, row in df.iterrows():
+        add_event(events, index, row, parameters)
+        add_obj(objects,
+                # Only nonempty sets of objects ids per object type
+                list(itertools.chain.from_iterable(
+                    [[obj_id + '/' + str(obj) for i, obj_id in enumerate(safe_split(row[obj]))]
+                     for obj in parameters["obj_names"] if row[obj] != '{}' and str(row[obj]).lower() != "nan"]
+                ))
+                )
+        acts.add(row[parameters["act_name"]])
+
+    attr_typ = {attr: name_type(str(df.dtypes[attr]))
+                for attr in parameters["val_names"]}
+    attr_types = list(set(typ for typ in attr_typ.values()))
+    act_attr = {act: parameters["val_names"] for act in acts}
+    meta = MetaObjectCentricData(
+        attr_names=parameters["val_names"],
+        attr_types=attr_types,
+        attr_typ=attr_typ,
+        obj_types=parameters["obj_names"],
+        act_attr=act_attr
+    )
+    raw = RawObjectCentricData(
+        events=events,
+        objects=objects
+    )
+    return ObjectCentricEventLog(meta, raw)
+
+
+def old_apply(df: pd.DataFrame, parameters=None) -> ObjectCentricEventLog:
     # parses the given dict
     events = parse_events(df)
     objects = parse_objects(df)
@@ -73,5 +143,4 @@ def parse_objects(df: pd.DataFrame) -> Dict[str, Obj]:
                                       type=temp_objects[obj]["type"],
                                       ovmap={})
                for obj in temp_objects}
-    print(objects)
     return objects

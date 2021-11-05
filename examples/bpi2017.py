@@ -44,15 +44,29 @@ import pandas as pd
 #     "/Users/gyunam/Documents/ocpa-core/example_logs/mdl/Sample.csv")
 
 
-filename = "/Users/gyunam/Documents/ocpa-core/example_logs/mdl/Sample.csv"
-df = pd.read_csv(filename)
-event_df = mdl_import_factory.apply(df)
+filename = "/Users/gyunam/Documents/ocpa-core/example_logs/mdl/BPI2017-Top10.csv"
+df = pd.read_csv(filename, dtype=str)
+del df["Unnamed: 0"]
+del df["event_start_timestamp"]
+del df["CaseID"]
+del df["EventID"]
+del df["event_variant"]
+
+parameters = {
+    "obj_names": ["A", "O"],
+    "val_names": [],
+    "time_name": "event_timestamp",
+    "act_name": "event_activity",
+}
+
+# event_df = mdl_import_factory.apply(df, parameters={'return_df': True})
+# print(event_df)
 
 
-ocel = log_convert_factory.apply(event_df, variant="mdl_to_ocel")
-print(ocel.raw.objects)
+ocel = log_convert_factory.apply(
+    df, variant="mdl_to_ocel", parameters=parameters)
 
-# eg = event_graph_factory.apply(ocel)
+eg = event_graph_factory.apply(ocel)
 
 # cegs = correlated_event_graph_factory.apply(eg)
 

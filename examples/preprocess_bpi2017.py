@@ -63,7 +63,7 @@ df = df.loc[df["event"] != "O_Created"]
 
 
 def assign_offers(case):
-    return [x for x in offer_mapping[case] if type(x) != float]
+    return {x for x in offer_mapping[case] if type(x) != float}
 
 
 df.loc[df["event"] == "A_Denied", "OfferID"] = df.loc[df["event"]
@@ -81,7 +81,7 @@ df.loc[df["event"] == "A_Cancelled", "OfferID"] = df.loc[df["event"]
 # print(df["OfferID"])
 
 # sampling
-sampling = False
+sampling = True
 if sampling == True:
     applications = set(df["case"])
     num_apps = len(applications)
@@ -105,9 +105,9 @@ sample_df = sample_df[["event_id", "event_activity", "event_timestamp",
 # converting to MDLs
 for i, row in sample_df.iterrows():
     if row["event_activity"] in ["O_Returned", "O_Created", "O_Sent (mail and online)", "O_Sent (online only)", "O_Cancelled", "W_Call after offers"]:
-        sample_df.at[i, 'A'] = None
+        row["A"] = None
     if row["event_activity"] not in ["O_Created", "O_Returned", "O_Sent (mail and online)", "O_Sent (online only)", "O_Cancelled", "O_Accepted", "W_Call after offers", "A_Denied", "A_Cancelled", "O_Refused"]:
-        sample_df.at[i, 'O'] = None
+        row["O"] = None
     # offer id for create offer is stored as eventid
     if row["event_activity"] == "O_Create Offer":
         sample_df.at[i, 'O'] = sample_df.at[i, 'EventID']
@@ -118,29 +118,29 @@ for i, row in sample_df.iterrows():
         row["O"] = None
 
     if row["A"] is not None:
-        if type(row["A"]) == list:
+        if type(row["A"]) == set:
             continue
         elif type(row["A"]) == str:
-            sample_df.at[i, 'A'] = [
-                sample_df.at[i, 'A']]
+            sample_df.at[i, 'A'] = {
+                sample_df.at[i, 'A']}
         # elif type(row["A"]) == float:
         #     sample_df.at[i, 'A'] = None
         else:
             raise ValueError("Cannot recognize the type of A")
     else:
-        sample_df.at[i, 'A'] = []
+        sample_df.at[i, 'A'] = ''
     if row["O"] is not None:
-        if type(row["O"]) == list:
+        if type(row["O"]) == set:
             continue
         elif type(row["O"]) == str:
-            sample_df.at[i, 'O'] = [sample_df.at[i, 'O']]
+            sample_df.at[i, 'O'] = {sample_df.at[i, 'O']}
         # elif type(row["O"]) == float:
         #     sample_df.at[i, 'O'] = None
         else:
             raise ValueError(
                 "Cannot recognize the type of O: {}".format(row["O"]))
     else:
-        sample_df.at[i, 'O'] = []
+        sample_df.at[i, 'O'] = ''
 
 renaming_activity = {
     "A_Create Application": "Create application",
@@ -173,7 +173,7 @@ ots = ["A", "O"]
 
 
 def remove_nan(l):
-    return [x for x in l if type(x) == str]
+    return {x for x in l if type(x) == str} if type(l) == set else l
 
 
 for ot in ots:
@@ -201,5 +201,6 @@ filtered_log = ocel.log.loc[ocel.log["event_variant"] < 10]
 print(filtered_log)
 
 # exporting
+filtered_log = filtered_log.astype(str)
 filtered_log.to_csv(
-    "/Users/gyunam/Documents/ocpa-core/example_logs/mdl/BPI2017-Top10.csv")
+    "/Users/gyunam/Documents/ocpa-core/example_logs/mdl/BPI2017-Top10-2.csv")

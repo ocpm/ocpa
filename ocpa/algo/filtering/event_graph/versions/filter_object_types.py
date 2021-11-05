@@ -26,7 +26,6 @@ def apply(sp: Subprocess, ceg, parameters):
     graph = ceg.graph
     otmap = ceg.otmap
     ovmap = ceg.ovmap
-
     remove = [e for e in graph.nodes if otmap[e].isdisjoint(
         set(sp.object_types))]
     new_graph = ceg.graph.copy()

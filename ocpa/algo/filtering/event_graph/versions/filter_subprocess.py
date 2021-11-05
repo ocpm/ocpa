@@ -36,14 +36,17 @@ def apply(sp: Subprocess, ceg, parameters):
     # TODO: currently assume activities are unique.
     transition_remove = [
         event for event in graph.nodes if event.act not in selected_transition_labels]
-    ot_remove = [e for e in graph.nodes if otmap[e].isdisjoint(
-        set(sp.object_types))]
-    remove = set(transition_remove+ot_remove)
+    # print("From: ", ceg.graph.nodes)
+    # ot_remove = [e for e in graph.nodes if otmap[e].isdisjoint(
+    #     set(sp.object_types))]
+    # print("Remove: ", ot_remove)
+    # remove = set(transition_remove+ot_remove)
+    remove = set(transition_remove)
 
     new_graph = ceg.graph.copy()
 
     new_graph.remove_nodes_from(remove)
-
-    new_ceg = CorrelatedEventGraph(ceg.name, new_graph, otmap, ovmap)
-
-    return new_ceg
+    if len(new_graph.nodes) != 0:
+        return CorrelatedEventGraph(ceg.name, new_graph, otmap, ovmap)
+    else:
+        return None
