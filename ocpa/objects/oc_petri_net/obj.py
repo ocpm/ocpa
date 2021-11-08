@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import List, Dict, Set, Tuple
+from typing import List, Dict, Set, Tuple, Any
 
 
 class ObjectCentricPetriNet(object):
@@ -107,6 +107,9 @@ class ObjectCentricPetriNet(object):
         def __get_silent(self):
             return self.__silent
 
+        def __set_silent(self, silent):
+            self.__silent = silent
+
         def __repr__(self):
             if self.label is None:
                 return str(self.name)
@@ -140,7 +143,7 @@ class ObjectCentricPetriNet(object):
         in_arcs = property(__get_in_arcs)
         out_arcs = property(__get_out_arcs)
         properties = property(__get_properties)
-        silent = property(__get_silent)
+        silent = property(__get_silent, __set_silent)
 
     class Arc(object):
         def __init__(self, source, target, variable=False, weight=1, properties=None):
@@ -254,6 +257,56 @@ class ObjectCentricPetriNet(object):
     def nets(self):
         return self.__nets
 
+    def add_arc(self, arc):
+        self.__arcs.add(arc)
+        arc.source.out_arcs.add(arc)
+        arc.target.in_arcs.add(arc)
+
+    def remove_place(self, pl):
+        self.__places.remove(pl)
+        remove_arcs = set()
+        for arc in self.arcs:
+            if arc.source == pl:
+                remove_arcs.add(arc)
+            elif arc.target == pl:
+                remove_arcs.add(arc)
+        self.remove_arcs(remove_arcs)
+
+    def remove_arc(self, arc):
+        self.__arcs.remove(arc)
+        arc.source.out_arcs.remove(arc)
+        arc.target.in_arcs.remove(arc)
+
+    def remove_arcs(self, arcs):
+        for arc in arcs:
+            self.remove_arc(arc)
+
+    def add_arcs(self, arcs):
+        for arc in arcs:
+            self.add_arc(arc)
+
+    def remove_transition(self, t):
+        self.__transitions.remove(t)
+        remove_arcs = set()
+        for arc in self.arcs:
+            if arc.source == t:
+                remove_arcs.add(arc)
+            elif arc.target == t:
+                remove_arcs.add(arc)
+        self.remove_arcs(remove_arcs)
+
+    def find_arc(self, source, target):
+        for arc in self.__arcs:
+            if arc.source == source and arc.target == target:
+                return arc
+        return None
+
+    def find_transition(self, name):
+        for transition in self.__transitions:
+            if transition.name == name:
+                return transition
+        return None
+
 
 @dataclass
 class Marking(object):
@@ -268,3 +321,38 @@ class Marking(object):
         temp_tokens = set([(pl, oi) for (pl, oi) in self._tokens if oi == obj])
         self._tokens -= temp_tokens
         self._tokens.add((pl, obj))
+
+
+@dataclass
+class Subprocess(object):
+    _ocpn: ObjectCentricPetriNet
+    _object_types: Set[str] = field(default_factory=set)
+    _activities: Set[str] = field(
+        default_factory=set)
+    _transitions: Set[ObjectCentricPetriNet.Transition] = field(
+        default_factory=set)
+    _sound: Any = False
+
+    @property
+    def object_types(self) -> Set[str]:
+        return self._object_types
+
+    @property
+    def transitions(self) -> Set[ObjectCentricPetriNet.Transition]:
+        return self._transitions
+
+    @property
+    def sound(self):
+        return self._sound
+
+    def __post_init__(self):
+        self._transitions = [self._ocpn.find_transition(
+            act) for act in self._activities]
+
+        in_tpl = {tr: [arc.source for arc in tr.in_arcs]
+                  for tr in self._transitions}
+        out_tpl = {tr: [arc.target for arc in tr.out_arcs]
+                   for tr in self._transitions}
+        tpl = {tr: in_tpl[tr]+out_tpl[tr] for tr in self._transitions}
+        self._sound = True if all(any(
+            True if p.object_type in self._object_types else False for p in tpl[tr]) for tr in self._transitions) else False

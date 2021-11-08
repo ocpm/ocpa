@@ -244,5 +244,5 @@ def apply(df, discovery_algorithm=discover_inductive, parameters=None):
                 t.in_arcs.add(a)
                 arcs.append(a)
     ocpn = ObjectCentricPetriNet(
-        places=places, transitions=transition_list, arcs=arcs, nets=nets)
+        places=set(places), transitions=set(transition_list), arcs=set(arcs), nets=nets)
     return ocpn

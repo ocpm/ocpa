@@ -14,6 +14,7 @@ def apply(all_df, return_obj_dataframe=False, parameters=None):
     obj_df = pd.DataFrame()
     if obj_cols:
         obj_df = all_df[obj_cols]
+    print(df)
     df["event_timestamp"] = pd.to_datetime(df["event_timestamp"])
     if "event_start_timestamp" in df.columns:
         df["event_start_timestamp"] = pd.to_datetime(
@@ -42,7 +43,6 @@ def filter_object_df_by_object_ids(df, ids):
     return df
 
 
-
 def succint_stream_to_exploded_stream(stream):
     new_stream = []
 
@@ -61,7 +61,7 @@ def succint_stream_to_exploded_stream(stream):
                     #ev[k] = ev[k][1:-1].split(",")
             values = ev[k]
             if values is not None:
-            #if values is not None and len(values) > 0:
+                # if values is not None and len(values) > 0:
                 if not (str(values).lower() == "nan" or str(values).lower() == "nat"):
                     for v in values:
                         event = deepcopy(basic_event)
@@ -69,6 +69,7 @@ def succint_stream_to_exploded_stream(stream):
                         new_stream.append(event)
 
     return new_stream
+
 
 def succint_mdl_to_exploded_mdl(df):
     stream = df.to_dict('r')
@@ -80,15 +81,18 @@ def succint_mdl_to_exploded_mdl(df):
 
     return df
 
+
 def clean_frequency(df, min_acti_freq=0):
     try:
         if df.type == "succint":
             df = succint_mdl_to_exploded_mdl(df)
     except:
         pass
-    activ = dict(df.groupby("event_id").first()["event_activity"].value_counts())
-    activ = [x for x,y in activ.items() if y >= min_acti_freq]
+    activ = dict(df.groupby("event_id").first()[
+                 "event_activity"].value_counts())
+    activ = [x for x, y in activ.items() if y >= min_acti_freq]
     return df[df["event_activity"].isin(activ)]
+
 
 def filter_paths(df, paths, parameters=None):
     """
@@ -127,9 +131,11 @@ def filter_paths(df, paths, parameters=None):
     positive = parameters["positive"] if "positive" in parameters else True
     filt_df = df[[case_id_glue, attribute_key, "event_id"]]
     filt_dif_shifted = filt_df.shift(-1)
-    filt_dif_shifted.columns = [str(col) + '_2' for col in filt_dif_shifted.columns]
+    filt_dif_shifted.columns = [
+        str(col) + '_2' for col in filt_dif_shifted.columns]
     stacked_df = pd.concat([filt_df, filt_dif_shifted], axis=1)
-    stacked_df["@@path"] = stacked_df[attribute_key] + "," + stacked_df[attribute_key + "_2"]
+    stacked_df["@@path"] = stacked_df[attribute_key] + \
+        "," + stacked_df[attribute_key + "_2"]
     stacked_df = stacked_df[stacked_df["@@path"].isin(paths)]
     i1 = df.set_index("event_id").index
     i2 = stacked_df.set_index("event_id").index
@@ -148,14 +154,16 @@ def clean_arc_frequency(df, min_freq=0):
             red_df = df.dropna(subset=[persp])
             prevlen = len(df)
             while True:
-                dfg = df_statistics.get_dfg_graph(red_df, activity_key="event_activity", timestamp_key="event_timestamp", case_id_glue=persp)
+                dfg = df_statistics.get_dfg_graph(
+                    red_df, activity_key="event_activity", timestamp_key="event_timestamp", case_id_glue=persp)
                 dfg = [x for x in dfg if dfg[x] >= min_freq]
                 param = {}
                 param[PARAMETER_CONSTANT_CASEID_KEY] = persp
                 param[PARAMETER_CONSTANT_ATTRIBUTE_KEY] = "event_activity"
                 red_df = filter_paths(red_df, dfg, parameters=param)
                 thislen = len(red_df)
-                dfg = df_statistics.get_dfg_graph(red_df, activity_key="event_activity", timestamp_key="event_timestamp", case_id_glue=persp)
+                dfg = df_statistics.get_dfg_graph(
+                    red_df, activity_key="event_activity", timestamp_key="event_timestamp", case_id_glue=persp)
                 if len(dfg) == 0 or min(dfg.values()) >= min_freq or prevlen == thislen:
                     collation.append(red_df)
                     break
