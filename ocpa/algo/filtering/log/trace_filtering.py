@@ -1,6 +1,4 @@
-import ocpa.algo.event_correlation.weakly_connected_components as variant_extraction
-import ocpa.objects.eog.retrieval.log as event_object_graph_extractor
-from ocpa.objects.ocel.obj import OCEL
+from ocpa.objects.log.obj import OCEL
 
 
 def filter_infrequent_traces(ocel, threshold):

@@ -1,4 +1,4 @@
-from ocpa.objects.ocel.obj import OCEL
+from ocpa.objects.log.obj import OCEL
 
 
 def generalize(ocel, generalization_mapping):

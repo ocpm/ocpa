@@ -1,5 +1,5 @@
 from collections import Counter
-from ocpa.objects.ocel.obj import OCEL
+from ocpa.objects.log.obj import OCEL
 
 def filter_infrequent_activities(ocel, threshold):
     #how to deal with multiple events?
