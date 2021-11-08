@@ -1,6 +1,6 @@
 import pandas as pd
 from ocpa.objects.log.importer.mdl import factory as mdl_import_factory
-from ocpa.objects.log.importer.mdl.factory import succint_mdl_to_exploded_mdl
+from ocpa.objects.log.importer.mdl.util import succint_mdl_to_exploded_mdl
 filename = "/Users/gyunam/Documents/ocpa-core/example_logs/mdl/BPI2017-Top10.csv"
 ots = ["A", "O"]
 df = pd.read_csv(filename)

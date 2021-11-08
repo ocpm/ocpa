@@ -1,3 +1,5 @@
+import matplotlib.pyplot as plt
+import networkx as nx
 from ocpa.objects.log.importer.ocel import factory as ocel_import_factory
 from ocpa.objects.log.importer.mdl import factory as mdl_import_factory
 from ocpa.objects.log.converter import factory as log_convert_factory
@@ -44,10 +46,10 @@ import pandas as pd
 #     "/Users/gyunam/Documents/ocpa-core/example_logs/mdl/Sample.csv")
 
 
-filename = "/Users/gyunam/Documents/ocpa-core/example_logs/mdl/BPI2017-Top10.csv"
+filename = "/Users/gyunam/Documents/ocpa-core/example_logs/mdl/BPI2017-Top10-2.csv"
 df = pd.read_csv(filename, dtype=str)
 del df["Unnamed: 0"]
-del df["event_start_timestamp"]
+# del df["event_start_timestamp"]
 del df["CaseID"]
 del df["EventID"]
 del df["event_variant"]
@@ -57,18 +59,29 @@ parameters = {
     "val_names": [],
     "time_name": "event_timestamp",
     "act_name": "event_activity",
+    "start_time": "event_start_timestamp"
 }
 
 # event_df = mdl_import_factory.apply(df, parameters={'return_df': True})
 # print(event_df)
 
 
-ocel = log_convert_factory.apply(
-    df, variant="mdl_to_ocel", parameters=parameters)
+ocel = mdl_import_factory.apply(
+    df, variant="to_obj", parameters=parameters)
 
 eg = event_graph_factory.apply(ocel)
 
-# cegs = correlated_event_graph_factory.apply(eg)
+cegs = correlated_event_graph_factory.apply(eg)
+
+initial_ceg = list(cegs)[1]
+a = len(set(
+    [initial_ceg.ovmap[oi].type for e in initial_ceg.graph.nodes for oi in e.omap]))
+print(a)
+
+# for i in range(1):
+#     graph = list(cegs)[i].graph
+#     nx.draw(graph, with_labels=True)
+#     plt.show()
 
 # ocpn = ocpn_discovery_factory.apply(event_df)
 

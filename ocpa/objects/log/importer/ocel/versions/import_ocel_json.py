@@ -3,6 +3,7 @@ from typing import Dict, List, Any
 
 import pandas as pd
 from datetime import datetime
+from collections import OrderedDict
 
 from ocpa.objects.log.importer.ocel.parameters import JsonParseParameters
 from ocpa.objects.log.obj import Event, Obj, ObjectCentricEventLog, MetaObjectCentricData, RawObjectCentricData
@@ -21,6 +22,11 @@ def apply(file_path, parameters=None):
         return_obj_df = parameters['return_obj_df']
     else:
         return_obj_df = None
+
+    if 'start_time' in parameters:
+        start_time_col = parameters['start_time']
+    else:
+        start_time_col = None
 
     if return_df:
         prefix = "ocel:"
@@ -59,7 +65,10 @@ def apply(file_path, parameters=None):
             del el[prefix + "activity"]
             del el[prefix + "timestamp"]
             for k2 in el[prefix + "vmap"]:
+                if k2 == start_time_col:
+                    continue
                 el["event_" + k2] = el[prefix + "vmap"][k2]
+            el["event_" + start_time_col] = el[prefix + start_time_col]
             del el[prefix + "vmap"]
             for k2 in el[prefix + "omap"]:
                 el[k2] = el[prefix + "omap"][k2]
@@ -74,129 +83,10 @@ def apply(file_path, parameters=None):
             return eve_df, obj_df
         return eve_df
     else:
-        prefix = "ocel:"
         F = open(file_path, "rb")
         obj = json.load(F)
         F.close()
         return parse_json(obj)
-        # eve_stream = obj[prefix + "events"]
-        # for el in eve_stream:
-        #     eve_stream[el]["event_id"] = el
-        # obj_stream = obj[prefix + "objects"]
-        # for el in obj_stream:
-        #     obj_stream[el]["object_id"] = el
-        # obj_stream = list(obj_stream.values())
-        # obj_type = {}
-        # for el in obj_stream:
-        #     obj_type[el["object_id"]] = el[prefix + "type"]
-        #     el["object_type"] = el[prefix + "type"]
-        #     del el[prefix + "type"]
-        #     for k2 in el[prefix + "ovmap"]:
-        #         el["object_" + k2] = el[prefix + "ovmap"][k2]
-        #     # del el[prefix + "ovmap"]
-        # eve_stream = list(eve_stream.values())
-        # for el in eve_stream:
-        #     new_omap = {}
-        #     for obj in el[prefix + "omap"]:
-        #         typ = obj_type[obj]
-        #         if not typ in new_omap:
-        #             new_omap[typ] = set()
-        #         new_omap[typ].add(obj)
-        #     for typ in new_omap:
-        #         new_omap[typ] = list(new_omap[typ])
-        #     el[prefix + "omap"] = new_omap
-        #     el["event_activity"] = el[prefix + "activity"]
-        #     el["event_timestamp"] = datetime.fromisoformat(
-        #         el[prefix + "timestamp"])
-        #     del el[prefix + "activity"]
-        #     del el[prefix + "timestamp"]
-        #     for k2 in el[prefix + "vmap"]:
-        #         el["event_" + k2] = el[prefix + "vmap"][k2]
-        #     # del el[prefix + "vmap"]
-        #     for k2 in el[prefix + "omap"]:
-        #         el[k2] = el[prefix + "omap"][k2]
-        #     # del el[prefix + "omap"]
-
-        # events = list()
-        # for el in eve_stream:
-        #     event_id = el["event_id"]
-        #     event_activity = el["event_activity"]
-        #     event_timestamp = el["event_timestamp"]
-        #     event_omap = el[prefix + "omap"]
-        #     event_vmap = el[prefix + "vmap"]
-        #     events.append(Event(id=event_id, act=event_activity,
-        #                         time=event_timestamp, omap=event_omap, vmap=event_vmap))
-
-        # objects = list()
-        # for el in obj_stream:
-        #     object_id = el["object_id"]
-        #     object_type = el["object_type"]
-        #     object_ovmap = el[prefix + "ovmap"]
-        #     objects.append(
-        #         Obj(id=object_id, type=object_type, ovmap=object_ovmap))
-
-        # acts = set([e.act for e in events])
-        # obj_types = set([o.type for o in objects])
-        # attr_names = set([at for e in events for at in e.vmap.keys()])
-        # return ObjectCentricEventLog(events=events, objects=objects, acts=acts, attr_names=attr_names, obj_types=obj_types, attr_types=list(), attr_typ=dict())
-
-
-# def parse_json(data: Dict[str, Any]) -> ObjectCentricEventLog:
-#     cfg = JsonParseParameters()
-
-#     # parses the given dict
-#     events = parse_events(data[cfg.log_params['events']], cfg)
-#     objects = parse_objects(data[cfg.log_params['objects']], cfg)
-#     # Uses the last found value type
-#     attr_events = {v:
-#                    str(type(events[eid].vmap[v])) for eid in events
-#                    for v in events[eid].vmap}
-#     attr_objects = {v:
-#                     str(type(objects[oid].ovmap[v])) for oid in objects
-#                     for v in objects[oid].ovmap
-#                     }
-#     attr_types = list({attr_events[v] for v in attr_events}.union(
-#         {attr_objects[v] for v in attr_objects}))
-#     attr_typ = {**attr_events, **attr_objects}
-#     act_attr = {}
-#     for event in events:
-#         act = event.act
-#         if act not in act_attr:
-#             act_attr[act] = {v for v in event.vmap}
-#         else:
-#             act_attr[act] = act_attr[act].union({v for v in event.vmap})
-#     for act in act_attr:
-#         act_attr[act] = list(act_attr[act])
-
-#     data = ObjectCentricEventLog(events=events, objects=objects, attr_names=data[cfg.log_params['meta']][cfg.log_params['attr_names']],
-#                                  obj_types=data[cfg.log_params['meta']][cfg.log_params['obj_types']], attr_types=attr_types, attr_typ=attr_typ, act_attr=act_attr, attr_events=attr_events)
-#     return data
-
-
-# def parse_events(data: Dict[str, Any], cfg: JsonParseParameters) -> Dict[str, Event]:
-#     # Transform events dict to list of events
-#     act_name = cfg.event_params['act']
-#     omap_name = cfg.event_params['omap']
-#     vmap_name = cfg.event_params['vmap']
-#     time_name = cfg.event_params['time']
-#     events = [Event(id=item[0],
-#                     act=item[1][act_name],
-#                     omap=item[1][omap_name],
-#                     vmap=item[1][vmap_name],
-#                     time=datetime.fromisoformat(item[1][time_name]))
-#               for item in data.items()]
-#     return events
-
-
-# def parse_objects(data: Dict[str, Any], cfg: JsonParseParameters) -> Dict[str, Obj]:
-#     # Transform objects dict to list of objects
-#     type_name = cfg.obj_params['type']
-#     ovmap_name = cfg.obj_params['ovmap']
-#     objects = {item[0]: Obj(id=item[0],
-#                             type=item[1][type_name],
-#                             ovmap=item[1][ovmap_name])
-#                for item in data.items()}
-#     return objects
 
 
 def parse_json(data: Dict[str, Any]) -> ObjectCentricEventLog:
@@ -242,13 +132,19 @@ def parse_events(data: Dict[str, Any], cfg: JsonParseParameters) -> Dict[str, Ev
     omap_name = cfg.event_params['omap']
     vmap_name = cfg.event_params['vmap']
     time_name = cfg.event_params['time']
-    events = {item[0]: Event(id=item[0],
-                             act=item[1][act_name],
-                             omap=item[1][omap_name],
-                             vmap=item[1][vmap_name],
-                             time=datetime.fromisoformat(item[1][time_name]))
-              for item in data.items()}
-    return events
+    events = {}
+    for item in data.items():
+        events[item[0]] = Event(id=item[0],
+                                act=item[1][act_name],
+                                omap=item[1][omap_name],
+                                vmap=item[1][vmap_name],
+                                time=datetime.fromisoformat(item[1][time_name]))
+        if "start_time" not in item[1][vmap_name]:
+            events[item[0]].vmap["start_time"] = None
+        else:
+            events[item[0]].vmap["start_time"] = datetime.fromisoformat(events[item[0]].vmap["start_time"])
+    sorted_events = sorted(events.items(), key=lambda kv: kv[1].time)
+    return OrderedDict(sorted_events)
 
 
 def parse_objects(data: Dict[str, Any], cfg: JsonParseParameters) -> Dict[str, Obj]:

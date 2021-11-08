@@ -110,7 +110,7 @@ for i, row in sample_df.iterrows():
         row["O"] = None
     # offer id for create offer is stored as eventid
     if row["event_activity"] == "O_Create Offer":
-        sample_df.at[i, 'O'] = sample_df.at[i, 'EventID']
+        row["O"] = row['EventID']
     # filter nan values
     if type(row["A"]) == float and math.isnan(row["A"]):
         row["A"] = None
@@ -122,7 +122,7 @@ for i, row in sample_df.iterrows():
             continue
         elif type(row["A"]) == str:
             sample_df.at[i, 'A'] = {
-                sample_df.at[i, 'A']}
+                row['A']}
         # elif type(row["A"]) == float:
         #     sample_df.at[i, 'A'] = None
         else:
@@ -133,7 +133,7 @@ for i, row in sample_df.iterrows():
         if type(row["O"]) == set:
             continue
         elif type(row["O"]) == str:
-            sample_df.at[i, 'O'] = {sample_df.at[i, 'O']}
+            sample_df.at[i, 'O'] = {row['O']}
         # elif type(row["O"]) == float:
         #     sample_df.at[i, 'O'] = None
         else:

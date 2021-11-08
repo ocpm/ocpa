@@ -1,4 +1,4 @@
-from ocpa.objects.log.importer.mdl import factory as mdl_import_factory
+from ocpa.objects.log.importer.mdl.util import succint_mdl_to_exploded_mdl
 
 
 def apply(df, persp, parameters=None):
@@ -7,7 +7,7 @@ def apply(df, persp, parameters=None):
 
     try:
         if df.type == "succint":
-            df = mdl_import_factory.succint_mdl_to_exploded_mdl(df)
+            df = succint_mdl_to_exploded_mdl(df)
             df.type = "exploded"
     except:
         pass

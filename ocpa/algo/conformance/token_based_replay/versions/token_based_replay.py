@@ -1,6 +1,6 @@
 import pm4py
 # from pm4pymdl.algo.mvp.utils import succint_mdl_to_exploded_mdl, clean_frequency, clean_arc_frequency
-from ocpa.objects.log.importer.mdl.factory import succint_mdl_to_exploded_mdl, clean_frequency, clean_arc_frequency
+from ocpa.objects.log.importer.mdl.util import succint_mdl_to_exploded_mdl, clean_frequency, clean_arc_frequency
 from ocpa.algo.discovery.mvp.projection import algorithm as projection_factory
 from pm4py.algo.discovery.alpha import algorithm as alpha_miner
 from pm4py.algo.discovery.inductive import algorithm as inductive_miner

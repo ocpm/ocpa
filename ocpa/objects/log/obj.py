@@ -21,7 +21,7 @@ class Event:
         return id(self)
 
     def __repr__(self):
-        return str(self.act)
+        return str(self.act) + str(self.time) + str(self.omap) + str(self.vmap)
 
 
 @dataclass
