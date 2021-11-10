@@ -1,5 +1,5 @@
 import networkx as nx
-from ocpa.objects.correlated_event_graph.obj import CorrelatedEventGraph
+from ocpa.objects.graph.correlated_event_graph.obj import CorrelatedEventGraph
 
 
 def apply(event_graph):

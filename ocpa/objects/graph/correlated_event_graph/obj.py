@@ -42,6 +42,9 @@ class CorrelatedEventGraph():
         return set([e for e in self._graph.nodes if (e, event) in self._graph.edges and ot in [self._ovmap[oi].type for oi in event.omap]])
 
     def get_event_context(self, event):
+        # if self.get_first_event() == event:
+        #     return None
+        # else:
         ots = [self._ovmap[oi].type for oi in event.omap]
         return set([e for e in [e2 for ot in ots for e2 in self.get_event_context_per_object(event, ot)]])
 

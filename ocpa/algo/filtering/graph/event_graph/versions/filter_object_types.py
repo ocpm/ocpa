@@ -1,6 +1,6 @@
 from ocpa.objects.oc_petri_net.obj import Subprocess, ObjectCentricPetriNet
 from copy import deepcopy
-from ocpa.objects.correlated_event_graph.obj import CorrelatedEventGraph
+from ocpa.objects.graph.correlated_event_graph.obj import CorrelatedEventGraph
 
 
 # def apply(ocpn: ObjectCentricPetriNet, cegs, parameters):

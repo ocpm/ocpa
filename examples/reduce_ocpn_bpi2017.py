@@ -4,11 +4,11 @@ from ocpa.objects.log.importer.mdl import factory as mdl_import_factory
 from ocpa.algo.discovery.ocpn import algorithm as ocpn_discovery_factory
 from ocpa.visualization.oc_petri_net import factory as pn_vis_factory
 from ocpa.algo.conformance.token_based_replay import algorithm as ocpn_conformance_factory
-from ocpa.objects.event_graph.retrieval import algorithm as event_graph_factory
-from ocpa.objects.correlated_event_graph.retrieval import algorithm as correlated_event_graph_factory
+from ocpa.objects.graph.event_graph.retrieval import algorithm as event_graph_factory
+from ocpa.objects.graph.correlated_event_graph.retrieval import algorithm as correlated_event_graph_factory
 
 from ocpa.algo.projection.ocpn import algorithm as ocpn_project_factory
-from ocpa.algo.filtering.event_graph import algorithm as event_graph_filtering_factory
+from ocpa.algo.filtering.graph.event_graph import algorithm as event_graph_filtering_factory
 
 from ocpa.algo.reduction.ocpn import algorithm as ocpn_reduction_factory
 

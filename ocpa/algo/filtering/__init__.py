@@ -1,1 +1,1 @@
-import ocpa.algo.filtering.event_graph
+import ocpa.algo.filtering.graph.event_graph

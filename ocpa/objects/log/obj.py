@@ -88,7 +88,6 @@ class RawObjectCentricData:
 class ObjectCentricEventLog:
     meta: MetaObjectCentricData
     raw: RawObjectCentricData
-    vmap_param: Union[CsvParseParameters, JsonParseParameters]
 
     def __post_init__(self):
         self.meta.locs = {}

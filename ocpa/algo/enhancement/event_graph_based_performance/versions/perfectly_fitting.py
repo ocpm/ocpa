@@ -1,9 +1,9 @@
 from ocpa.objects.oc_petri_net.obj import ObjectCentricPetriNet, Subprocess
-from ocpa.objects.correlated_event_graph.obj import CorrelatedEventGraph
+from ocpa.objects.graph.correlated_event_graph.obj import CorrelatedEventGraph
 from ocpa.objects.log.obj import Event
 from ocpa.algo.util.util import AGG_MAP
 from ocpa.util.vis_util import human_readable_stat
-from ocpa.algo.filtering.event_graph import algorithm as event_graph_filtering_factory
+from ocpa.algo.filtering.graph.event_graph import algorithm as event_graph_filtering_factory
 
 from typing import List, Set
 
@@ -98,6 +98,8 @@ def first(events: Set[Event]) -> Event:
 def last(events: Set[Event]) -> Event:
     if len(events) == 0:
         return None
+    if events == None:
+        return None
     events = list(events)
     event_timestamps = [e.time for e in events]
     i = event_timestamps.index(max(event_timestamps))
@@ -128,8 +130,6 @@ def compute_waiting_time(cegs: List[CorrelatedEventGraph], sp: Subprocess = None
         return [0]
     else:
         return all_waiting_times
-
-    # return [(first(ceg.graph.nodes).time - last(ceg.get_event_context(first(ceg.graph.nodes)))).total_seconds() for ceg in cegs if first(ceg.graph.nodes) is not None and last(ceg.get_event_context(first(ceg.graph.nodes))) is not None]
 
 
 def compute_service_time(cegs: List[CorrelatedEventGraph], sp: Subprocess = None):
@@ -171,15 +171,18 @@ def compute_sojourn_time(cegs: List[CorrelatedEventGraph], sp: Subprocess = None
         last_event = last(filtered_ceg.graph.nodes)
         last_context_event = last(
             initial_ceg.get_event_context(first(filtered_ceg.graph.nodes)))
-        if last_event is not None and last_context_event is not None:
+        if last_event is not None:
+            # if the event is the first event, no context, but we can still use the first event.
+            if last_context_event is None:
+                last_context_event = first(filtered_ceg.graph.nodes)
+            print("Sojourn Time between {} -> {}: {}".format(last_context_event.act,
+                  last_event.act, (last_event.time - last_context_event.time).total_seconds()))
             all_sojourn_times.append(
                 (last_event.time - last_context_event.time).total_seconds())
     if len(all_sojourn_times) == 0:
         return [0]
     else:
         return all_sojourn_times
-
-    # return [(last(ceg.graph.nodes).time - last(ceg.get_event_context(first(ceg.graph.nodes))).time).total_seconds() for ceg in cegs]
 
 
 def compute_sync_time(cegs: List[CorrelatedEventGraph], sp: Subprocess = None, selected_object_types=None):
@@ -202,8 +205,6 @@ def compute_sync_time(cegs: List[CorrelatedEventGraph], sp: Subprocess = None, s
             initial_ceg.get_event_context_per_object(first_event, selected_object_types[0]))
         last_context_event_ot2 = last(
             initial_ceg.get_event_context_per_object(first_event, selected_object_types[1]))
-        # first_context_event = first(
-        #     initial_ceg.get_event_context(first_event))
         if last_context_event_ot1 is not None and last_context_event_ot2 is not None:
             all_sync_times.append(
                 abs((last_context_event_ot1.time - last_context_event_ot2.time).total_seconds()))
@@ -211,8 +212,6 @@ def compute_sync_time(cegs: List[CorrelatedEventGraph], sp: Subprocess = None, s
         return [0]
     else:
         return all_sync_times
-
-    # return [abs((last(ceg.get_event_context(first(ceg))).time - first(ceg.get_event_context(first(ceg.graph.nodes))).time).total_seconds()) for ceg in cegs]
 
 
 # def compute_coherent_sync_time(cegs: List[CorrelatedEventGraph], ot, sp: Subprocess = None):

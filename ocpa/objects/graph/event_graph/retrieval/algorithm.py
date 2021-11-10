@@ -1,5 +1,5 @@
 import networkx as nx
-from ocpa.objects.event_graph.obj import EventGraph
+from ocpa.objects.graph.event_graph.obj import EventGraph
 import matplotlib.pyplot as plt
 import time
 

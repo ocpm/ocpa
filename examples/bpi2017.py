@@ -6,8 +6,8 @@ from ocpa.objects.log.converter import factory as log_convert_factory
 from ocpa.algo.discovery.ocpn import algorithm as ocpn_discovery_factory
 from ocpa.visualization.oc_petri_net import factory as pn_vis_factory
 from ocpa.objects.oc_petri_net.obj import Subprocess
-from ocpa.objects.event_graph.retrieval import algorithm as event_graph_factory
-from ocpa.objects.correlated_event_graph.retrieval import algorithm as correlated_event_graph_factory
+from ocpa.objects.graph.event_graph.retrieval import algorithm as event_graph_factory
+from ocpa.objects.graph.correlated_event_graph.retrieval import algorithm as correlated_event_graph_factory
 
 from ocpa.algo.projection.ocpn import algorithm as ocpn_project_factory
 

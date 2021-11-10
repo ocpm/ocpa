@@ -1,6 +1,6 @@
-from ocpa.algo.filtering.event_graph.versions import filter_object_types
-from ocpa.algo.filtering.event_graph.versions import filter_subprocess
-from ocpa.algo.filtering.event_graph.versions import filter_complete
+from ocpa.algo.filtering.graph.event_graph.versions import filter_object_types
+from ocpa.algo.filtering.graph.event_graph.versions import filter_subprocess
+from ocpa.algo.filtering.graph.event_graph.versions import filter_complete
 
 # OBJECT_TYPES = "object_types"
 SUBPROCESS = "subprocess"
