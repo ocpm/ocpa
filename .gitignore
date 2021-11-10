@@ -67,3 +67,4 @@ venv.bak/
 /dist
 
 /ocpa_tester-private.py
+/test.py
