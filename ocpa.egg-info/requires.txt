@@ -1,0 +1,3 @@
+pm4py>=2.2.0
+setuptools
+jsonschema
