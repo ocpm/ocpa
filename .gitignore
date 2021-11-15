@@ -1,0 +1,67 @@
+# IDE
+/.idea
+/.idea/inspectionProfiles
+
+# Temporary
+*.log
+*__pycache__
+*.DS_Store
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Pyre
+.pyre_configuration
+.watchmanconfig
+.pyre/
+
+# Resources
+*.pptx
+*.csv
+*.pickle
+*.zip
+*.png
+*.json
+*.jsonocel
+
+## Vue.js frontend
+/src/.idea
+/src/.idea/
+/src/frontend/node_modules
+/src/frontend/dist
+
+
+# local env files
+/src/frontend/.env.local
+/src/frontend/.env.*.local
+
+# Log files
+/src/frontend/npm-debug.log*
+/src/frontend/yarn-debug.log*
+/src/frontend/yarn-error.log*
+/src/frontend/pnpm-debug.log*
+
+# Editor directories and files
+/src/frontend/.idea
+/src/frontend/.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Deprecated lib
+/lib
+
+# Examples
+# /example_logs
+# /examples
+
+/build
+/dist
