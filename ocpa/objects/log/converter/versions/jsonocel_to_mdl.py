@@ -1,16 +1,4 @@
-<<<<<<< HEAD
-import json
-
 import pandas as pd
-from dateutil import parser
-from lxml import etree, objectify
-import dateutil
-from jsonschema import validate
-import jsonschema
-from datetime import datetime
-=======
-import pandas as pd
->>>>>>> origin/Publishing
 
 
 def apply(ocel, return_obj_df=True, parameters=None):

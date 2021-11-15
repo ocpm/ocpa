@@ -7,14 +7,11 @@ ocpa.egg-info/dependency_links.txt
 ocpa.egg-info/requires.txt
 ocpa.egg-info/top_level.txt
 ocpa/algo/__init__.py
-<<<<<<< HEAD
 ocpa/algo/conformance/__init__.py
 ocpa/algo/conformance/token_based_replay/__init__.py
 ocpa/algo/conformance/token_based_replay/algorithm.py
 ocpa/algo/conformance/token_based_replay/versions/__init__.py
 ocpa/algo/conformance/token_based_replay/versions/token_based_replay.py
-=======
->>>>>>> origin/Publishing
 ocpa/algo/discovery/__init__.py
 ocpa/algo/discovery/mvp/__init__.py
 ocpa/algo/discovery/mvp/projection/__init__.py
@@ -37,10 +34,6 @@ ocpa/objects/log/converter/__init__.py
 ocpa/objects/log/converter/factory.py
 ocpa/objects/log/converter/versions/__init__.py
 ocpa/objects/log/converter/versions/jsonocel_to_mdl.py
-<<<<<<< HEAD
-ocpa/objects/log/importer/__init__.py
-=======
->>>>>>> origin/Publishing
 ocpa/objects/log/importer/mdl/__init__.py
 ocpa/objects/log/importer/mdl/factory.py
 ocpa/objects/log/importer/ocel/__init__.py

@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-from ocpa.objects.log.importer.mdl import factory as mdl_import_factory
-=======
 from ocpa.objects.log.importer.mdl.util import succint_mdl_to_exploded_mdl
->>>>>>> origin/Publishing
 from pm4py.objects.conversion.log import converter as log_conv_factory
 
 
@@ -12,11 +8,7 @@ def apply(df, persp, parameters=None):
 
     try:
         if df.type == "succint":
-<<<<<<< HEAD
-            df = mdl_import_factory.succint_mdl_to_exploded_mdl(df)
-=======
             df = succint_mdl_to_exploded_mdl(df)
->>>>>>> origin/Publishing
             df.type = "exploded"
     except:
         pass
@@ -35,7 +27,3 @@ def apply(df, persp, parameters=None):
     log = log_conv_factory.apply(df)
 
     return log
-<<<<<<< HEAD
-
-=======
->>>>>>> origin/Publishing

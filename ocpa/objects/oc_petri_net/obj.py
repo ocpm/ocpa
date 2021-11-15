@@ -1,9 +1,5 @@
 from dataclasses import dataclass, field
-<<<<<<< HEAD
-from typing import List, Dict, Set, Tuple
-=======
 from typing import List, Dict, Set, Tuple, Any
->>>>>>> origin/Publishing
 
 
 class ObjectCentricPetriNet(object):
@@ -79,11 +75,7 @@ class ObjectCentricPetriNet(object):
         name = property(__get_name, __set_name)
 
     class Transition(object):
-<<<<<<< HEAD
-        def __init__(self, name, label=None, in_arcs=None, out_arcs=None, properties=None, silent=None):
-=======
         def __init__(self, name, label=None, in_arcs=None, out_arcs=None, properties=None, silent=False):
->>>>>>> origin/Publishing
             self.__name = name
             self.__label = None if label is None else label
             self.__in_arcs = set() if in_arcs is None else in_arcs
@@ -115,12 +107,9 @@ class ObjectCentricPetriNet(object):
         def __get_silent(self):
             return self.__silent
 
-<<<<<<< HEAD
-=======
         def __set_silent(self, silent):
             self.__silent = silent
 
->>>>>>> origin/Publishing
         def __repr__(self):
             if self.label is None:
                 return str(self.name)
@@ -154,11 +143,7 @@ class ObjectCentricPetriNet(object):
         in_arcs = property(__get_in_arcs)
         out_arcs = property(__get_out_arcs)
         properties = property(__get_properties)
-<<<<<<< HEAD
-        silent = property(__get_silent)
-=======
         silent = property(__get_silent, __set_silent)
->>>>>>> origin/Publishing
 
     class Arc(object):
         def __init__(self, source, target, variable=False, weight=1, properties=None):
@@ -272,8 +257,6 @@ class ObjectCentricPetriNet(object):
     def nets(self):
         return self.__nets
 
-<<<<<<< HEAD
-=======
     def add_arc(self, arc):
         self.__arcs.add(arc)
         arc.source.out_arcs.add(arc)
@@ -324,7 +307,6 @@ class ObjectCentricPetriNet(object):
                 return transition
         return None
 
->>>>>>> origin/Publishing
 
 @dataclass
 class Marking(object):
@@ -339,8 +321,6 @@ class Marking(object):
         temp_tokens = set([(pl, oi) for (pl, oi) in self._tokens if oi == obj])
         self._tokens -= temp_tokens
         self._tokens.add((pl, obj))
-<<<<<<< HEAD
-=======
 
 
 @dataclass
@@ -391,4 +371,3 @@ class Subprocess(object):
             self._transitions = list(set(
                 [tr for tr in self._ocpn.transitions for p in tpl[tr] if p.object_type in self._object_types]))
             self._sound = True
->>>>>>> origin/Publishing

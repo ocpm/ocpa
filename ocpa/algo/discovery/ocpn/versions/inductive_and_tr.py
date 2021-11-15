@@ -18,10 +18,7 @@ from pm4py.objects.petri.utils import remove_place, remove_transition
 from ocpa.objects.log.importer.mdl import factory as mdl_import_factory
 from ocpa.algo.discovery.mvp.projection import algorithm
 from ocpa.objects.oc_petri_net.obj import ObjectCentricPetriNet
-<<<<<<< HEAD
-=======
 from ocpa.objects.log.importer.mdl.util import succint_mdl_to_exploded_mdl, clean_frequency, clean_arc_frequency
->>>>>>> origin/Publishing
 from copy import deepcopy
 import uuid
 import pandas as pd
@@ -86,11 +83,7 @@ def discover_nets(df, discovery_algorithm=discover_inductive, parameters=None):
     #         df.type = "exploded"
     # except:
     #     pass
-<<<<<<< HEAD
-    df = mdl_import_factory.succint_mdl_to_exploded_mdl(df)
-=======
     df = succint_mdl_to_exploded_mdl(df)
->>>>>>> origin/Publishing
 
     if len(df) == 0:
         df = pd.DataFrame({"event_id": [], "event_activity": []})
@@ -98,13 +91,8 @@ def discover_nets(df, discovery_algorithm=discover_inductive, parameters=None):
     min_node_freq = parameters["min_node_freq"] if "min_node_freq" in parameters else 0
     min_edge_freq = parameters["min_edge_freq"] if "min_edge_freq" in parameters else 0
 
-<<<<<<< HEAD
-    df = mdl_import_factory.clean_frequency(df, min_node_freq)
-    df = mdl_import_factory.clean_arc_frequency(df, min_edge_freq)
-=======
     df = clean_frequency(df, min_node_freq)
     df = clean_arc_frequency(df, min_edge_freq)
->>>>>>> origin/Publishing
 
     if len(df) == 0:
         df = pd.DataFrame({"event_id": [], "event_activity": []})
@@ -176,12 +164,9 @@ def apply(df, discovery_algorithm=discover_inductive, parameters=None):
     arcs = []
     for index, persp in enumerate(nets):
         net, im, fm = nets[persp]
-<<<<<<< HEAD
-=======
         for tr in net.transitions:
             if not (tr.label != "" and tr.label != None):
                 tr.name = persp + tr.name
->>>>>>> origin/Publishing
         pl_count = 1
         tr_count = 1
         arc_count = 1
@@ -260,9 +245,5 @@ def apply(df, discovery_algorithm=discover_inductive, parameters=None):
                 t.in_arcs.add(a)
                 arcs.append(a)
     ocpn = ObjectCentricPetriNet(
-<<<<<<< HEAD
-        places=places, transitions=transition_list, arcs=arcs, nets=nets)
-=======
         places=set(places), transitions=set(transition_list), arcs=set(arcs), nets=nets)
->>>>>>> origin/Publishing
     return ocpn

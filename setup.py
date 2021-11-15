@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # from setuptools import setup
 import setuptools
 
@@ -6,21 +5,6 @@ import ocpa
 setuptools.setup(
     name = ocpa.__name__,
     packages=setuptools.find_packages(),
-=======
-from setuptools import setup
-
-import ocpa
-setup(
-    name = ocpa.__name__,
-    packages = [
-        'ocpa', 'ocpa.algo', 'ocpa.objects', 'ocpa.util', 'ocpa.visualization',
-        'ocpa.algo.discovery', 'ocpa.algo.discovery.mvp', 'ocpa.algo.discovery.ocpn', 'ocpa.algo.discovery.mvp.projection', 'ocpa.algo.discovery.mvp.projection.versions', 'ocpa.algo.discovery.ocpn.versions', 
-        'ocpa.algo.evaluation', 'ocpa.algo.evaluation.precision',
-        'ocpa.objects.log', 'ocpa.objects.log.converter', 'ocpa.objects.log.converter.versions', 'ocpa.objects.log.importer.mdl', 'ocpa.objects.log.importer.ocel', 'ocpa.objects.log.importer.ocel.versions', 'ocpa.objects.log.util', 'ocpa.objects.oc_petri_net', 
-        'ocpa.util', 
-        'ocpa.visualization', 'ocpa.visualization.oc_petri_net', 'ocpa.visualization.oc_petri_net.util', 'ocpa.visualization.oc_petri_net.versions'
-        ],
->>>>>>> origin/Publishing
     py_modules=[ocpa.__name__],
     include_package_data=True,
     version = ocpa.__version__,      

@@ -1,39 +1,12 @@
 from dataclasses import dataclass, field
 from typing import List, Dict, Set, Any, Optional, Union, Tuple
 from datetime import datetime
-<<<<<<< HEAD
-
-=======
 import networkx as nx
->>>>>>> origin/Publishing
 
 from ocpa.objects.log.util.param import CsvParseParameters, JsonParseParameters
 
 
 @dataclass
-<<<<<<< HEAD
-class EventId:
-    id: str
-
-
-@dataclass
-class EventClassic(EventId):
-    act: str
-    time: datetime
-
-
-@dataclass
-class EventClassicResource(EventClassic):
-    vmap: Dict[str, Any]
-
-
-@dataclass
-class Event(EventClassic):
-    omap: List[str]
-    vmap: Dict[str, Any]
-    # Kept for backward compatibility with the evaluation
-    corr: bool = field(default_factory=lambda: False)
-=======
 class Event:
     id: str
     act: str
@@ -49,7 +22,6 @@ class Event:
 
     def __repr__(self):
         return str(self.act) + str(self.time) + str(self.omap) + str(self.vmap)
->>>>>>> origin/Publishing
 
 
 @dataclass
@@ -59,8 +31,6 @@ class Obj:
     ovmap: Dict
 
 
-<<<<<<< HEAD
-=======
 # @dataclass
 # class ObjectCentricEventLog:
 #     events: List[Event]
@@ -85,7 +55,6 @@ class Obj:
 #         self.acts = {act for act in self.act_attr}
 
 
->>>>>>> origin/Publishing
 @dataclass
 class MetaObjectCentricData:
     attr_names: List[str]  # AN
@@ -98,11 +67,6 @@ class MetaObjectCentricData:
     # act_obj: Dict[str, List[str]]  # allowed ot per act
 
     acts: Set[str] = field(init=False)  # TODO: change to list for json
-<<<<<<< HEAD
-    ress: Set[str] = field(init=False)  # TODO: change to list for json
-    locs: Set[str] = field(init=False)  # TODO: change to list for json
-=======
->>>>>>> origin/Publishing
     # Used for OCEL json data to simplify UI on homepage
     attr_events: List[str] = field(default_factory=lambda: [])
 
@@ -121,27 +85,14 @@ class RawObjectCentricData:
 
 
 @dataclass
-<<<<<<< HEAD
-class ObjectCentricData:
-    meta: MetaObjectCentricData
-    raw: RawObjectCentricData
-    vmap_param: Union[CsvParseParameters, JsonParseParameters]
-=======
 class ObjectCentricEventLog:
     meta: MetaObjectCentricData
     raw: RawObjectCentricData
->>>>>>> origin/Publishing
 
     def __post_init__(self):
         self.meta.locs = {}
 
 
-<<<<<<< HEAD
-def sort_events(data: ObjectCentricData) -> None:
-    events = data.raw.events
-    data.raw.events = {k: event for k, event in sorted(
-        events.items(), key=lambda item: item[1].time)}
-=======
 class OCEL():
     def __init__(self, log, object_types=None, precalc=False):
         self._log = log
@@ -196,4 +147,3 @@ class OCEL():
                     last_ev[(ot, o)] = i
         EOG.add_edges_from(edge_list)
         return EOG
->>>>>>> origin/Publishing
