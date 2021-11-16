@@ -10,6 +10,7 @@ def calculate_preset(eog):
         #stable speed also for later events, large logs with large connected components
         #preset[e] = [v for v in nx.dfs_predecessors(EOG, source=e).keys() if v!=e]
         #fast for small graphs/no connected component
+
         #preset[e] = [n for n in nx.traversal.bfs_tree(EOG, e, reverse=True) if n != e]
     return preset
 
@@ -36,4 +37,4 @@ def calculate_contexts_and_bindings(ocel):
         contexts[event] = context
         bindings[event] = binding_sequence
     return contexts, bindings
-        
+

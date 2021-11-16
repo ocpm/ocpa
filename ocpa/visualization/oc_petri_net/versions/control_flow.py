@@ -23,6 +23,7 @@ def apply(obj, parameters=None):
     if "ratio" in parameters:
         ratio = parameters["ratio"]
         g.attr(ratio = ratio)
+
     all_objs = {}
     trans_names = {}
 
