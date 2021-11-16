@@ -1,4 +1,4 @@
-from ocpa.objects.ocel.obj import OCEL
+from ocpa.objects.log.obj import OCEL
 from ocpa.algo.discovery.ocpn import algorithm as ocpn_discovery_factory
 import pandas as pd
 import ocpa.algo.filtering.log.trace_filtering as trace_filtering
