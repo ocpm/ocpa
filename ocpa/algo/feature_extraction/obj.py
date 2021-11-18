@@ -19,6 +19,7 @@ class Feature_Storage:
 
     def __init__(self):
         self._event_features = []
+        self._edge_features = []
         self._case_features = []
         self._feature_graphs = []
 
