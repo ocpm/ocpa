@@ -82,6 +82,9 @@ class OCEL():
         else:
 
             self._object_types = [c for c in self._log.columns if not c.startswith("event_")]
+        #clean empty events
+        self._log = self._log[self._log[self._object_types].astype(bool).any(axis=1)]
+        #self._log = self._log[self._log.apply(lambda x: any([len(x[ot]) > 0 for ot in self._object_types]))]
         if precalc:
             self._eog = self.eog_from_log()
             self._cases = self.calculate_cases()
