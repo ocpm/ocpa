@@ -88,11 +88,12 @@ class OCEL():
         if precalc:
             self._eog = self.eog_from_log()
             self._cases = self.calculate_cases()
-            self._variants, self._variant_frequency = self.calculate_variants()
+            self._variants, self._variant_frequency, self._variant_graphs = self.calculate_variants()
         else:
             self._eog = None
             self._cases = None
             self._variants = None
+            self._variant_graphs = None
             self._variant_frequency = None
 
 
@@ -115,13 +116,18 @@ class OCEL():
 
     def _get_variants(self):
         if self._variants == None:
-            self._variants, self._variant_frequency = self.calculate_variants()
+            self._variants, self._variant_frequency, self._variant_graphs = self.calculate_variants()
         return self._variants
 
     def _get_variant_frequency(self):
         if self._variant_frequency == None:
-            self._variants, self._variant_frequency = self.calculate_variants()
+            self._variants, self._variant_frequency, self._variant_graphs = self.calculate_variants()
         return self._variant_frequency
+
+    def _get_variant_graphs(self):
+        if self._variant_graphs == None:
+            self._variants, self._variant_frequency, self._variant_graphs = self.calculate_variants()
+        return self._variant_graphs
 
 
     def _get_object_types(self):
@@ -138,6 +144,7 @@ class OCEL():
     cases = property(_get_cases)
     variants = property(_get_variants)
     variant_frequency = property(_get_variant_frequency)
+    variant_graphs = property(_get_variant_graphs)
 
 
     def eog_from_log(self):
@@ -210,5 +217,5 @@ class OCEL():
         #for i in range(0, 10):
         #    print("Class number " + str(i + 1) + " with frequency " + str(v_freq_list[i]))
         self.log.drop('event_objects', axis=1, inplace=True)
-        return variants, v_freq_list
+        return variants, v_freq_list, variant_graphs
 
