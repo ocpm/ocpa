@@ -34,9 +34,9 @@ def event_to_y(graph, event, y_mappings):
             objects += [o]
     return [y_mappings[o] for o in set(objects)]
 
-def graph_to_2d(ocel,graph):
+def graph_to_2d(ocel,graph,mapping_activity):
     all_obs = {}
-    mapping_activity = dict(zip(ocel.log["event_id"], ocel.log["event_activity"]))
+
     for event in graph.nodes:
         in_edges = graph.in_edges(event)
         out_edges = graph.out_edges(event)
@@ -86,6 +86,7 @@ def graph_to_2d(ocel,graph):
 
 def apply(obj, parameters=None):
     variant_layouting = {}
+    mapping_activity = dict(zip(obj.log["event_id"], obj.log["event_activity"]))
     for v,v_graph in obj.variant_graphs.items():
-        variant_layouting[v] = graph_to_2d(obj,v_graph)
+        variant_layouting[v] = graph_to_2d(obj,v_graph,mapping_activity)
     return variant_layouting
