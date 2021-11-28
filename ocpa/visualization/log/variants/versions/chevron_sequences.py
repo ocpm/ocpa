@@ -7,6 +7,13 @@ def event_to_x(graph, event):
     else:
         return max([event_to_x(graph, pre_e) for pre_e in pre]) + 1
 
+def event_to_x_end(graph, event, coords):
+    suc = list(graph.successors(event))
+    if len(suc) == 0:
+        return coords[event][0]
+    else:
+        return min([coords[suc_e][0] for suc_e in suc]) - 1
+
 
 def event_to_y(graph, event, y_mappings):
     in_edges = graph.in_edges(event)
@@ -56,18 +63,24 @@ def graph_to_2d(ocel,graph):
         ot_o = 1
         for o in all_obs[ot]:
             y_mappings[o] = y
-            lane_info[y] = ot+"_"+str(ot_o)
+            lane_info[y] = (str(ot).replace("'",""),str(ot).replace("'","")+'_'+str(ot_o))
             y+=1
             ot_o += 1
     coords = {}
+    coords_tmp = {}
     for event in graph.nodes:
-        x = event_to_x(graph, event)
+        x_start = event_to_x(graph, event)
         y = event_to_y(graph,event, y_mappings)
-        coords[event] = (x,y)
+        coords_tmp[event] = [x_start,y]
+    for event in graph.nodes:
+        x_end = event_to_x_end(graph, event, coords_tmp)
+        coords[event] = [[coords_tmp[event][0],x_end], coords_tmp[event][1]]
     #coords = list(coords.items())
     coords = [[k,v] for k,v in coords.items()]
     for i in range(0,len(coords)):
         coords[i][0] = mapping_activity[coords[i][0]]
+
+
     return (coords, lane_info)
 
 
