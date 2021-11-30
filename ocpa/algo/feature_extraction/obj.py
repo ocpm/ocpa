@@ -5,7 +5,7 @@ class Feature_Storage:
             def __init__(self, event_id):
                 self._event = event_id
                 self._attributes = {}
-            def add_attributes(self, key, value):
+            def add_attribute(self, key, value):
                 self._attributes[key] = value
             def _get_attributes(self):
                 return self._attributes
@@ -19,7 +19,7 @@ class Feature_Storage:
                 self._target = target
                 self._objects = objects
                 self._attributes = {}
-            def add_attributes(self, key, value):
+            def add_attribute(self, key, value):
                 self._attributes[key] = value
 
             def _get_source(self):
@@ -57,7 +57,7 @@ class Feature_Storage:
         attributes = property(_get_attributes)
         nodes = property(_get_nodes)
         edges = property(_get_edges)
-        def add_attributes(self, key, value):
+        def add_attribute(self, key, value):
             self._attributes[key] = value
 
     def __init__(self, event_features, execution_features, ocel):
