@@ -19,8 +19,11 @@ event_df["event_id"] = list(range(0, len(event_df)))
 event_df.index = list(range(0, len(event_df)))
 event_df["event_id"] = event_df["event_id"].astype(float).astype(int)
 ocel = OCEL(event_df, ots)
+###this is needed to extract the features into the feature storage
 feature_storage = feature_extraction.apply(ocel,[feature_extraction.EVENT_NUM_OF_OBJECTS],[feature_extraction.EXECUTION_NUM_OF_EVENTS,feature_extraction.EXECUTION_NUM_OF_END_EVENTS])
-print(feature_storage.feature_graphs)
+
+
+####example of how the feature storage looks like
 for f_g in feature_storage.feature_graphs:
     print("Next Feature Graph")
     for e in f_g.edges:
@@ -31,6 +34,10 @@ for f_g in feature_storage.feature_graphs:
     for n in f_g.nodes:
         print("for event: "+str(n.event_id))
         print(n.attributes)
+        print(n.objects)
+
+#for going through the graph
+
 
 # print("Number of cases: "+str(len(ocel.cases)))
 # print("Number of variants: "+str(len(ocel.variants)))
