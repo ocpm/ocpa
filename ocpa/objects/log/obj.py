@@ -77,6 +77,8 @@ class ObjectCentricEventLog:
 class OCEL():
     def __init__(self, log, object_types=None, precalc=False):
         self._log = log
+        self._log["event_index"] = self._log["event_id"]
+        self._log = self._log.set_index("event_index")
         if object_types != None:
             self._object_types = object_types
         else:

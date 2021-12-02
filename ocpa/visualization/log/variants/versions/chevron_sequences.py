@@ -15,7 +15,7 @@ def event_to_x_end(graph, event, coords):
         return min([coords[suc_e][0] for suc_e in suc]) - 1
 
 
-def event_to_y(graph, event, y_mappings):
+def event_to_y(graph, event, y_mappings, ocel):
     in_edges = graph.in_edges(event)
     out_edges = graph.out_edges(event)
     objects = []
@@ -31,6 +31,11 @@ def event_to_y(graph, event, y_mappings):
     for e in out_edges:
         object_strings = [s.strip() for s in graph.edges[e]["label"].split(":")]
         for o in object_strings:
+            objects += [o]
+    for ot_ in ocel.object_types:
+        ot = "'" + ot_ + "'"
+        for o in ocel.log.loc[event][ot_]:
+            o = "(" + ot + ", '" + o + "')"
             objects += [o]
     return [y_mappings[o] for o in set(objects)]
 
@@ -56,10 +61,21 @@ def graph_to_2d(ocel,graph,mapping_activity):
                     all_obs[o_tuple[0]] = [o]
                 elif o not in all_obs[o_tuple[0]]:
                     all_obs[o_tuple[0]] += [o]
+
+        for ot_ in ocel.object_types:
+            ot = "'" + ot_ + "'"
+            for o in ocel.log.loc[event][ot_]:
+                o = "("+ot+", '"+o+"')"
+                if ot not in all_obs.keys():
+                    all_obs[ot] = [o]
+                elif o not in all_obs[ot]:
+                    all_obs[ot] += [o]
+
     y_mappings = {}
     lane_info = {}
     y = 0
-    for ot in all_obs.keys():
+
+    for ot in sorted(list(all_obs.keys())):
         ot_o = 1
         for o in all_obs[ot]:
             y_mappings[o] = y
@@ -70,7 +86,7 @@ def graph_to_2d(ocel,graph,mapping_activity):
     coords_tmp = {}
     for event in graph.nodes:
         x_start = event_to_x(graph, event)
-        y = event_to_y(graph,event, y_mappings)
+        y = event_to_y(graph,event, y_mappings, ocel)
         coords_tmp[event] = [x_start,y]
     for event in graph.nodes:
         x_end = event_to_x_end(graph, event, coords_tmp)
@@ -79,7 +95,7 @@ def graph_to_2d(ocel,graph,mapping_activity):
     coords = [[k,v] for k,v in coords.items()]
     for i in range(0,len(coords)):
         coords[i][0] = mapping_activity[coords[i][0]]
-
+    print(coords)
 
     return (coords, lane_info)
 
