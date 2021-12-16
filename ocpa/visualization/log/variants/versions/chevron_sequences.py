@@ -95,7 +95,7 @@ def graph_to_2d(ocel,graph,mapping_activity):
     coords = [[k,v] for k,v in coords.items()]
     for i in range(0,len(coords)):
         coords[i][0] = mapping_activity[coords[i][0]]
-    print(coords)
+    #print(coords)
 
     return (coords, lane_info)
 

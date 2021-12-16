@@ -8,12 +8,34 @@ import ocpa.algo.evaluation.precision_and_fitness.utils as evaluation_utils
 import ocpa.algo.evaluation.precision_and_fitness.evaluator as precision_fitness_evaluator
 import ocpa.visualization.oc_petri_net.factory as vis_factory
 import ocpa.visualization.log.variants.factory as log_viz
+import ocpa.objects.log.importer.ocel.factory as import_factory
 # TODO: Preprocessing and conversion from other types of OCEL
+# filepath = "running-example.jsonocel"
+# df = import_factory.apply(filepath, parameters={"return_df":True})
+# print(df[0])
+# print(df[0].dtypes)
+# f_ocel = OCEL(df[0])
+# print(f_ocel.object_types)
+# #ocpn = ocpn_discovery_factory.apply(f_ocel, parameters={"debug": False})
+# exit
+#
+# filepath = "running-example.xmlocel"
+# df = import_factory.apply(filepath,import_factory.OCEL_XML, parameters={"return_df":True})
+# print(df[0])
+# print(df[0].dtypes)
+# f_ocel = OCEL(df[0])
+# print(f_ocel.object_types)
+# #ocpn = ocpn_discovery_factory.apply(f_ocel, parameters={"debug": False})
+# exit
+
+
+
+
 filename = "BPI2017.csv"
 ots = ["application", "offer"]
 
 
-event_df = pd.read_csv(filename, sep=',')[:1]
+event_df = pd.read_csv(filename, sep=',')[:25000]
 print(event_df)
 for ot in ots:
     event_df[ot] = event_df[ot].map(
@@ -30,7 +52,7 @@ print(ocel.variant_frequency)
 t_start = time.time()
 vars = log_viz.apply(ocel)
 print(str(time.time()-t_start))
-print(vars)
+#print(vars)
 #sub_ocel = trace_filtering.filter_infrequent_traces(ocel, 0.3)
 #ocpn = ocpn_discovery_factory.apply(sub_ocel, parameters={"debug": False})
 #contexts, bindings = evaluation_utils.calculate_contexts_and_bindings(ocel)

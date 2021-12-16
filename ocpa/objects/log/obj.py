@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from typing import List, Dict, Set, Any, Optional, Union, Tuple
 from datetime import datetime
 import networkx as nx
-
+import itertools
 from ocpa.objects.log.util.param import CsvParseParameters, JsonParseParameters
 
 
@@ -170,10 +170,65 @@ class OCEL():
         EOG.add_edges_from(edge_list)
         return EOG
 
-    def calculate_cases(self):
-        # Add the possibility to remove edges
-        cases = sorted(nx.weakly_connected_components(self.eog), key=len , reverse=True)
-        return cases
+    def calculate_cases(self, technique = "leading", leading_type = None):
+        if technique == "weakly":
+            # Add the possibility to remove edges
+            cases = sorted(nx.weakly_connected_components(self.eog), key=len , reverse=True)
+            return cases
+        elif technique == "leading":
+            ocel = self.log.copy()
+            ocel["event_objects"] = ocel.apply(lambda x: set([(ot, o) for ot in self.object_types for o in x[ot]]),
+                                                       axis=1)
+            OG = nx.Graph()
+            OG.add_nodes_from(ocel["event_objects"].explode("event_objects").to_list())
+            #ot_index = {ot: list(ocel.values).index(ot) for ot in self.object_types}
+            object_index = list(ocel.columns.values).index("event_objects")
+            edge_list = []
+            cases = []
+            # build object graph
+            arr = ocel.to_numpy()
+            for i in range(0,len(arr)):
+                edge_list+=list(itertools.combinations(arr[i][object_index],2))
+            edge_list = [x for x in edge_list if x]
+            OG.add_edges_from(edge_list)
+
+            #for each leading object extract the case
+            leading_type = "order"# self.object_types[0] # leading_type
+            for node in OG.nodes:
+                case = []
+                if node[0] != leading_type:
+                    continue
+                relevant_objects = []
+                ot_mapping = {}
+                o_mapping = {}
+                next_level_objects = OG.neighbors(node)
+                #relevant_objects += next_level_objects
+                for level in range(1,len(self.object_types)):
+                    to_be_next_level = []
+                    for (ot,o) in next_level_objects:
+                        if ot not in ot_mapping.keys():
+                            ot_mapping[ot] = level
+                        else:
+                            if ot_mapping[ot] != level:
+                                continue
+                        relevant_objects.append((ot,o))
+                        o_mapping[(ot,o)] = level
+                        to_be_next_level+=OG.neighbors((ot,o))
+                    next_level_objects = to_be_next_level
+
+                relevant_objects = set(relevant_objects)
+                #add all leading events, and all events where only relevant objects are included
+                events_to_add = ocel[ocel["event_objects"].apply(lambda x: bool(x & set([node])))]["event_id"].values
+
+                case += list(events_to_add)
+                full_rel_events = ocel[ocel["event_objects"].apply(lambda x: bool(x & relevant_objects))]["event_id"].values
+                case += list(full_rel_events)
+                case = list(set(case))
+
+                cases.append(case)
+
+            ocel.drop('event_objects', axis=1, inplace=True)
+            return cases
 
     def _project_subgraph_on_activity(self, v_g,mapping_objects,mapping_activity):
         for node in v_g.nodes():
@@ -215,7 +270,7 @@ class OCEL():
             for e in events:
                 variant_event_map[e] = v_id
         self.log["event_variant"] = self.log["event_id"].map(variant_event_map)
-        self.log["event_variant"] = self.log["event_variant"].astype(int)
+        #self.log["event_variant"] = self.log["event_variant"].astype(int)
         #for i in range(0, 10):
         #    print("Class number " + str(i + 1) + " with frequency " + str(v_freq_list[i]))
         self.log.drop('event_objects', axis=1, inplace=True)

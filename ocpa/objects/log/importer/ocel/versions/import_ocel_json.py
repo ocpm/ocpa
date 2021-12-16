@@ -68,7 +68,8 @@ def apply(file_path, parameters=None):
                 if k2 == start_time_col:
                     continue
                 el["event_" + k2] = el[prefix + "vmap"][k2]
-            el["event_" + start_time_col] = el[prefix + start_time_col]
+            if start_time_col:
+                el["event_" + start_time_col] = el[prefix + start_time_col]
             del el[prefix + "vmap"]
             for k2 in el[prefix + "omap"]:
                 el[k2] = el[prefix + "omap"][k2]
@@ -76,8 +77,8 @@ def apply(file_path, parameters=None):
 
         eve_df = pd.DataFrame(eve_stream)
         obj_df = pd.DataFrame(obj_stream)
-
-        eve_df.type = "succint"
+        eve_df["event_id"] = eve_df["event_id"].astype(float).astype(int)
+        #eve_df.type = "succint"
 
         if return_obj_df or (return_obj_df is None and len(obj_df.columns) > 1):
             return eve_df, obj_df
