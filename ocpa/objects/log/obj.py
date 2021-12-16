@@ -185,6 +185,7 @@ class OCEL():
             object_index = list(ocel.columns.values).index("event_objects")
             edge_list = []
             cases = []
+            obs = []
             # build object graph
             arr = ocel.to_numpy()
             for i in range(0,len(arr)):
@@ -226,6 +227,7 @@ class OCEL():
                 case = list(set(case))
 
                 cases.append(case)
+                obs.append([node]+relevant_objects)
 
             ocel.drop('event_objects', axis=1, inplace=True)
             return cases
@@ -268,7 +270,9 @@ class OCEL():
             cases = [self.cases[c_id] for c_id in variants_dict[v]]
             events = set().union(*cases)
             for e in events:
-                variant_event_map[e] = v_id
+                if e not in variant_event_map.keys():
+                    variant_event_map[e] = []
+                variant_event_map[e] += [v_id]
         self.log["event_variant"] = self.log["event_id"].map(variant_event_map)
         #self.log["event_variant"] = self.log["event_variant"].astype(int)
         #for i in range(0, 10):
