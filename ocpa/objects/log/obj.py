@@ -75,10 +75,12 @@ class ObjectCentricEventLog:
 
 
 class OCEL():
-    def __init__(self, log, object_types=None, precalc=False):
+    def __init__(self, log, object_types=None, precalc=False, execution_extraction = "leading", leading_object_type = "order"):
         self._log = log
         self._log["event_index"] = self._log["event_id"]
         self._log = self._log.set_index("event_index")
+        self._execution_extraction = execution_extraction
+        self._leading_type = leading_object_type
         if object_types != None:
             self._object_types = object_types
         else:
@@ -89,14 +91,16 @@ class OCEL():
         #self._log = self._log[self._log.apply(lambda x: any([len(x[ot]) > 0 for ot in self._object_types]))]
         if precalc:
             self._eog = self.eog_from_log()
-            self._cases = self.calculate_cases()
-            self._variants, self._variant_frequency, self._variant_graphs = self.calculate_variants()
+            self._cases, self._case_objects = self.calculate_cases()
+            self._variants, self._variant_frequency, self._variant_graphs, self._variants_dict = self.calculate_variants()
         else:
             self._eog = None
             self._cases = None
+            self._case_objects = None
             self._variants = None
             self._variant_graphs = None
             self._variant_frequency = None
+            self._variants_dict = None
 
 
     def _get_log(self):
@@ -110,25 +114,29 @@ class OCEL():
             self._eog = self.eog_from_log()
         return self._eog
 
+    def _get_case_objects(self):
+        if self._case_objects == None:
+            self._cases, self._case_objects = self.calculate_cases()
+        return self._case_objects
 
     def _get_cases(self):
         if self._cases == None:
-            self._cases = self.calculate_cases()
+            self._cases, self._case_objects = self.calculate_cases()
         return self._cases
 
     def _get_variants(self):
         if self._variants == None:
-            self._variants, self._variant_frequency, self._variant_graphs = self.calculate_variants()
+            self._variants, self._variant_frequency, self._variant_graphs, self._variants_dict = self.calculate_variants()
         return self._variants
 
     def _get_variant_frequency(self):
         if self._variant_frequency == None:
-            self._variants, self._variant_frequency, self._variant_graphs = self.calculate_variants()
+            self._variants, self._variant_frequency, self._variant_graphs, self._variants_dict = self.calculate_variants()
         return self._variant_frequency
 
     def _get_variant_graphs(self):
         if self._variant_graphs == None:
-            self._variants, self._variant_frequency, self._variant_graphs = self.calculate_variants()
+            self._variants, self._variant_frequency, self._variant_graphs, self._variants_dict = self.calculate_variants()
         return self._variant_graphs
 
 
@@ -138,15 +146,21 @@ class OCEL():
     def _set_object_types(self, object_types):
         self.object_types = object_types
 
+    def _get_variants_dict(self):
+        if self._variants_dict == None:
+            self._variants, self._variant_frequency, self._variant_graphs, self._variants_dict = self.calculate_variants()
+        return self._variants_dict
 
 
     log = property(_get_log, _set_log)
     object_types = property(_get_object_types, _set_object_types)
     eog = property(_get_eog)
     cases = property(_get_cases)
+    case_objects = property(_get_case_objects)
     variants = property(_get_variants)
     variant_frequency = property(_get_variant_frequency)
     variant_graphs = property(_get_variant_graphs)
+    variants_dict = property(_get_variants_dict)
 
 
     def eog_from_log(self):
@@ -170,12 +184,20 @@ class OCEL():
         EOG.add_edges_from(edge_list)
         return EOG
 
-    def calculate_cases(self, technique = "leading", leading_type = None):
-        if technique == "weakly":
+    def calculate_cases(self):
+        if self._execution_extraction == "weakly":
             # Add the possibility to remove edges
             cases = sorted(nx.weakly_connected_components(self.eog), key=len , reverse=True)
-            return cases
-        elif technique == "leading":
+            obs = []
+            for case in cases:
+                case_obs= []
+                for event in case:
+                    for ot in self.object_types:
+                        for o in self.log.loc[event][ot]:
+                            case_obs +=[(ot,o)]
+                obs.append(case_obs)
+            return cases, obs
+        elif self._execution_extraction == "leading":
             ocel = self.log.copy()
             ocel["event_objects"] = ocel.apply(lambda x: set([(ot, o) for ot in self.object_types for o in x[ot]]),
                                                        axis=1)
@@ -194,7 +216,7 @@ class OCEL():
             OG.add_edges_from(edge_list)
 
             #for each leading object extract the case
-            leading_type = "order"# self.object_types[0] # leading_type
+            leading_type = self._leading_type# self.object_types[0] # leading_type
             for node in OG.nodes:
                 case = []
                 if node[0] != leading_type:
@@ -227,10 +249,10 @@ class OCEL():
                 case = list(set(case))
 
                 cases.append(case)
-                obs.append([node]+relevant_objects)
+                obs.append([node]+list(relevant_objects))
 
             ocel.drop('event_objects', axis=1, inplace=True)
-            return cases
+            return cases, obs
 
     def _project_subgraph_on_activity(self, v_g,mapping_objects,mapping_activity):
         for node in v_g.nodes():
@@ -258,7 +280,7 @@ class OCEL():
             variant_string = variant
             if variant_string not in variants_dict:
                 variants_dict[variant_string] = []
-                variant_graphs[variant_string] = case  # EOG.subgraph(v_g)#case
+                variant_graphs[variant_string] = (case, self.case_objects[case_id])  # EOG.subgraph(v_g)#case
             variants_dict[variant_string].append(case_id)
             case_id += 1
         variant_frequencies = {v: len(variants_dict[v]) / len(self.cases) for v in variants_dict.keys()}
@@ -278,5 +300,23 @@ class OCEL():
         #for i in range(0, 10):
         #    print("Class number " + str(i + 1) + " with frequency " + str(v_freq_list[i]))
         self.log.drop('event_objects', axis=1, inplace=True)
-        return variants, v_freq_list, variant_graphs
+        return variants, v_freq_list, variant_graphs, variants_dict
+
+    def get_objects_of_variants(self, variants):
+        obs = {}
+        for ot in self.object_types:
+            obs[ot] = set()
+        for v_id in variants:
+            for case_id in self.variants_dict[self.variants[v_id]]:
+                for ob in self.case_objects[case_id]:
+                    obs[ob[0]].add(ob[1])
+
+        return obs
+
+    def remove_object_references(self, to_keep):
+        #this is in place!
+        for ot in self.object_types:
+            self.log[ot] = self.log[ot].apply(lambda x: list(set(x) & to_keep[ot]))
+
+
 

@@ -12,6 +12,11 @@ def filter_infrequent_traces(ocel, threshold):
             last_filtered_variant = i
 
             break
+    #get the relevant objects
+    rel_obs = ocel.get_objects_of_variants(filtered_variants)
     sublog = ocel.log[ocel.log["event_variant"].apply(lambda x: bool( set(x) & set(filtered_variants)))].copy()
     #sublog = ocel.log[ocel.log["event_variant"]<= last_filtered_variant].copy()
-    return OCEL(sublog, object_types=ocel.object_types)
+    new_log = OCEL(sublog, object_types=ocel.object_types)
+    #remove all object references of irrelevant objects
+    new_log.remove_object_references(rel_obs)
+    return new_log

@@ -37,11 +37,13 @@ def event_to_y(graph, event, y_mappings, ocel):
         for o in ocel.log.loc[event][ot_]:
             o = "(" + ot + ", '" + o + "')"
             objects += [o]
-    return [y_mappings[o] for o in set(objects)]
+    return [y_mappings[o] for o in set(objects) if o in y_mappings.keys()]
 
-def graph_to_2d(ocel,graph,mapping_activity):
+def graph_to_2d(ocel,graph_obj,mapping_activity):
+    print("find obs")
     all_obs = {}
-
+    graph = graph_obj[0]
+    relevant_obs = graph_obj[1]
     for event in graph.nodes:
         in_edges = graph.in_edges(event)
         out_edges = graph.out_edges(event)
@@ -74,7 +76,22 @@ def graph_to_2d(ocel,graph,mapping_activity):
     y_mappings = {}
     lane_info = {}
     y = 0
-
+    print("rmeove irrel obs")
+    rel_obs_dict = {}
+    for ob in relevant_obs:
+        ot_string = "'" + ob[0] + "'"
+        ob_string = "("+ot_string+", '"+ob[1]+"')"
+        if ot_string not in rel_obs_dict.keys():
+            rel_obs_dict[ot_string] = []
+        rel_obs_dict[ot_string].append(ob_string)
+    #intersection between relevant objects and all
+    for ot in all_obs.keys():
+        to_remove = []
+        for o in all_obs[ot]:
+            if o not in rel_obs_dict[ot]:
+                to_remove.append(o)
+        all_obs[ot] = [e for e in all_obs[ot] if e not in to_remove]
+    print("create mappings")
     for ot in sorted(list(all_obs.keys())):
         ot_o = 1
         for o in all_obs[ot]:
@@ -84,6 +101,7 @@ def graph_to_2d(ocel,graph,mapping_activity):
             ot_o += 1
     coords = {}
     coords_tmp = {}
+    print("calc x and y coords")
     for event in graph.nodes:
         x_start = event_to_x(graph, event)
         y = event_to_y(graph,event, y_mappings, ocel)
@@ -103,6 +121,10 @@ def graph_to_2d(ocel,graph,mapping_activity):
 def apply(obj, parameters=None):
     variant_layouting = {}
     mapping_activity = dict(zip(obj.log["event_id"], obj.log["event_activity"]))
+    c= 0
     for v,v_graph in obj.variant_graphs.items():
+        print("Next "+str(c))
+        c+=1
+        #print(len(list(v_graph.nodes)))
         variant_layouting[v] = graph_to_2d(obj,v_graph,mapping_activity)
     return variant_layouting
