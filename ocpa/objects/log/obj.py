@@ -89,7 +89,7 @@ class OCEL():
 
             self._object_types = [c for c in self._log.columns if not c.startswith("event_")]
         #clean empty events
-        self._log = self._log[self._log[self._object_types].astype(bool).any(axis=1)]
+        self.clean_empty_events()
         #self._log = self._log[self._log.apply(lambda x: any([len(x[ot]) > 0 for ot in self._object_types]))]
         if precalc:
             self._eog = self.eog_from_log()
@@ -320,6 +320,10 @@ class OCEL():
         #this is in place!
         for ot in self.object_types:
             self.log[ot] = self.log[ot].apply(lambda x: list(set(x) & to_keep[ot]))
+        self.clean_empty_events()
+
+    def clean_empty_events(self):
+        self._log = self._log[self._log[self._object_types].astype(bool).any(axis=1)]
 
 
 
