@@ -15,4 +15,4 @@ def filter_infrequent_activities(ocel, threshold):
 
     filtered_activities = activities[:last_filtered_activity+1]#[activities[i] for i in range(0,len(activities)) if threshold  >= freq_acc[i] ]
     sublog = ocel.log[ocel.log["event_activity"].isin(filtered_activities)].copy()
-    return OCEL(sublog, object_types=ocel.object_types)
+    return OCEL(sublog, object_types=ocel.object_types, execution_extraction=ocel._execution_extraction, leading_object_type=ocel._leading_type)

@@ -81,6 +81,8 @@ class OCEL():
         self._log = self._log.set_index("event_index")
         self._execution_extraction = execution_extraction
         self._leading_type = leading_object_type
+        print(self._execution_extraction)
+        print(self._leading_type)
         if object_types != None:
             self._object_types = object_types
         else:
@@ -224,6 +226,7 @@ class OCEL():
                 relevant_objects = []
                 ot_mapping = {}
                 o_mapping = {}
+                ot_mapping[leading_type] = 0
                 next_level_objects = OG.neighbors(node)
                 #relevant_objects += next_level_objects
                 for level in range(1,len(self.object_types)):
