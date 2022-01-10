@@ -40,7 +40,6 @@ def event_to_y(graph, event, y_mappings, ocel):
     return [y_mappings[o] for o in set(objects) if o in y_mappings.keys()]
 
 def graph_to_2d(ocel,graph_obj,mapping_activity):
-    print("find obs")
     all_obs = {}
     graph = graph_obj[0]
     relevant_obs = graph_obj[1]
@@ -76,7 +75,7 @@ def graph_to_2d(ocel,graph_obj,mapping_activity):
     y_mappings = {}
     lane_info = {}
     y = 0
-    print("rmeove irrel obs")
+
     rel_obs_dict = {}
     for ob in relevant_obs:
         ot_string = "'" + ob[0] + "'"
@@ -91,7 +90,6 @@ def graph_to_2d(ocel,graph_obj,mapping_activity):
             if o not in rel_obs_dict[ot]:
                 to_remove.append(o)
         all_obs[ot] = [e for e in all_obs[ot] if e not in to_remove]
-    print("create mappings")
     for ot in sorted(list(all_obs.keys())):
         ot_o = 1
         for o in all_obs[ot]:
@@ -101,7 +99,6 @@ def graph_to_2d(ocel,graph_obj,mapping_activity):
             ot_o += 1
     coords = {}
     coords_tmp = {}
-    print("calc x and y coords")
     for event in graph.nodes:
         x_start = event_to_x(graph, event)
         y = event_to_y(graph,event, y_mappings, ocel)
@@ -123,7 +120,7 @@ def apply(obj, parameters=None):
     mapping_activity = dict(zip(obj.log["event_id"], obj.log["event_activity"]))
     c= 0
     for v,v_graph in obj.variant_graphs.items():
-        print("Next "+str(c))
+        #print("Next "+str(c))
         c+=1
         #print(len(list(v_graph.nodes)))
         variant_layouting[v] = graph_to_2d(obj,v_graph,mapping_activity)

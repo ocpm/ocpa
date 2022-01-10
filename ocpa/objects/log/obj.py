@@ -1,3 +1,4 @@
+import time
 from dataclasses import dataclass, field
 from typing import List, Dict, Set, Any, Optional, Union, Tuple
 from datetime import datetime
@@ -75,7 +76,7 @@ class ObjectCentricEventLog:
 
 
 class OCEL():
-    def __init__(self, log, object_types=None, precalc=False, execution_extraction = "leading", leading_object_type = "order"):
+    def __init__(self, log, object_types=None, precalc=False, execution_extraction = "weakly", leading_object_type = "order"):
         self._log = log
         self._log["event_index"] = self._log["event_id"]
         self._log = self._log.set_index("event_index")
@@ -188,16 +189,21 @@ class OCEL():
 
     def calculate_cases(self):
         if self._execution_extraction == "weakly":
+            ocel = self.log.copy()
+            ocel["event_objects"] = ocel.apply(lambda x: set([(ot, o) for ot in self.object_types for o in x[ot]]),
+                                               axis=1)
             # Add the possibility to remove edges
             cases = sorted(nx.weakly_connected_components(self.eog), key=len , reverse=True)
             obs = []
+            mapping_objects = dict(zip(ocel["event_id"], ocel["event_objects"]))
+            object_index = list(ocel.columns.values).index("event_objects")
             for case in cases:
                 case_obs= []
                 for event in case:
-                    for ot in self.object_types:
-                        for o in self.log.loc[event][ot]:
-                            case_obs +=[(ot,o)]
+                    for ob in mapping_objects[event]:
+                        case_obs += [ob]
                 obs.append(case_obs)
+            ocel.drop('event_objects', axis=1, inplace=True)
             return cases, obs
         elif self._execution_extraction == "leading":
             ocel = self.log.copy()
@@ -269,23 +275,63 @@ class OCEL():
         return v_g
 
     def calculate_variants(self):
+
         variants = None
         self.log["event_objects"] = self.log.apply(lambda x: [(ot, o) for ot in self.object_types for o in x[ot]], axis=1)
         variants_dict = dict()
+        variants_graph_dict = dict()
         variant_graphs = dict()
         case_id = 0
         mapping_activity = dict(zip(self.log["event_id"], self.log["event_activity"]))
         mapping_objects = dict(zip(self.log["event_id"], self.log["event_objects"]))
+        start_time = time.time()
         for v_g in self.cases:
+
             case = self._project_subgraph_on_activity(self.eog.subgraph(v_g),mapping_objects,mapping_activity)
             variant = nx.weisfeiler_lehman_graph_hash(case, node_attr="label",
                                                       edge_attr="type")
             variant_string = variant
             if variant_string not in variants_dict:
                 variants_dict[variant_string] = []
+                variants_graph_dict[variant_string] = []
                 variant_graphs[variant_string] = (case, self.case_objects[case_id])  # EOG.subgraph(v_g)#case
             variants_dict[variant_string].append(case_id)
+            variants_graph_dict[variant_string].append(case)
             case_id += 1
+        print("Before refining")
+        print(len(variants_dict.keys()))
+        print("time taken for first step")
+        print(time.time()-start_time)
+        start_time = time.time()
+        #refine the classes
+        for _class in variants_graph_dict.keys():
+            subclass_counter = 0
+            subclass_mappings = {}
+
+            for j in range(0,len(variants_graph_dict[_class])):
+                exec = variants_graph_dict[_class][j]
+                case_id = variants_dict[_class][j]
+                found = False
+                for i in range(1,subclass_counter+1):
+                    if nx.is_isomorphic(exec,subclass_mappings[i][0][0]):
+                        subclass_mappings[subclass_counter].append((exec,case_id))
+                        found = True
+                        break
+                if found:
+                    continue
+                subclass_counter +=1
+                subclass_mappings[subclass_counter] = [(exec,case_id)]
+            for ind in subclass_mappings.keys():
+                variants_dict[_class+str(ind)] = [case_id for (exec, case_id) in subclass_mappings[ind]]
+                (exec, case_id) = subclass_mappings[ind][0]
+                variant_graphs[_class+str(ind)] = (exec, self.case_objects[case_id])
+            del variants_dict[_class]
+            del variant_graphs[_class]
+        print("After refining")
+        print(len(variants_dict.keys()))
+        print("time taken for second step")
+        print(time.time() - start_time)
+
         variant_frequencies = {v: len(variants_dict[v]) / len(self.cases) for v in variants_dict.keys()}
         variants, v_freq_list = map(list,
                                     zip(*sorted(list(variant_frequencies.items()), key=lambda x: x[1], reverse=True)))
