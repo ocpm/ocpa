@@ -35,7 +35,7 @@ filename = "BPI2017.csv"
 ots = ["application", "offer"]
 
 
-event_df = pd.read_csv(filename, sep=',')#[:00000]
+event_df = pd.read_csv(filename, sep=',')[:50000]
 print(event_df)
 for ot in ots:
     event_df[ot] = event_df[ot].map(
