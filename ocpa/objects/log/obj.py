@@ -66,12 +66,12 @@ class MetaObjectCentricData:
     act_attr: Dict[str, List[str]]  # allowed attr per act
     # act_obj: Dict[str, List[str]]  # allowed ot per act
 
-    acts: Set[str] = field(init=False)  # TODO: change to list for json
+    # acts: Set[str] = field(init=False)  # TODO: change to list for json
     # Used for OCEL json data to simplify UI on homepage
     attr_events: List[str] = field(default_factory=lambda: [])
 
-    def __post_init__(self):
-        self.acts = {act for act in self.act_attr}
+    # def __post_init__(self):
+    #     self.acts = {act for act in self.act_attr}
 
 
 @dataclass

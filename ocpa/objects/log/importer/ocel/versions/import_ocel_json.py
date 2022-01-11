@@ -5,7 +5,7 @@ import pandas as pd
 from datetime import datetime
 from collections import OrderedDict
 
-from ocpa.objects.log.importer.ocel.parameters import JsonParseParameters
+from ocpa.objects.log.util.param import JsonParseParameters
 from ocpa.objects.log.obj import Event, Obj, ObjectCentricEventLog, MetaObjectCentricData, RawObjectCentricData
 
 
@@ -142,7 +142,8 @@ def parse_events(data: Dict[str, Any], cfg: JsonParseParameters) -> Dict[str, Ev
         if "start_time" not in item[1][vmap_name]:
             events[item[0]].vmap["start_time"] = None
         else:
-            events[item[0]].vmap["start_time"] = datetime.fromisoformat(events[item[0]].vmap["start_time"])
+            events[item[0]].vmap["start_time"] = datetime.fromisoformat(
+                events[item[0]].vmap["start_time"])
     sorted_events = sorted(events.items(), key=lambda kv: kv[1].time)
     return OrderedDict(sorted_events)
 
