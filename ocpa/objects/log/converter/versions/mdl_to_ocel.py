@@ -4,11 +4,7 @@ from pandas import to_datetime
 from datetime import datetime
 import itertools
 
-<<<<<<< HEAD
-from ocpa.objects.log.importer.ocel.parameters import JsonParseParameters
-=======
 from ocpa.objects.log.util.param import JsonParseParameters
->>>>>>> ocpn-functions
 from ocpa.objects.log.obj import Event, Obj, ObjectCentricEventLog, MetaObjectCentricData, RawObjectCentricData
 
 import math
