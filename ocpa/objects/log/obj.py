@@ -4,6 +4,9 @@ from typing import List, Dict, Set, Any, Optional, Union, Tuple
 from datetime import datetime
 import networkx as nx
 import itertools
+
+import numpy as np
+
 from ocpa.objects.log.util.param import CsvParseParameters, JsonParseParameters
 
 
@@ -210,18 +213,34 @@ class OCEL():
             ocel["event_objects"] = ocel.apply(lambda x: set([(ot, o) for ot in self.object_types for o in x[ot]]),
                                                        axis=1)
             OG = nx.Graph()
+            b = time.time()
             OG.add_nodes_from(ocel["event_objects"].explode("event_objects").to_list())
+            print("eploding took "+str(time.time()-b))
             #ot_index = {ot: list(ocel.values).index(ot) for ot in self.object_types}
             object_index = list(ocel.columns.values).index("event_objects")
+            id_index = list(ocel.columns.values).index("event_id")
             edge_list = []
             cases = []
             obs = []
             # build object graph
+            b = time.time()
             arr = ocel.to_numpy()
             for i in range(0,len(arr)):
                 edge_list+=list(itertools.combinations(arr[i][object_index],2))
             edge_list = [x for x in edge_list if x]
             OG.add_edges_from(edge_list)
+            print("edge adding took " + str(time.time() - b))
+            ocel_act = 0
+            ob_comp = 0
+            ##construct a mapping for each object
+            object_event_mapping = {}
+            for i in range(0, len(arr)):
+                for ob in arr[i][object_index]:
+                    if ob not in object_event_mapping.keys():
+                        object_event_mapping[ob]=[]
+                    object_event_mapping[ob].append(arr[i][id_index])
+
+
 
             #for each leading object extract the case
             leading_type = self._leading_type# self.object_types[0] # leading_type
@@ -250,22 +269,49 @@ class OCEL():
 
                 relevant_objects = set(relevant_objects)
                 #add all leading events, and all events where only relevant objects are included
-                events_to_add = ocel[ocel["event_objects"].apply(lambda x: bool(x & set([node])))]["event_id"].values
+                b=time.time()
+                obs_case = relevant_objects.union(set([node]))
+                if True:
+                    events_to_add = []
+                    for ob in obs_case:
+                        events_to_add += object_event_mapping[ob]
+                    events_to_add = list(set(events_to_add))
+                    case = events_to_add
+                    cases.append(case)
+                    obs.append(obs_case)
+                    ocel_act += time.time() - b
+                if False:
+                    events_to_add = []
+                    for i in range(0,len(arr)):
+                        c = time.time()
+                        if bool(arr[i][object_index] & obs_case):
+                            events_to_add += [arr[i][id_index]]
+                        ob_comp += time.time() - c
+                    case = events_to_add
+                    cases.append(case)
+                    obs.append(obs_case)
+                    ocel_act += time.time() - b
+                if False:
+                    events_to_add = ocel[ocel["event_objects"].apply(lambda x: bool(x & set([node])))]["event_id"].values
 
-                case += list(events_to_add)
-                full_rel_events = ocel[ocel["event_objects"].apply(lambda x: bool(x & relevant_objects))]["event_id"].values
-                case += list(full_rel_events)
-                case = list(set(case))
+                    case += list(events_to_add)
+                    full_rel_events = ocel[ocel["event_objects"].apply(lambda x: bool(x & relevant_objects))]["event_id"].values
+                    ocel_act += time.time() -b
+                    case += list(full_rel_events)
+                    case = list(set(case))
 
-                cases.append(case)
-                obs.append([node]+list(relevant_objects))
+                    cases.append(case)
+                    obs.append([node]+list(relevant_objects))
 
+            print("ocel activitities took "+str(ocel_act))
+            print("comparing took " + str(ob_comp))
             ocel.drop('event_objects', axis=1, inplace=True)
             return cases, obs
 
     def _project_subgraph_on_activity(self, v_g,mapping_objects,mapping_activity):
         for node in v_g.nodes():
-            v_g.nodes[node]['label'] = mapping_activity[node]
+            v_g.nodes[node]['label'] = mapping_activity[node] + ": ".join(
+                [e[0] for e in sorted(list(set(mapping_objects[node])))])
         for edge in v_g.edges():
             source, target = edge
             v_g.edges[edge]['type'] = ": ".join(
@@ -274,7 +320,7 @@ class OCEL():
                 [str(e) for e in sorted(list(set(mapping_objects[source]).intersection(set(mapping_objects[target]))))])
         return v_g
 
-    def calculate_variants_complex(self):
+    def calculate_variants(self):
 
         variants = None
         self.log["event_objects"] = self.log.apply(lambda x: [(ot, o) for ot in self.object_types for o in x[ot]], axis=1)
@@ -288,7 +334,7 @@ class OCEL():
         for v_g in self.cases:
 
             case = self._project_subgraph_on_activity(self.eog.subgraph(v_g),mapping_objects,mapping_activity)
-            variant = nx.weisfeiler_lehman_graph_hash(case, iterations=3, digest_size=32, node_attr="label",
+            variant = nx.weisfeiler_lehman_graph_hash(case, node_attr="label",
                                                       edge_attr="type")
             variant_string = variant
             if variant_string not in variants_dict:
@@ -313,7 +359,7 @@ class OCEL():
                 case_id = variants_dict[_class][j]
                 found = False
                 for i in range(1,subclass_counter+1):
-                    if nx.is_isomorphic(exec,subclass_mappings[i][0][0]):
+                    if nx.is_isomorphic(exec,subclass_mappings[i][0][0], node_match = lambda x,y: x['label'] == y['label'], edge_match = lambda x,y: x['type'] == y['type']):
                         subclass_mappings[subclass_counter].append((exec,case_id))
                         found = True
                         break
@@ -350,7 +396,7 @@ class OCEL():
         #    print("Class number " + str(i + 1) + " with frequency " + str(v_freq_list[i]))
         self.log.drop('event_objects', axis=1, inplace=True)
         return variants, v_freq_list, variant_graphs, variants_dict
-    def calculate_variants(self):
+    def calculate_variants_naive(self):
 
         variants = None
         self.log["event_objects"] = self.log.apply(lambda x: [(ot, o) for ot in self.object_types for o in x[ot]],
