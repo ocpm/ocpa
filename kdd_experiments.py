@@ -78,23 +78,51 @@ for i in range(0,len(datasets)):
         for technique, t in execution_extraction_parameters:
             s_time = time.time()
             print(technique +" "+ t)
-            ocel = OCEL(event_df[:1000000], ts, execution_extraction=technique,leading_object_type=t)
+            ocel = OCEL(event_df, ts, execution_extraction=technique,leading_object_type=t)
             print("Number of cases: "+str(len(ocel.cases)))
             sum_lengths = 0
             max_length = 0
             min_length = 10000000
-            for exec in ocel.cases:
+            sum_obs = 0
+            max_obs = 0
+            min_obs = 10000000
+            for i in range(0,len(ocel.cases)):
+                exec = ocel.cases[i]
                 num_events = len(exec)
                 if num_events  > max_length:
                     max_length = num_events
                 if min_length  > num_events:
                     min_length = num_events
                 sum_lengths += num_events
+                case_obs = ocel.case_objects[i]
+                num_obs = len(case_obs)
+                if num_obs > max_obs:
+                    max_obs = num_obs
+                if min_obs > num_obs:
+                    min_obs = num_obs
+                sum_obs += num_obs
             avg_length = sum_lengths/len(ocel.cases)
+            avg_obs = sum_obs/ len(ocel.cases)
             print("Max length: "+str(max_length))
             print("Min length: " + str(min_length))
             print("Avg length: " + str(avg_length))
+            print("Max objects: " + str(max_obs))
+            print("Min objects: " + str(min_obs))
+            print("Avg objects: " + str(avg_obs))
             print("Took: "+str(time.time()-s_time))
+            #get execution times
+            print(technique + " " + t)
+            for t_dev in range(1,10):
+                log_size = int(len(event_df)/10*t_dev)
+                print("___________")
+                print("For size" +str(log_size))
+                s_time = time.time()
+                ocel = OCEL(event_df[:log_size], ts, execution_extraction=technique, leading_object_type=t)
+                print("Number of cases: " + str(len(ocel.cases)))
+                print("Took: " + str(time.time() - s_time))
+                #print("Number of cases: " + str(len(ocel.cases)))
+
+
 #Running times of extraction for different subsizes of each log and for different extraction techniques
 
 

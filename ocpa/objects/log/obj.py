@@ -85,8 +85,6 @@ class OCEL():
         self._log = self._log.set_index("event_index")
         self._execution_extraction = execution_extraction
         self._leading_type = leading_object_type
-        print(self._execution_extraction)
-        print(self._leading_type)
         if object_types != None:
             self._object_types = object_types
         else:
@@ -205,7 +203,7 @@ class OCEL():
                 for event in case:
                     for ob in mapping_objects[event]:
                         case_obs += [ob]
-                obs.append(case_obs)
+                obs.append(list(set(case_obs)))
             ocel.drop('event_objects', axis=1, inplace=True)
             return cases, obs
         elif self._execution_extraction == "leading":
@@ -213,9 +211,7 @@ class OCEL():
             ocel["event_objects"] = ocel.apply(lambda x: set([(ot, o) for ot in self.object_types for o in x[ot]]),
                                                        axis=1)
             OG = nx.Graph()
-            b = time.time()
             OG.add_nodes_from(ocel["event_objects"].explode("event_objects").to_list())
-            print("eploding took "+str(time.time()-b))
             #ot_index = {ot: list(ocel.values).index(ot) for ot in self.object_types}
             object_index = list(ocel.columns.values).index("event_objects")
             id_index = list(ocel.columns.values).index("event_id")
@@ -223,15 +219,11 @@ class OCEL():
             cases = []
             obs = []
             # build object graph
-            b = time.time()
             arr = ocel.to_numpy()
             for i in range(0,len(arr)):
                 edge_list+=list(itertools.combinations(arr[i][object_index],2))
             edge_list = [x for x in edge_list if x]
             OG.add_edges_from(edge_list)
-            print("edge adding took " + str(time.time() - b))
-            ocel_act = 0
-            ob_comp = 0
             ##construct a mapping for each object
             object_event_mapping = {}
             for i in range(0, len(arr)):
@@ -239,8 +231,6 @@ class OCEL():
                     if ob not in object_event_mapping.keys():
                         object_event_mapping[ob]=[]
                     object_event_mapping[ob].append(arr[i][id_index])
-
-
 
             #for each leading object extract the case
             leading_type = self._leading_type# self.object_types[0] # leading_type
@@ -269,42 +259,14 @@ class OCEL():
 
                 relevant_objects = set(relevant_objects)
                 #add all leading events, and all events where only relevant objects are included
-                b=time.time()
                 obs_case = relevant_objects.union(set([node]))
-                if True:
-                    events_to_add = []
-                    for ob in obs_case:
-                        events_to_add += object_event_mapping[ob]
-                    events_to_add = list(set(events_to_add))
-                    case = events_to_add
-                    cases.append(case)
-                    obs.append(obs_case)
-                    ocel_act += time.time() - b
-                if False:
-                    events_to_add = []
-                    for i in range(0,len(arr)):
-                        c = time.time()
-                        if bool(arr[i][object_index] & obs_case):
-                            events_to_add += [arr[i][id_index]]
-                        ob_comp += time.time() - c
-                    case = events_to_add
-                    cases.append(case)
-                    obs.append(obs_case)
-                    ocel_act += time.time() - b
-                if False:
-                    events_to_add = ocel[ocel["event_objects"].apply(lambda x: bool(x & set([node])))]["event_id"].values
-
-                    case += list(events_to_add)
-                    full_rel_events = ocel[ocel["event_objects"].apply(lambda x: bool(x & relevant_objects))]["event_id"].values
-                    ocel_act += time.time() -b
-                    case += list(full_rel_events)
-                    case = list(set(case))
-
-                    cases.append(case)
-                    obs.append([node]+list(relevant_objects))
-
-            print("ocel activitities took "+str(ocel_act))
-            print("comparing took " + str(ob_comp))
+                events_to_add = []
+                for ob in obs_case:
+                    events_to_add += object_event_mapping[ob]
+                events_to_add = list(set(events_to_add))
+                case = events_to_add
+                cases.append(case)
+                obs.append(list(obs_case))
             ocel.drop('event_objects', axis=1, inplace=True)
             return cases, obs
 
