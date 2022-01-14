@@ -79,12 +79,13 @@ class ObjectCentricEventLog:
 
 
 class OCEL():
-    def __init__(self, log, object_types=None, precalc=False, execution_extraction = "weakly", leading_object_type = "order"):
+    def __init__(self, log, object_types=None, precalc=False, execution_extraction = "weakly", leading_object_type = "order", variant_extraction = "complex"):
         self._log = log
         self._log["event_index"] = self._log["event_id"]
         self._log = self._log.set_index("event_index")
         self._execution_extraction = execution_extraction
         self._leading_type = leading_object_type
+        self._variant_extraction = variant_extraction
         if object_types != None:
             self._object_types = object_types
         else:
@@ -281,8 +282,13 @@ class OCEL():
             v_g.edges[edge]['label'] = ": ".join(
                 [str(e) for e in sorted(list(set(mapping_objects[source]).intersection(set(mapping_objects[target]))))])
         return v_g
-
     def calculate_variants(self):
+        if self._variant_extraction == "complex":
+            return self.calculate_variants_complex()
+        else:
+            return self.calculate_variants_naive()
+
+    def calculate_variants_complex(self):
 
         variants = None
         self.log["event_objects"] = self.log.apply(lambda x: [(ot, o) for ot in self.object_types for o in x[ot]], axis=1)
