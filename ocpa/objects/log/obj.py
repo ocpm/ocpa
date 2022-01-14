@@ -312,10 +312,8 @@ class OCEL():
             variants_dict[variant_string].append(case_id)
             variants_graph_dict[variant_string].append(case)
             case_id += 1
-        print("Before refining")
-        print(len(variants_dict.keys()))
-        print("time taken for first step")
-        print(time.time()-start_time)
+        print("Before refining: "+str(len(variants_dict.keys()))+" equivalence classes")
+        print("Time taken for first step "+str(time.time()-start_time))
         start_time = time.time()
         #refine the classes
         for _class in variants_graph_dict.keys():
@@ -341,10 +339,8 @@ class OCEL():
                 variant_graphs[_class+str(ind)] = (exec, self.case_objects[case_id])
             del variants_dict[_class]
             del variant_graphs[_class]
-        print("After refining")
-        print(len(variants_dict.keys()))
-        print("time taken for second step")
-        print(time.time() - start_time)
+        print("After refining: "+str(len(variants_dict.keys()))+" equivalence classes")
+        print("Time taken for second step: "+str(time.time() - start_time))
 
         variant_frequencies = {v: len(variants_dict[v]) / len(self.cases) for v in variants_dict.keys()}
         variants, v_freq_list = map(list,
@@ -388,10 +384,8 @@ class OCEL():
             variants_dict[variant_string].append(case_id)
             variants_graph_dict[variant_string].append(case)
             case_id += 1
-        print("Before refining")
-        print(len(variants_dict.keys()))
-        print("time taken for first step")
-        print(time.time() - start_time)
+        print("Before refining: " + str(len(variants_dict.keys())) + " equivalence classes")
+        print("Time taken for first step " + str(time.time() - start_time))
         start_time = time.time()
         # refine the classes
         for _class in variants_graph_dict.keys():
@@ -403,10 +397,11 @@ class OCEL():
                 case_id = variants_dict[_class][j]
                 found = False
                 for i in range(1, subclass_counter + 1):
-                    if nx.is_isomorphic(exec, subclass_mappings[i][0][0], node_match = lambda x,y: x['label'] == y['label'], edge_match = lambda x,y: x['type'] == y['type']):
-                        subclass_mappings[subclass_counter].append((exec, case_id))
-                        found = True
-                        break
+                    if nx.faster_could_be_isomorphic(exec, subclass_mappings[i][0][0]):
+                        if nx.is_isomorphic(exec, subclass_mappings[i][0][0], node_match = lambda x,y: x['label'] == y['label'], edge_match = lambda x,y: x['type'] == y['type']):
+                            subclass_mappings[subclass_counter].append((exec, case_id))
+                            found = True
+                            break
                 if found:
                     continue
                 subclass_counter += 1
@@ -417,10 +412,8 @@ class OCEL():
                 variant_graphs[_class + str(ind)] = (exec, self.case_objects[case_id])
             del variants_dict[_class]
             del variant_graphs[_class]
-        print("After refining")
-        print(len(variants_dict.keys()))
-        print("time taken for second step")
-        print(time.time() - start_time)
+        print("After refining: " + str(len(variants_dict.keys())) + " equivalence classes")
+        print("Time taken for second step: " + str(time.time() - start_time))
 
         variant_frequencies = {v: len(variants_dict[v]) / len(self.cases) for v in variants_dict.keys()}
         variants, v_freq_list = map(list,
