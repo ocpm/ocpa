@@ -4,7 +4,7 @@ from typing import List, Dict, Set, Any, Optional, Union, Tuple
 from datetime import datetime
 import networkx as nx
 import itertools
-
+import random
 import numpy as np
 
 from ocpa.objects.log.util.param import CsvParseParameters, JsonParseParameters
@@ -79,13 +79,14 @@ class ObjectCentricEventLog:
 
 
 class OCEL():
-    def __init__(self, log, object_types=None, precalc=False, execution_extraction = "weakly", leading_object_type = "order", variant_extraction = "complex"):
+    def __init__(self, log, object_types=None, precalc=False, execution_extraction = "weakly", leading_object_type = "order", variant_extraction = "complex", variant_timeout = 3600):
         self._log = log
         self._log["event_index"] = self._log["event_id"]
         self._log = self._log.set_index("event_index")
         self._execution_extraction = execution_extraction
         self._leading_type = leading_object_type
         self._variant_extraction = variant_extraction
+        self._variant_timeout = variant_timeout
         if object_types != None:
             self._object_types = object_types
         else:
@@ -149,7 +150,13 @@ class OCEL():
         return self._object_types
 
     def _set_object_types(self, object_types):
-        self.object_types = object_types
+        self._object_types = object_types
+
+    def _get_variant_timeout(self):
+        return self._variant_timeout
+
+    def _set_variant_timeout(self, variant_timeout):
+        self._variant_timeout = variant_timeout
 
     def _get_variants_dict(self):
         if self._variants_dict == None:
@@ -166,6 +173,7 @@ class OCEL():
     variant_frequency = property(_get_variant_frequency)
     variant_graphs = property(_get_variant_graphs)
     variants_dict = property(_get_variants_dict)
+    variant_timeout = property(_get_variant_timeout, _set_variant_timeout)
 
 
     def eog_from_log(self):
@@ -289,7 +297,7 @@ class OCEL():
             return self.calculate_variants_naive()
 
     def calculate_variants_complex(self):
-
+        timeout = self._variant_timeout
         variants = None
         self.log["event_objects"] = self.log.apply(lambda x: [(ot, o) for ot in self.object_types for o in x[ot]], axis=1)
         variants_dict = dict()
@@ -333,6 +341,8 @@ class OCEL():
                     continue
                 subclass_counter +=1
                 subclass_mappings[subclass_counter] = [(exec,case_id)]
+                if (time.time() - start_time) > timeout:
+                    raise Exception("timeout")
             for ind in subclass_mappings.keys():
                 variants_dict[_class+str(ind)] = [case_id for (exec, case_id) in subclass_mappings[ind]]
                 (exec, case_id) = subclass_mappings[ind][0]
@@ -361,7 +371,7 @@ class OCEL():
         self.log.drop('event_objects', axis=1, inplace=True)
         return variants, v_freq_list, variant_graphs, variants_dict
     def calculate_variants_naive(self):
-
+        timeout = self._variant_timeout
         variants = None
         self.log["event_objects"] = self.log.apply(lambda x: [(ot, o) for ot in self.object_types for o in x[ot]],
                                                    axis=1)
@@ -406,6 +416,8 @@ class OCEL():
                     continue
                 subclass_counter += 1
                 subclass_mappings[subclass_counter] = [(exec, case_id)]
+                if (time.time() - start_time) > timeout:
+                    raise Exception("timeout")
             for ind in subclass_mappings.keys():
                 variants_dict[_class + str(ind)] = [case_id for (exec, case_id) in subclass_mappings[ind]]
                 (exec, case_id) = subclass_mappings[ind][0]
@@ -445,6 +457,8 @@ class OCEL():
 
         return obs
 
+
+
     def remove_object_references(self, to_keep):
         #this is in place!
         for ot in self.object_types:
@@ -454,5 +468,11 @@ class OCEL():
     def clean_empty_events(self):
         self._log = self._log[self._log[self._object_types].astype(bool).any(axis=1)]
 
+    def sample_cases(self,percent):
+        index_array = random.sample(list(range(0,len(self.cases))),int(len(self.cases)*percent))
+        self._cases = [self.cases[i] for i in index_array]
+        self._case_objects = [self.case_objects[i] for i in index_array]
 
+    def copy(self):
+        return OCEL(self.log.copy(),object_types=self.object_types,execution_extraction=self._execution_extraction,leading_object_type=self._leading_type,variant_extraction=self._variant_extraction,variant_timeout=self.variant_timeout)
 
