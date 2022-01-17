@@ -12,6 +12,7 @@ import ocpa.visualization.oc_petri_net.factory as vis_factory
 import ocpa.visualization.log.variants.factory as log_viz
 import ocpa.algo.filtering.log.case_filtering as execution_filtering
 import ocpa.objects.log.importer.ocel.factory as import_factory
+import ocpa.visualization.log.variants.factory as log_viz
 import matplotlib.pyplot as plt
 import seaborn as sns
 import matplotlib.patches as mpatches
@@ -642,3 +643,65 @@ if True:
 
 
 ######## Visualization
+def results_variant_layouting(ind, datasets, types):
+    random.seed(a=33)
+    results = {}
+    # Running times of extraction for different subsizes of each log and for different extraction techniques
+    i = ind
+    ds = datasets[i]
+    print("_____________")
+    print(ds)
+    print("_____________")
+    ts = types[i]
+    event_df = None
+    if ds.endswith(".csv"):
+        event_df = pd.read_csv(ds)
+        print(event_df)
+        for t in ts:
+            event_df[t] = event_df[t].map(
+                lambda x: [y.strip() for y in x.split(',')] if isinstance(x, str) else [])
+        event_df["event_id"] = list(range(0, len(event_df)))
+        event_df.index = list(range(0, len(event_df)))
+
+    elif ds.endswith(".jsonocel"):
+        event_df = import_factory.apply(ds, import_factory.OCEL_JSON, parameters={"return_df": True})[0]
+        for t in ts:
+            event_df.loc[event_df[t].isnull(), [t]] = event_df.loc[event_df[t].isnull(), t].apply(lambda x: [])
+    event_df["event_id"] = event_df["event_id"].astype(float).astype(int)
+    execution_extraction_parameters = [("weakly", "")] #+ [("leading", t) for t in ts]
+    for technique, t in execution_extraction_parameters:
+        s_time = time.time()
+        print("TECHNIQUE: " + technique + " " + t)
+        ocel = None
+        if ind == 1:
+            ocel = OCEL(event_df, ts, execution_extraction=technique, leading_object_type=t,
+                    variant_extraction="complex")
+        else:
+            ocel = OCEL(event_df, ts, execution_extraction=technique, leading_object_type=t,
+                        variant_extraction="complex")
+        print("Number of cases: " + str(len(ocel.cases)))
+        print("Number of variants: " + str(len(ocel.variants)))
+        variant_layouting, results = log_viz.apply(ocel,{"measure":True})
+
+    return results
+
+if True:
+    pool = ThreadPool(4)
+    result = pool.starmap(results_variant_layouting, zip([0, 1, 2, 3], itertools.repeat(datasets), itertools.repeat(types)))
+    print(result)
+    results = []#{k: v for d in result for k, v in d.items()}
+    for r in result:
+        results+=r
+    plt.clf()
+    # collect data
+    x = [elem[0] for elem in results]
+    y = [elem[1] for elem in results]
+    sns.scatterplot(x, y, color=colors[0], marker="o")  # ) + ("leading type" +t) if t != "" else "weakly con. comp.")
+    # plt.plot(x,y,color=color_map[ds_], marker=pointer_map[(technique,t)])
+    sns.despine()
+    plt.xlabel("Number of Events")
+    plt.ylabel("Layouting Time in s")
+    plt.title("Layout Calculation Time")
+    plt.tight_layout()
+
+    plt.savefig("iso_sns_final.png")
