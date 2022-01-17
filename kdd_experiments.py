@@ -674,10 +674,10 @@ def results_variant_layouting(ind, datasets, types):
         print("TECHNIQUE: " + technique + " " + t)
         ocel = None
         if ind == 1:
-            ocel = OCEL(event_df[:700], ts, execution_extraction=technique, leading_object_type=t,
+            ocel = OCEL(event_df, ts, execution_extraction=technique, leading_object_type=t,
                     variant_extraction="complex")
         else:
-            ocel = OCEL(event_df[:5000], ts, execution_extraction=technique, leading_object_type=t,
+            ocel = OCEL(event_df, ts, execution_extraction=technique, leading_object_type=t,
                         variant_extraction="complex")
         print("Number of cases: " + str(len(ocel.cases)))
         print("Number of variants: " + str(len(ocel.variants)))

@@ -2,12 +2,12 @@ import time
 
 import networkx as nx
 
-def event_to_x(graph, event):
+def event_to_x(graph, event, cache_map):
     pre = list(graph.predecessors(event))
     if len(pre) == 0:
         return 0
     else:
-        return max([event_to_x(graph, pre_e) for pre_e in pre]) + 1
+        return max([event_to_x(graph, pre_e) if pre_e not in cache_map.keys() else cache_map[pre_e] for pre_e in pre]) + 1
 
 def event_to_x_end(graph, event, coords):
     suc = list(graph.successors(event))
@@ -45,6 +45,7 @@ def graph_to_2d(ocel,graph_obj,mapping_activity):
     all_obs = {}
     graph = graph_obj[0]
     relevant_obs = graph_obj[1]
+    s_time = time.time()
     for event in graph.nodes:
         in_edges = graph.in_edges(event)
         out_edges = graph.out_edges(event)
@@ -99,21 +100,33 @@ def graph_to_2d(ocel,graph_obj,mapping_activity):
             lane_info[y] = (str(ot).replace("'",""),str(ot).replace("'","")+'_'+str(ot_o))
             y+=1
             ot_o += 1
+    #print("Before " + str(time.time() - s_time))
+    s_time = time.time()
     coords = {}
     coords_tmp = {}
-    for event in graph.nodes:
-        x_start = event_to_x(graph, event)
+    x_starter = 0
+    cache_map = {}
+    for event in sorted(list(graph.nodes)):
+        ss_time= time.time()
+        x_start = event_to_x(graph, event, cache_map)
+        cache_map[event] = x_start
+        x_starter += time.time() -ss_time
         y = event_to_y(graph,event, y_mappings, ocel)
         coords_tmp[event] = [x_start,y]
+    #print("Only start "+ str(x_starter))
+    #print("x start "+str(time.time()-s_time))
+    s_time=time.time()
     for event in graph.nodes:
         x_end = event_to_x_end(graph, event, coords_tmp)
         coords[event] = [[coords_tmp[event][0],x_end], coords_tmp[event][1]]
+    #print("x end " + str(time.time() - s_time))
+    s_time= time.time()
     #coords = list(coords.items())
     coords = [[k,v] for k,v in coords.items()]
     for i in range(0,len(coords)):
         coords[i][0] = mapping_activity[coords[i][0]]
     #print(coords)
-
+    #print("After "+str(time.time()-s_time))
     return (coords, lane_info)
 
 
@@ -139,11 +152,12 @@ def apply_measuring(obj, parameters=None):
     c= 0
     for v,v_graph in obj.variant_graphs.items():
         print("Next "+str(c))
+        print("EV: "+str(len(list(v_graph[0].nodes)))+" obs: "+str(len(list(v_graph[1]))))
         c+=1
         #print(len(list(v_graph.nodes)))
         s_time = time.time()
         variant_layouting[v] = graph_to_2d(obj,v_graph,mapping_activity)
-        print("Done " + str(c))
+        #print("Done " + str(c))
         runtimes.append((len(list(v_graph[0].nodes)),len(list(v_graph[1])),time.time()-s_time))
-        print("fonex " + str(c))
+       # print("fonex " + str(c))
     return  runtimes
