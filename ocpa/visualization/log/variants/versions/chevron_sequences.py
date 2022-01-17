@@ -119,7 +119,7 @@ def graph_to_2d(ocel,graph_obj,mapping_activity):
 
 def apply(obj, parameters=None):
     if "measure" in parameters.keys():
-        apply_measuring(obj,parameters)
+        return apply_measuring(obj,parameters)
     else:
         variant_layouting = {}
         mapping_activity = dict(zip(obj.log["event_id"], obj.log["event_activity"]))
@@ -138,10 +138,12 @@ def apply_measuring(obj, parameters=None):
     mapping_activity = dict(zip(obj.log["event_id"], obj.log["event_activity"]))
     c= 0
     for v,v_graph in obj.variant_graphs.items():
-        #print("Next "+str(c))
+        print("Next "+str(c))
         c+=1
         #print(len(list(v_graph.nodes)))
         s_time = time.time()
         variant_layouting[v] = graph_to_2d(obj,v_graph,mapping_activity)
-        runtimes.append((len(list(v_graph.nodes)),time.time()-s_time))
-    return variant_layouting, runtimes
+        print("Done " + str(c))
+        runtimes.append((len(list(v_graph[0].nodes)),len(list(v_graph[1])),time.time()-s_time))
+        print("fonex " + str(c))
+    return  runtimes

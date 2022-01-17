@@ -570,7 +570,7 @@ if False:
     plt.savefig("iso_sns_final.png")
 
 #Dissassmebled runnign times isomorphism
-if True:
+if False:
     colors = ['#1F77B4', '#FF7F0E', '#2CA02C', '#D62728', '#9467BD', '#8C564B', '#CFECF9', '#7F7F7F', '#BCBD22',
               '#17BECF']
     results_df = []
@@ -674,18 +674,21 @@ def results_variant_layouting(ind, datasets, types):
         print("TECHNIQUE: " + technique + " " + t)
         ocel = None
         if ind == 1:
-            ocel = OCEL(event_df, ts, execution_extraction=technique, leading_object_type=t,
+            ocel = OCEL(event_df[:700], ts, execution_extraction=technique, leading_object_type=t,
                     variant_extraction="complex")
         else:
-            ocel = OCEL(event_df, ts, execution_extraction=technique, leading_object_type=t,
+            ocel = OCEL(event_df[:5000], ts, execution_extraction=technique, leading_object_type=t,
                         variant_extraction="complex")
         print("Number of cases: " + str(len(ocel.cases)))
         print("Number of variants: " + str(len(ocel.variants)))
-        variant_layouting, results = log_viz.apply(ocel,{"measure":True})
-
+        print(str(ind) + "start")
+        results = log_viz.apply(ocel,parameters={"measure":True})
+        print(str(ind) + "done")
     return results
 
 if True:
+    colors = ['#1F77B4', '#FF7F0E', '#2CA02C', '#D62728', '#9467BD', '#8C564B', '#CFECF9', '#7F7F7F', '#BCBD22',
+              '#17BECF']
     pool = ThreadPool(4)
     result = pool.starmap(results_variant_layouting, zip([0, 1, 2, 3], itertools.repeat(datasets), itertools.repeat(types)))
     print(result)
@@ -693,10 +696,16 @@ if True:
     for r in result:
         results+=r
     plt.clf()
+    sns.set(rc={'figure.figsize': (24, 8)})
+    plt.rcParams["axes.labelsize"] = 16
+    plt.rcParams["axes.titlesize"] = 20
+    cmap = sns.cubehelix_palette(rot=-.2, as_cmap=True)
+    plt.figure(figsize=(10, 5))
     # collect data
     x = [elem[0] for elem in results]
-    y = [elem[1] for elem in results]
-    sns.scatterplot(x, y, color=colors[0], marker="o")  # ) + ("leading type" +t) if t != "" else "weakly con. comp.")
+    x2 = [elem[1] for elem in results]
+    y = [elem[2] for elem in results]
+    sns.scatterplot(x, y, color=colors[0], marker="o",size=x2, palette=cmap, hue =x2)  # ) + ("leading type" +t) if t != "" else "weakly con. comp.")
     # plt.plot(x,y,color=color_map[ds_], marker=pointer_map[(technique,t)])
     sns.despine()
     plt.xlabel("Number of Events")
@@ -704,4 +713,4 @@ if True:
     plt.title("Layout Calculation Time")
     plt.tight_layout()
 
-    plt.savefig("iso_sns_final.png")
+    plt.savefig("v_run.png")
