@@ -69,7 +69,7 @@ sns.despine()
 
 
 ######Datasets
-datasets = ["example_logs/mdl/Full_slim_minimal.csv","example_logs/jsonxml/running-example.jsonocel","example_logs/mdl/incident_ocel.csv","example_logs/mdl/BPI_2018_2017.csv"]
+datasets = ["example_logs/mdl/Full_slim_minimal.csv","example_logs/jsonxml/running-example.jsonocel","example_logs/mdl/incident.csv","example_logs/mdl/BPI_2018_2017.csv"]
 ###datasets = ["example_logs/mdl/Full_slim_minimal.csv","example_logs/mdl/BPI_2018_2017.csv"]
 #Here are som eproblems with respect to purchase as leading object type, the first 10 percent of th elog does not contain any purchase, i.e., producing division by zero error
 #datasets = ["example_logs/mdl/BPI2019.csv"]
@@ -224,11 +224,12 @@ def results_two_steps_iso(ind, datasets, types):
         if ind == 1:
             ocel = OCEL(event_df, ts, execution_extraction=technique, leading_object_type=t,
                     variant_extraction="complex")
+
         else:
             ocel = OCEL(event_df, ts, execution_extraction=technique, leading_object_type=t,
                         variant_extraction="complex")
         print("Number of cases: " + str(len(ocel.cases)))
-        ocel.variant_timeout = 10000
+        ocel.variant_timeout = 22000
         s_time = time.time()
         r_full_time = 0
         n_before, n_after, t_first, t_second = ocel.calculate_variants_with_data()
@@ -574,7 +575,7 @@ if False:
     colors = ['#1F77B4', '#FF7F0E', '#2CA02C', '#D62728', '#9467BD', '#8C564B', '#CFECF9', '#7F7F7F', '#BCBD22',
               '#17BECF']
     results_df = []
-    pool = ThreadPool(4)
+    pool = ThreadPool(1)
     result = pool.starmap(results_two_steps_iso, zip([0, 1, 2, 3], itertools.repeat(datasets), itertools.repeat(types)))
     print(result)
     results = {k: v for d in result for k, v in d.items()}
@@ -634,7 +635,7 @@ if False:
     sns.despine()
     plt.tight_layout()
     #sns.catplot(x="dataset",y="first_step",hue="technique", kind="bar", data=results_df)
-    plt.savefig("first_second.png")
+    plt.savefig("first_second_new_.png")
 
 
 #calculate comparison numbers for number of classes and running tim efrom naive baseline
@@ -645,7 +646,7 @@ if False:
 ######## Visualization
 def results_variant_layouting(ind, datasets, types):
     random.seed(a=33)
-    results = {}
+    results = []
     # Running times of extraction for different subsizes of each log and for different extraction techniques
     i = ind
     ds = datasets[i]
@@ -669,6 +670,8 @@ def results_variant_layouting(ind, datasets, types):
             event_df.loc[event_df[t].isnull(), [t]] = event_df.loc[event_df[t].isnull(), t].apply(lambda x: [])
     event_df["event_id"] = event_df["event_id"].astype(float).astype(int)
     execution_extraction_parameters = [("weakly", "")] #+ [("leading", t) for t in ts]
+    #if ind == 1 or ind == 2:
+    #    execution_extraction_parameters += [("leading", t) for t in ts[1:]]
     for technique, t in execution_extraction_parameters:
         s_time = time.time()
         print("TECHNIQUE: " + technique + " " + t)
@@ -682,7 +685,7 @@ def results_variant_layouting(ind, datasets, types):
         print("Number of cases: " + str(len(ocel.cases)))
         print("Number of variants: " + str(len(ocel.variants)))
         print(str(ind) + "start")
-        results = log_viz.apply(ocel,parameters={"measure":True})
+        results += log_viz.apply(ocel,parameters={"measure":True})
         print(str(ind) + "done")
     return results
 
@@ -708,9 +711,11 @@ if True:
     sns.scatterplot(x, y, color=colors[0], marker="o",size=x2, palette=cmap, hue =x2)  # ) + ("leading type" +t) if t != "" else "weakly con. comp.")
     # plt.plot(x,y,color=color_map[ds_], marker=pointer_map[(technique,t)])
     sns.despine()
+    plt.legend(
+              title='Number of Objects')
     plt.xlabel("Number of Events")
     plt.ylabel("Layouting Time in s")
     plt.title("Layout Calculation Time")
     plt.tight_layout()
 
-    plt.savefig("v_run.png")
+    plt.savefig("v_run_.png")

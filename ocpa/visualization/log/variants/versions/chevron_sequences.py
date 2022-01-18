@@ -151,8 +151,6 @@ def apply_measuring(obj, parameters=None):
     mapping_activity = dict(zip(obj.log["event_id"], obj.log["event_activity"]))
     c= 0
     for v,v_graph in obj.variant_graphs.items():
-        print("Next "+str(c))
-        print("EV: "+str(len(list(v_graph[0].nodes)))+" obs: "+str(len(list(v_graph[1]))))
         c+=1
         #print(len(list(v_graph.nodes)))
         s_time = time.time()

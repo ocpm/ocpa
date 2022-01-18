@@ -6,6 +6,7 @@ import networkx as nx
 import itertools
 import random
 import numpy as np
+import matplotlib.pyplot as plt
 
 from ocpa.objects.log.util.param import CsvParseParameters, JsonParseParameters
 
@@ -513,10 +514,11 @@ class OCEL():
         print("Time taken for first step "+str(time.time()-start_time))
         start_time = time.time()
         #refine the classes
+        c=0
         for _class in variants_graph_dict.keys():
             subclass_counter = 0
             subclass_mappings = {}
-
+            c+=1
             for j in range(0,len(variants_graph_dict[_class])):
                 exec = variants_graph_dict[_class][j]
                 case_id = variants_dict[_class][j]
@@ -639,3 +641,23 @@ class OCEL():
         #    print("Class number " + str(i + 1) + " with frequency " + str(v_freq_list[i]))
         self.log.drop('event_objects', axis=1, inplace=True)
         return num_before_refining, num_after_refining, time_first_step, time_second_step
+
+    # def sample_largest_cases(self,percent):
+    #     index_array = [i for i in range(0,len(self.cases)) if len(self.cases[i]) < 150]
+    #     #index_array = list(range(int((1-percent)*len(self.cases)),len(self.cases)))
+    #     self._cases = [self.cases[i] for i in index_array]
+    #     self._case_objects = [self.case_objects[i] for i in index_array]
+    #
+    # def sample_and_remove(self,percent):
+    #     n_ocel = self.copy()
+    #     n_ocel.sample_largest_cases(percent)
+    #     all_new_events = []
+    #     for c in n_ocel.cases:
+    #         all_new_events += c
+    #     new_df = n_ocel.log.copy()
+    #     new_df = new_df[new_df["event_id"].isin(all_new_events)]
+    #     for ot in self.object_types:
+    #         new_df[ot] = new_df[ot].apply(lambda x: ",".join(x))
+    #     new_df.to_csv("sampled.csv", sep = ",")
+
+
