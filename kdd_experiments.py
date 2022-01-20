@@ -69,7 +69,7 @@ sns.despine()
 
 
 ######Datasets
-datasets = ["example_logs/mdl/Full_slim_minimal.csv","example_logs/jsonxml/running-example.jsonocel","example_logs/mdl/incident.csv","example_logs/mdl/BPI_2018_2017.csv"]
+datasets = ["example_logs/mdl/BPI2017.csv","example_logs/jsonxml/running-example.jsonocel","example_logs/mdl/incident.csv","example_logs/mdl/BPI_2018_2017.csv"]
 ###datasets = ["example_logs/mdl/Full_slim_minimal.csv","example_logs/mdl/BPI_2018_2017.csv"]
 #Here are som eproblems with respect to purchase as leading object type, the first 10 percent of th elog does not contain any purchase, i.e., producing division by zero error
 #datasets = ["example_logs/mdl/BPI2019.csv"]
@@ -80,9 +80,9 @@ types = [["application", "offer"],["items","orders","packages"],["incident","cus
 ########## Extraction running times
 #Basic statistics for the five event data sets
 x = False
-if x:
+if True:
     running_times = {}
-    for i in range(0,len(datasets)):
+    for i in [0,2]:#range(0,len(datasets)):
         ds = datasets[i]
         print("_____________")
         print(ds)
@@ -143,7 +143,7 @@ if x:
             #get execution times
             print(technique + " " + t)
             running_times[(ds, technique, t)] = []
-
+            continue
             for t_dev in range(1,10):
                 log_size = int(len(event_df)/10*t_dev)
                 print("___________")
@@ -182,7 +182,7 @@ if x:
     plt.title("Running Time of Execution Extraction")
     plt.tight_layout()
 
-    plt.savefig("extr_sns_full"+".png")
+    plt.savefig("__extr_sns_full"+".png")
 
 print("______________")
 print("______________")
@@ -233,6 +233,7 @@ def results_two_steps_iso(ind, datasets, types):
         s_time = time.time()
         r_full_time = 0
         n_before, n_after, t_first, t_second = ocel.calculate_variants_with_data()
+        print("FOR "+str(ind)+" WITH TECHNIQUE "+technique+" "+t+" NUMBER OF EQUIVALENCE CLASSES: "+ str(n_after) )
         results[(ds, technique, t)] = (n_before,n_after,t_first,t_second)
     return results
 
@@ -571,11 +572,11 @@ if False:
     plt.savefig("iso_sns_final.png")
 
 #Dissassmebled runnign times isomorphism
-if False:
+if True:
     colors = ['#1F77B4', '#FF7F0E', '#2CA02C', '#D62728', '#9467BD', '#8C564B', '#CFECF9', '#7F7F7F', '#BCBD22',
               '#17BECF']
     results_df = []
-    pool = ThreadPool(1)
+    pool = ThreadPool(4)
     result = pool.starmap(results_two_steps_iso, zip([0, 1, 2, 3], itertools.repeat(datasets), itertools.repeat(types)))
     print(result)
     results = {k: v for d in result for k, v in d.items()}
@@ -689,7 +690,7 @@ def results_variant_layouting(ind, datasets, types):
         print(str(ind) + "done")
     return results
 
-if True:
+if False:
     colors = ['#1F77B4', '#FF7F0E', '#2CA02C', '#D62728', '#9467BD', '#8C564B', '#CFECF9', '#7F7F7F', '#BCBD22',
               '#17BECF']
     pool = ThreadPool(4)

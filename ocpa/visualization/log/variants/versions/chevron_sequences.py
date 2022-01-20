@@ -145,7 +145,7 @@ def apply(obj, parameters=None):
         return variant_layouting
 
 ######only for experiments
-def apply_measuring(obj, parameters=None):
+def apply_measuring(obj, parameters={}):
     runtimes = []
     variant_layouting = {}
     mapping_activity = dict(zip(obj.log["event_id"], obj.log["event_activity"]))
