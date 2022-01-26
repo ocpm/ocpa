@@ -80,7 +80,7 @@ types = [["application", "offer"],["items","orders","packages"],["incident","cus
 ########## Extraction running times
 #Basic statistics for the five event data sets
 x = False
-if True:
+if False:
     running_times = {}
     for i in [0,2]:#range(0,len(datasets)):
         ds = datasets[i]
@@ -370,7 +370,7 @@ def scalability_iso(ind, datasets, types):
     plt.savefig("iso_sns_" + str(datasets.index(ds_) + 1) + ".png")
     return running_times
 
-if x:
+if False:
     random.seed(a=33)
     running_times = {}
     #Running times of extraction for different subsizes of each log and for different extraction techniques
@@ -720,3 +720,56 @@ if False:
     plt.tight_layout()
 
     plt.savefig("v_run_.png")
+
+
+
+# index_ = 1
+# ds = datasets[index_]
+# lt = types[index_][0]
+# print("_____________")
+# print(ds)
+# print("_____________")
+# ts = types[index_]
+# event_df = None
+# if ds.endswith(".csv"):
+#     event_df = pd.read_csv(ds)
+#     print(event_df)
+#     for t in ts:
+#         event_df[t] = event_df[t].map(
+#             lambda x: [y.strip() for y in x.split(',')] if isinstance(x, str) else [])
+#     event_df["event_id"] = list(range(0, len(event_df)))
+#     event_df.index = list(range(0, len(event_df)))
+#
+# elif ds.endswith(".jsonocel"):
+#     event_df = import_factory.apply(ds,import_factory.OCEL_JSON, parameters={"return_df": True})[0]
+#     for t in ts:
+#         event_df.loc[event_df[t].isnull(),[t]] = event_df.loc[event_df[t].isnull(), t].apply(lambda x: [])
+# event_df["event_id"] = event_df["event_id"].astype(float).astype(int)
+# ocel = OCEL(event_df[:1000], ts, execution_extraction="leading", leading_object_type=lt,
+#                     variant_extraction="complex")
+# print(len(ocel.cases))
+# print(len(ocel.variants))
+#
+# ds = datasets[index_]
+# print("_____________")
+# print(ds)
+# print("_____________")
+# ts = types[index_]
+# event_df = None
+# if ds.endswith(".csv"):
+#     event_df = pd.read_csv(ds)
+#     print(event_df)
+#     for t in ts:
+#         event_df[t] = event_df[t].map(
+#             lambda x: [y.strip() for y in x.split(',')] if isinstance(x, str) else [])
+#     event_df["event_id"] = list(range(0, len(event_df)))
+#     event_df.index = list(range(0, len(event_df)))
+#
+# elif ds.endswith(".jsonocel"):
+#     event_df = import_factory.apply(ds,import_factory.OCEL_JSON, parameters={"return_df": True})[0]
+#     for t in ts:
+#         event_df.loc[event_df[t].isnull(),[t]] = event_df.loc[event_df[t].isnull(), t].apply(lambda x: [])
+# event_df["event_id"] = event_df["event_id"].astype(float).astype(int)
+# ocel = OCEL(event_df[:1000], ts, execution_extraction="leading", leading_object_type=lt,
+#                     variant_extraction="naive")
+# print(len(ocel.variants))

@@ -7,7 +7,7 @@ import itertools
 import random
 import numpy as np
 import matplotlib.pyplot as plt
-
+import networkx.algorithms.isomorphism as iso
 from ocpa.objects.log.util.param import CsvParseParameters, JsonParseParameters
 
 
@@ -281,16 +281,23 @@ class OCEL():
             return cases, obs
 
     def _project_subgraph_on_activity(self, v_g,case_id,mapping_objects,mapping_activity):
+        v_g_ = v_g.copy()
         for node in v_g.nodes():
-            v_g.nodes[node]['label'] = mapping_activity[node] + ": ".join(
-                [e[0] for e in sorted(list(set(mapping_objects[node]) & set(self.case_objects[case_id])))])
+            if not set(mapping_objects[node]) & set(self.case_objects[case_id]):
+                v_g_.remove_node(node)
+                continue
+            v_g_.nodes[node]['label'] = mapping_activity[node] + ": ".join(
+                [e[0] for e in sorted(list(set(mapping_objects[node])      & set(self.case_objects[case_id])  ))])#
         for edge in v_g.edges():
             source, target = edge
-            v_g.edges[edge]['type'] = ": ".join(
-                [e[0] for e in sorted(list(set(mapping_objects[source]).intersection(set(mapping_objects[target])) & set(self.case_objects[case_id])))])
-            v_g.edges[edge]['label'] = ": ".join(
-                [str(e) for e in sorted(list(set(mapping_objects[source]).intersection(set(mapping_objects[target])) & set(self.case_objects[case_id]) ))])
-        return v_g
+            if not set(mapping_objects[source]) & set(mapping_objects[target])  & set(self.case_objects[case_id]):
+                v_g_.remove_edge(source, target)
+                continue
+            v_g_.edges[edge]['type'] = ": ".join(
+                [e[0] for e in sorted(list(set(mapping_objects[source]).intersection(set(mapping_objects[target]))     & set(self.case_objects[case_id]) ))])
+            v_g_.edges[edge]['label'] = ": ".join(
+                [str(e) for e in sorted(list(set(mapping_objects[source]).intersection(set(mapping_objects[target]))    & set(self.case_objects[case_id]) ))])
+        return v_g_
     def calculate_variants(self):
         if self._variant_extraction == "complex":
             return self.calculate_variants_complex()
@@ -311,8 +318,10 @@ class OCEL():
         for v_g in self.cases:
 
             case = self._project_subgraph_on_activity(self.eog.subgraph(v_g),case_id,mapping_objects,mapping_activity)
-            variant = nx.weisfeiler_lehman_graph_hash(case, node_attr="label",
-                                                      edge_attr="type")
+
+            variant = nx.weisfeiler_lehman_graph_hash(case, node_attr="label", edge_attr="type")
+            #variant = e_string
+                #print(e_string)
             variant_string = variant
             if variant_string not in variants_dict:
                 variants_dict[variant_string] = []
@@ -323,35 +332,36 @@ class OCEL():
             case_id += 1
         print("Before refining: "+str(len(variants_dict.keys()))+" equivalence classes")
         print("Time taken for first step "+str(time.time()-start_time))
+
         start_time = time.time()
         #refine the classes
-        # for _class in variants_graph_dict.keys():
-        #     subclass_counter = 0
-        #     subclass_mappings = {}
-        #
-        #     for j in range(0,len(variants_graph_dict[_class])):
-        #         exec = variants_graph_dict[_class][j]
-        #         case_id = variants_dict[_class][j]
-        #         found = False
-        #         for i in range(1,subclass_counter+1):
-        #             if nx.is_isomorphic(exec,subclass_mappings[i][0][0], node_match = lambda x,y: x['label'] == y['label'], edge_match = lambda x,y: x['type'] == y['type']):
-        #                 subclass_mappings[subclass_counter].append((exec,case_id))
-        #                 found = True
-        #                 break
-        #         if found:
-        #             continue
-        #         subclass_counter +=1
-        #         subclass_mappings[subclass_counter] = [(exec,case_id)]
-        #         if (time.time() - start_time) > timeout:
-        #             raise Exception("timeout")
-        #     for ind in subclass_mappings.keys():
-        #         variants_dict[_class+str(ind)] = [case_id for (exec, case_id) in subclass_mappings[ind]]
-        #         (exec, case_id) = subclass_mappings[ind][0]
-        #         variant_graphs[_class+str(ind)] = (exec, self.case_objects[case_id])
-        #     del variants_dict[_class]
-        #     del variant_graphs[_class]
-        # print("After refining: "+str(len(variants_dict.keys()))+" equivalence classes")
-        # print("Time taken for second step: "+str(time.time() - start_time))
+        for _class in variants_graph_dict.keys():
+            subclass_counter = 0
+            subclass_mappings = {}
+
+            for j in range(0,len(variants_graph_dict[_class])):
+                exec = variants_graph_dict[_class][j]
+                case_id = variants_dict[_class][j]
+                found = False
+                for i in range(1,subclass_counter+1):
+                    if nx.is_isomorphic(exec,subclass_mappings[i][0][0], node_match = lambda x,y: x['label'] == y['label'], edge_match = lambda x,y: x['type'] == y['type']):
+                        subclass_mappings[subclass_counter].append((exec,case_id))
+                        found = True
+                        break
+                if found:
+                    continue
+                subclass_counter +=1
+                subclass_mappings[subclass_counter] = [(exec,case_id)]
+                if (time.time() - start_time) > timeout:
+                    raise Exception("timeout")
+            for ind in subclass_mappings.keys():
+                variants_dict[_class+str(ind)] = [case_id for (exec, case_id) in subclass_mappings[ind]]
+                (exec, case_id) = subclass_mappings[ind][0]
+                variant_graphs[_class+str(ind)] = (exec, self.case_objects[case_id])
+            del variants_dict[_class]
+            del variant_graphs[_class]
+        print("After refining: "+str(len(variants_dict.keys()))+" equivalence classes")
+        print("Time taken for second step: "+str(time.time() - start_time))
 
         variant_frequencies = {v: len(variants_dict[v]) / len(self.cases) for v in variants_dict.keys()}
         variants, v_freq_list = map(list,

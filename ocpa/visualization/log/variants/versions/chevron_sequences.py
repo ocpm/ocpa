@@ -90,7 +90,9 @@ def graph_to_2d(ocel,graph_obj,mapping_activity):
     for ot in all_obs.keys():
         to_remove = []
         for o in all_obs[ot]:
-            if o not in rel_obs_dict[ot]:
+            if ot not in rel_obs_dict.keys():
+                to_remove.append(o)
+            elif o not in rel_obs_dict[ot]:
                 to_remove.append(o)
         all_obs[ot] = [e for e in all_obs[ot] if e not in to_remove]
     for ot in sorted(list(all_obs.keys())):
