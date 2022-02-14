@@ -57,7 +57,8 @@ def binding_possible(ocpn, state, binding, object_types):
     if t == None:
         return False
     for a in t.in_arcs:
-        input_places_tokens += state[a.source] if a.source in state.keys() else []
+        input_places_tokens += state[a.source] if a.source in state.keys() else [
+        ]
     if set(tokens).issubset(set(input_places_tokens)) or set(tokens) == set(input_places_tokens):
         if model_enabled(ocpn, state, t):
             return True
@@ -75,8 +76,10 @@ def calculate_next_states_on_bindings(ocpn, state, binding, object_types):
         in_places = {}
         out_places = {}
         for ot in object_types:
-            in_places[ot] = [(x, y) for (x, y) in [(a.source, a.variable) for a in t.in_arcs] if x.object_type == ot]
-            out_places[ot] = [x for x in [a.target for a in t.out_arcs] if x.object_type == ot]
+            in_places[ot] = [(x, y) for (x, y) in [(a.source, a.variable)
+                                                   for a in t.in_arcs] if x.object_type == ot]
+            out_places[ot] = [x for x in [
+                a.target for a in t.out_arcs] if x.object_type == ot]
         new_state = {k: state[k].copy() for k in state.keys()}
         update = not t.silent
         for ot in object_types:
@@ -88,7 +91,8 @@ def calculate_next_states_on_bindings(ocpn, state, binding, object_types):
                 new_state[out_pl] += list(binding[0][1][ot])
 
             for (in_pl, is_v) in in_places[ot]:
-                new_state[in_pl] = list((Counter(new_state[in_pl]) - Counter(list(binding[0][1][ot]))).elements())
+                new_state[in_pl] = list(
+                    (Counter(new_state[in_pl]) - Counter(list(binding[0][1][ot]))).elements())
                 if new_state[in_pl] == []:
                     del new_state[in_pl]
             state_update_pairs.append((new_state, update))
@@ -105,11 +109,15 @@ def calculate_next_states_on_bindings(ocpn, state, binding, object_types):
                     for ot in object_types:
                         in_places[ot] = [(x, y) for (x, y) in [(a.source, a.variable) for a in t.in_arcs] if
                                          x.object_type == ot]
-                        out_places[ot] = [x for x in [a.target for a in t.out_arcs] if x.object_type == ot]
-                        token_lists = [[z for z in state[x]] for (x, y) in in_places[ot]]
+                        out_places[ot] = [x for x in [
+                            a.target for a in t.out_arcs] if x.object_type == ot]
+                        token_lists = [[z for z in state[x]]
+                                       for (x, y) in in_places[ot]]
                         if len(token_lists) != 0:
-                            input_tokens[ot] = set.intersection(*map(set, token_lists))
-                            input_token_combinations[ot] = list(combinations(input_tokens[ot], 1))
+                            input_tokens[ot] = set.intersection(
+                                *map(set, token_lists))
+                            input_token_combinations[ot] = list(
+                                combinations(input_tokens[ot], 1))
                         else:
                             input_tokens[ot] = set()
                     indices_list = [
@@ -204,7 +212,8 @@ def calculate_single_event(context, binding, object_types, ocpn):
     index = 0
     context_string_target = context_to_string(context)
     result = (context_string_target, set())
-    [state_binding_set.add((state_to_place_counter(elem[0]), len(elem[1]))) for elem in q]
+    [state_binding_set.add(
+        (state_to_place_counter(elem[0]), len(elem[1]))) for elem in q]
     times = [0, 0, 0, 0, 0]
     while not index == len(q):
         # For long running event calculations
@@ -221,12 +230,13 @@ def calculate_single_event(context, binding, object_types, ocpn):
                     result[1].add(t.name)
         times[0] += time.time() - ti
         ti = time.time()
-        state_update_pairs, binding_possible = calculate_next_states_on_bindings(ocpn, elem[0], elem[1], object_types)
+        state_update_pairs, binding_possible = calculate_next_states_on_bindings(
+            ocpn, elem[0], elem[1], object_types)
         times[1] += time.time() - ti
         # for all next states
         # if the binding is possible, go to the end of the queue and append the next state there
-        ### This is an approximation technique
-        #if binding_possible:
+        # This is an approximation technique
+        # if binding_possible:
         #    index = len(q)
         for (state, update) in state_update_pairs:
             ti = time.time()
@@ -238,7 +248,8 @@ def calculate_single_event(context, binding, object_types, ocpn):
             ti = time.time()
             if (traditional_state_string, len(updated_binding)) in state_binding_set:
                 continue
-            state_binding_set.add((traditional_state_string, len(updated_binding)))
+            state_binding_set.add(
+                (traditional_state_string, len(updated_binding)))
             q.append([state, updated_binding])
             times[4] += time.time() - ti
             # this could be used to get a rough idea of the progress without any communication between processes
