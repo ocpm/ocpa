@@ -5,6 +5,11 @@ def apply(ocel, return_obj_df=True, parameters=None):
     if parameters is None:
         parameters = {}
 
+    if 'return_obj_df' in parameters:
+        return_obj_df = parameters['return_obj_df']
+    else:
+        return_obj_df = None
+
     prefix = "ocel:"
 
     objects = ocel.raw.objects
@@ -37,6 +42,11 @@ def apply(ocel, return_obj_df=True, parameters=None):
     obj_stream = []
 
     eve_df = pd.DataFrame(eve_stream)
+    # if an object is empty for an event, replace them with empty list []
+    for col in eve_df.columns:
+        if 'event' not in col:
+            eve_df[col] = eve_df[col].apply(
+                lambda d: d if isinstance(d, list) else [])
     obj_df = pd.DataFrame(obj_stream)
 
     eve_df.type = "succint"
