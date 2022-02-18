@@ -35,7 +35,7 @@ filename = "BPI2017.csv"
 ots = ["application", "offer"]
 
 
-event_df = pd.read_csv(filename, sep=',')[:25]
+event_df = pd.read_csv(filename, sep=',')[:2500]
 print(event_df)
 for ot in ots:
     event_df[ot] = event_df[ot].map(
@@ -50,9 +50,9 @@ print("Number of variants: "+str(len(ocel.variants)))
 print(str(time.time()-t_start))
 print(ocel.variant_frequency)
 print(ocel.log)
-t_start = time.time()
-vars = log_viz.apply(ocel)
-print(str(time.time()-t_start))
+#t_start = time.time()
+#vars = log_viz.apply(ocel)
+#print(str(time.time()-t_start))
 #print(vars)
 #sub_ocel = trace_filtering.filter_infrequent_traces(ocel, 0.3)
 #ocpn = ocpn_discovery_factory.apply(sub_ocel, parameters={"debug": False})
