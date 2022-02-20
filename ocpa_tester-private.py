@@ -46,7 +46,7 @@ filename = "example_logs/mdl/BPI2017-Full-MDL.csv"
 ots = ["application", "offer"]
 
 
-event_df = pd.read_csv(filename, sep=',')#[:50000]
+event_df = pd.read_csv(filename, sep=',')#[:15000]
 event_df["event_timestamp"] = pd.to_datetime(event_df["event_timestamp"])
 
 
@@ -138,64 +138,96 @@ print(ocel.log)
 
 
 #Visualizing different inclusion functions
+# feat_to_s = {}
+# for f_in in [ocpa.algo.filtering.log.time_filtering.start, ocpa.algo.filtering.log.time_filtering.end, ocpa.algo.filtering.log.time_filtering.contained, ocpa.algo.filtering.log.time_filtering.spanning, ocpa.algo.filtering.log.time_filtering.events]:
+#     s_time= time.time()
+#     s, time_index = time_series.construct_time_series(ocel, timedelta(days=7),
+#                                                       [(avg, feature_extraction.EVENT_NUM_OF_OBJECTS)],
+#                                                       [(
+#                                                       avg,
+#                                                       feature_extraction.EXECUTION_THROUGHPUT)],
+#                                                       f_in)
+#     print("total time series: " + str(time.time() - s_time))
+#     for feat in s.keys():
+#         if feat not in feat_to_s.keys():
+#             feat_to_s[feat] = []
+#         feat_to_s[feat].append((f_in.__name__, s[feat], time_index))
+# for feat in feat_to_s.keys():
+#     plt.clf()
+#     sns.set(rc={'figure.figsize': (24, 8)})
+#     plt.rcParams["axes.labelsize"] = 12
+#     plt.rcParams["axes.titlesize"] = 14
+#     data_df = pd.DataFrame({f_in_name: s for (f_in_name, s, time_index) in feat_to_s[feat]})
+#     viz_df = pd.concat([pd.DataFrame({"date": feat_to_s[list(feat_to_s.keys())[0]][0][2]}), data_df], axis=1)
+#     viz_df.set_index('date', inplace=True)
+#     sns.set_style("darkgrid")
+#     plot_ = sns.lineplot(data=viz_df)
+#     for index, label in enumerate(plot_.get_xticklabels()):
+#         if index % 2 == 0:
+#             label.set_visible(True)
+#         else:
+#             label.set_visible(False)
+#     plot_.set_title("Time Series for " + "Different Inclusion Functions")
+#     plot_.set_ylabel("Average throughput time in s" if feat[1] == "exec_throughput" else "Average number of objects per event")
+#     plot_.set_xlabel(
+#         "Date")
+#     plt.savefig("time_series" + feat[1] +"_inclusion"+ ".png")
+
+#Visualizing different window sizes
 feat_to_s = {}
-for f_in in [ocpa.algo.filtering.log.time_filtering.start, ocpa.algo.filtering.log.time_filtering.end, ocpa.algo.filtering.log.time_filtering.contained, ocpa.algo.filtering.log.time_filtering.spanning, ocpa.algo.filtering.log.time_filtering.events]:
-    s_time= time.time()
-    s, time_index = time_series.construct_time_series(ocel, timedelta(days=7),
-                                                      [(avg, feature_extraction.EVENT_NUM_OF_OBJECTS)],
+window_array = [1,3,7,30]
+for w in window_array:
+    s, time_index = time_series.construct_time_series(ocel, timedelta(days=w),
+                                                      [(avg,
+                                                        feature_extraction.EVENT_NUM_OF_OBJECTS)],
                                                       [(
-                                                      avg,
-                                                      feature_extraction.EXECUTION_THROUGHPUT)],
-                                                      f_in)
-    print("total time series: " + str(time.time() - s_time))
+                                                          avg,
+                                                          feature_extraction.EXECUTION_THROUGHPUT)],
+                                                      ocpa.algo.filtering.log.time_filtering.start)
     for feat in s.keys():
         if feat not in feat_to_s.keys():
             feat_to_s[feat] = []
-        feat_to_s[feat].append((f_in.__name__, s[feat], time_index))
+        feat_to_s[feat].append((str(w)+" days", s[feat], time_index))
+viz_df = pd.DataFrame()
+
 for feat in feat_to_s.keys():
+    data_df = pd.DataFrame()
     plt.clf()
     sns.set(rc={'figure.figsize': (24, 8)})
     plt.rcParams["axes.labelsize"] = 12
     plt.rcParams["axes.titlesize"] = 14
-    data_df = pd.DataFrame({f_in_name: s for (f_in_name, s, time_index) in feat_to_s[feat]})
-    viz_df = pd.concat([pd.DataFrame({"date": feat_to_s[list(feat_to_s.keys())[0]][0][2]}), data_df], axis=1)
-    viz_df.set_index('date', inplace=True)
+    for (w, s, time_index) in feat_to_s[feat]:
+        if (w=="1 days"):
+            data_df["date"] = time_index
+            data_df.set_index("date",inplace=True)
+    for (w, s, time_index) in feat_to_s[feat]:
+        for i in range(0,len(s)):
+            data_df.loc[time_index[i],w] = s[i]
+        #data_df.loc[time_index] = s
+        #frame = pd.DataFrame({"date":time_index,w:s})
+        #frame.set_index("date")
+        #data_df = data_df.join(frame,how='left')
+        print(data_df)
+    #for (w, s, time_index) in feat_to_s[feat]:
+    #    data_df = pd.concat([data_df,pd.DataFrame({w:s})], axis=1)
+    #data_df = pd.DataFrame({w: s for (w, s, time_index) in feat_to_s[feat]})
+    #for (w, s, time_index) in feat_to_s[feat]:
+    #    if (w=="1 days"):
+    #        viz_df = pd.concat([pd.DataFrame({"date": time_index}), data_df], axis=1)
+    #viz_df.set_index('date', inplace=True)
     sns.set_style("darkgrid")
-    plot_ = sns.lineplot(data=viz_df)
+    print(data_df)
+    plot_ = sns.lineplot(data=data_df)
     for index, label in enumerate(plot_.get_xticklabels()):
         if index % 2 == 0:
             label.set_visible(True)
         else:
             label.set_visible(False)
-    plot_.set_title("Time Series for " + "Different Inclusion Functions")
+    plot_.set_title("Time Series for " + "Different Window Sizes")
     plot_.set_ylabel("Average throughput time in s" if feat[1] == "exec_throughput" else "Average number of objects per event")
     plot_.set_xlabel(
         "Date")
-    plt.savefig("time_series" + feat[1] +"_inclusion"+ ".png")
-
-#Visualizing different window sizes
-# feat_to_s = {}
-# for w in [1,3,7,30]:
-#     s, time_index = time_series.construct_time_series(ocel, timedelta(days=w),
-#                                                       [(avg,
-#                                                         feature_extraction.EVENT_NUM_OF_OBJECTS)],
-#                                                       [(
-#                                                           avg,
-#                                                           feature_extraction.EXECUTION_THROUGHPUT)],
-#                                                       ocpa.algo.filtering.log.time_filtering.start)
-#     for feat in s.keys():
-#         if feat not in feat_to_s.keys():
-#             feat_to_s[feat] = []
-#         feat_to_s[feat].append((str(w)+" days", s[feat], time_index))
-#
-# for feat in feat_to_s.keys():
-#     plt.clf()
-#     data_df = pd.DataFrame({w: s for (w, s, time_index) in feat_to_s[feat]})
-#     viz_df = pd.concat([pd.DataFrame({"date": feat_to_s[list(feat_to_s.keys())[0]][0][2]}), data_df], axis=1)
-#     viz_df.set_index('date', inplace=True)
-#     sns.set_style("darkgrid")
-#     sns.lineplot(data=viz_df)
-#     plt.savefig("time_series" + feat[1] + "_window" + ".png")
+    plt.savefig("time_series" + feat[1] + "_window" + ".png")
 
 
 
