@@ -1,5 +1,7 @@
 import time
 
+import matplotlib.pyplot as plt
+
 import ocpa.algo.filtering.log.time_filtering
 from ocpa.objects.log.obj import OCEL
 from ocpa.algo.discovery.ocpn import algorithm as ocpn_discovery_factory
@@ -16,6 +18,7 @@ from datetime import date, timedelta
 from statsmodels.tsa.stattools import grangercausalitytests
 import ruptures as rpt
 import numpy as np
+import seaborn as sns
 # TODO: Preprocessing and conversion from other types of OCEL
 # filepath = "running-example.jsonocel"
 # df = import_factory.apply(filepath, parameters={"return_df":True})
@@ -35,14 +38,15 @@ import numpy as np
 # #ocpn = ocpn_discovery_factory.apply(f_ocel, parameters={"debug": False})
 # exit
 
-
+def avg(x):
+    return sum(x)/len(x)
 
 
 filename = "example_logs/mdl/BPI2017-Full-MDL.csv"
 ots = ["application", "offer"]
 
 
-event_df = pd.read_csv(filename, sep=',')[:10000]
+event_df = pd.read_csv(filename, sep=',')#[:50000]
 event_df["event_timestamp"] = pd.to_datetime(event_df["event_timestamp"])
 
 
@@ -80,27 +84,133 @@ print(ocel.log)
 #    ocel, ocpn, contexts=contexts, bindings=bindings)
 #print("Precision: "+str(precision))
 #print("Fitness: "+str(fitness))
-p=0.05
-s = time_series.construct_time_series(ocel,timedelta(days=1),[(max,feature_extraction.EVENT_NUM_OF_OBJECTS)],[(lambda x: sum(x)/len(x), feature_extraction.EXECUTION_NUM_OF_EVENTS)],ocpa.algo.filtering.log.time_filtering.spanning)
-print(s)
-loc = {k:[bp for bp in rpt.Pelt().fit(s[k]/np.max(s[k])).predict(pen=0.5)] for k in s.keys()}
-print(loc)
-phi_1 = lambda x:x
-phi_2 = lambda x:x
-for feat_1 in s.keys():
-    for feat_2 in s.keys():
-        if feat_1== feat_2:
-            continue
-        loc_1 = loc[feat_1]
-        loc_2 = loc[feat_2]
-        for d in loc_1:
-            for d_ in loc_2:
-                if d_ < d:
-                    #Granger test
-                    res = grangercausalitytests(pd.DataFrame({feat_1:s[feat_1],feat_2:s[feat_2]}),[d-d_])
-                    #print(res)
-                    p_value = res[d-d_][0]['ssr_ftest'][1]
-                    print(p_value)
+
+#######EXAMPLE
+# explainable_drifts = []
+# p=0.05
+# s, time_index = time_series.construct_time_series(ocel,timedelta(days=7),[(max,feature_extraction.EVENT_NUM_OF_OBJECTS)],[(sum, feature_extraction.EXECUTION_IDENTITY),(lambda x: sum(x)/len(x), feature_extraction.EXECUTION_THROUGHPUT)],ocpa.algo.filtering.log.time_filtering.start)
+# print(s)
+# loc = {k:[bp for bp in rpt.Pelt().fit(s[k]/np.max(s[k])).predict(pen=0.5)] for k in s.keys()}
+# print(loc)
+# phi_1 = lambda x:x
+# phi_2 = lambda x:x
+# for feat_1 in s.keys():
+#     for feat_2 in s.keys():
+#         if feat_1== feat_2:
+#             continue
+#         loc_1 = loc[feat_1]
+#         loc_2 = loc[feat_2]
+#         for d in loc_1:
+#             for d_ in loc_2:
+#                 if d_ < d:
+#                     #Granger test
+#                     try:
+#                         res = grangercausalitytests(pd.DataFrame({feat_1:s[feat_1],feat_2:s[feat_2]}),[d-d_])
+#                     except ValueError:
+#                         #insufficient observations are not added
+#                         continue
+#                     #print(res)
+#                     p_value = res[d-d_][0]['ssr_ftest'][1]
+#                     if p_value <= p:
+#                         explainable_drifts.append((feat_1,feat_2,d,d_,p_value))
+#
+# print(explainable_drifts)
+#
+#
+# ###Visualization
+# data_df = pd.DataFrame({k:s[k] for k in s.keys()})
+# viz_df = pd.concat([pd.DataFrame({"date":time_index}), data_df], axis=1)
+# viz_df.set_index('date', inplace=True)
+# sns.set_style("darkgrid")
+# sns.lineplot(data = viz_df)
+# plt.savefig("time_series.png")
+#
+# for feat in s.keys():
+#     plt.clf()
+#     data_df = pd.DataFrame({feat:s[feat]})
+#     viz_df = pd.concat([pd.DataFrame({"date":time_index}), data_df], axis=1)
+#     viz_df.set_index('date', inplace=True)
+#     sns.set_style("darkgrid")
+#     sns.lineplot(data = viz_df)
+#     plt.savefig("time_series"+feat[1]+".png")
+#######EXAMPLE OVER
+
+
+
+#Visualizing different inclusion functions
+feat_to_s = {}
+for f_in in [ocpa.algo.filtering.log.time_filtering.start, ocpa.algo.filtering.log.time_filtering.end, ocpa.algo.filtering.log.time_filtering.contained, ocpa.algo.filtering.log.time_filtering.spanning, ocpa.algo.filtering.log.time_filtering.events]:
+    s_time= time.time()
+    s, time_index = time_series.construct_time_series(ocel, timedelta(days=7),
+                                                      [(avg, feature_extraction.EVENT_NUM_OF_OBJECTS)],
+                                                      [(
+                                                      avg,
+                                                      feature_extraction.EXECUTION_THROUGHPUT)],
+                                                      f_in)
+    print("total time series: " + str(time.time() - s_time))
+    for feat in s.keys():
+        if feat not in feat_to_s.keys():
+            feat_to_s[feat] = []
+        feat_to_s[feat].append((f_in.__name__, s[feat], time_index))
+for feat in feat_to_s.keys():
+    plt.clf()
+    sns.set(rc={'figure.figsize': (24, 8)})
+    plt.rcParams["axes.labelsize"] = 12
+    plt.rcParams["axes.titlesize"] = 14
+    data_df = pd.DataFrame({f_in_name: s for (f_in_name, s, time_index) in feat_to_s[feat]})
+    viz_df = pd.concat([pd.DataFrame({"date": feat_to_s[list(feat_to_s.keys())[0]][0][2]}), data_df], axis=1)
+    viz_df.set_index('date', inplace=True)
+    sns.set_style("darkgrid")
+    plot_ = sns.lineplot(data=viz_df)
+    for index, label in enumerate(plot_.get_xticklabels()):
+        if index % 2 == 0:
+            label.set_visible(True)
+        else:
+            label.set_visible(False)
+    plot_.set_title("Time Series for " + "Different Inclusion Functions")
+    plot_.set_ylabel("Average throughput time in s" if feat[1] == "exec_throughput" else "Average number of objects per event")
+    plot_.set_xlabel(
+        "Date")
+    plt.savefig("time_series" + feat[1] +"_inclusion"+ ".png")
+
+#Visualizing different window sizes
+# feat_to_s = {}
+# for w in [1,3,7,30]:
+#     s, time_index = time_series.construct_time_series(ocel, timedelta(days=w),
+#                                                       [(avg,
+#                                                         feature_extraction.EVENT_NUM_OF_OBJECTS)],
+#                                                       [(
+#                                                           avg,
+#                                                           feature_extraction.EXECUTION_THROUGHPUT)],
+#                                                       ocpa.algo.filtering.log.time_filtering.start)
+#     for feat in s.keys():
+#         if feat not in feat_to_s.keys():
+#             feat_to_s[feat] = []
+#         feat_to_s[feat].append((str(w)+" days", s[feat], time_index))
+#
+# for feat in feat_to_s.keys():
+#     plt.clf()
+#     data_df = pd.DataFrame({w: s for (w, s, time_index) in feat_to_s[feat]})
+#     viz_df = pd.concat([pd.DataFrame({"date": feat_to_s[list(feat_to_s.keys())[0]][0][2]}), data_df], axis=1)
+#     viz_df.set_index('date', inplace=True)
+#     sns.set_style("darkgrid")
+#     sns.lineplot(data=viz_df)
+#     plt.savefig("time_series" + feat[1] + "_window" + ".png")
+
+
+
+
+
+
+    # for feat in s.keys():
+    #     plt.clf()
+    #     data_df = pd.DataFrame({feat: s[feat]})
+    #     viz_df = pd.concat([pd.DataFrame({"date": time_index}), data_df], axis=1)
+    #     viz_df.set_index('date', inplace=True)
+    #     sns.set_style("darkgrid")
+    #     sns.lineplot(data=viz_df)
+    #     plt.savefig("time_series" + feat[1] +"_"+f_in.__name__+ ".png")
+
 # feature_storage = feature_extraction.apply(ocel,[feature_extraction.EVENT_NUM_OF_OBJECTS],[feature_extraction.EXECUTION_NUM_OF_EVENTS,feature_extraction.EXECUTION_NUM_OF_END_EVENTS])
 #
 #
