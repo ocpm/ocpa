@@ -42,11 +42,11 @@ def construct_time_series(ocel, w, feat_events, feat_cases, f_in = time_filterin
                 s[feat] = []
             s[feat].append(v)
         for feat in feat_cases:
-            v = feat[0]([c.attributes[feat[1]]for c in feature_storage.feature_graphs])
+            v = feat[0]([c.attributes[feat[1]] for c in feature_storage.feature_graphs])
             if feat not in s.keys():
                 s[feat] = []
             s[feat].append(v)
-            print(str(i)+"/"+str(m)+ " windows done")
+        print(str(i)+"/"+str(m)+ " windows done")
     print(f_in)
     print("Extraction time: "+str(extract_sublog))
     print("Feature time: " + str(feature_time))
