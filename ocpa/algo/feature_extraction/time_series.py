@@ -37,12 +37,12 @@ def construct_time_series(ocel, w, feat_events, feat_cases, f_in = time_filterin
             for n in g.nodes:
                 events.append(n.attributes)
         for feat in feat_events:
-            v = feat[0]([e[feat[1]]for e in events])
+            v = feat[0]([e[feat[1]]for e in events if e[feat[1]]])
             if feat not in s.keys():
                 s[feat] = []
             s[feat].append(v)
         for feat in feat_cases:
-            v = feat[0]([c.attributes[feat[1]] for c in feature_storage.feature_graphs])
+            v = feat[0]([c.attributes[feat[1]] for c in feature_storage.feature_graphs if c.attributes[feat[1]]])
             if feat not in s.keys():
                 s[feat] = []
             s[feat].append(v)

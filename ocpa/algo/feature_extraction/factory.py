@@ -8,6 +8,9 @@ EVENT_BASED = "event_based"
 EXECUTION_BASED = "execution_based"
 
 EVENT_NUM_OF_OBJECTS ="num_objects"
+EVENT_SERVICE_TIME ="event_service"
+EVENT_IDENTITY = "event_identity"
+
 EXECUTION_NUM_OF_EVENTS ="num_events"
 EXECUTION_NUM_OF_END_EVENTS = "num_end_events"
 EXECUTION_THROUGHPUT = "exec_throughput"
@@ -22,7 +25,9 @@ EXECUTION_AVG_SERVICE_TIME = "exec_avg_service_time"
 
 
 VERSIONS = {
-    EVENT_BASED: {EVENT_NUM_OF_OBJECTS:event_features.number_of_objects},
+    EVENT_BASED: {EVENT_NUM_OF_OBJECTS:event_features.number_of_objects,
+                  EVENT_SERVICE_TIME:event_features.service_time,
+                  EVENT_IDENTITY:event_features.event_identity},
     EXECUTION_BASED: {EXECUTION_NUM_OF_EVENTS:execution_features.number_of_events,
                       EXECUTION_NUM_OF_END_EVENTS:execution_features.number_of_ending_events,
                       EXECUTION_THROUGHPUT:execution_features.throughput_time,

@@ -41,6 +41,8 @@ from statistics import median as median
 # exit
 
 def avg(x):
+    if len(x) == 0:
+        return np.nan
     return sum(x)/len(x)
 
 def std_dev(x):
@@ -74,7 +76,7 @@ event_df["event_id"] = event_df["event_id"].astype(float).astype(int)
 event_df["event_start_timestamp"] = pd.to_datetime(event_df["event_start_timestamp"])
 ocel = OCEL(event_df, ots)
 t_start = time.time()
-print("Number of cases: "+str(len(ocel.cases)))
+print("Number of process executions: "+str(len(ocel.cases)))
 #print("Number of variants: "+str(len(ocel.variants)))
 print(str(time.time()-t_start))
 #print(ocel.variant_frequency)
@@ -92,67 +94,68 @@ print(ocel.log)
 #print("Fitness: "+str(fitness))
 
 #######EXAMPLE
-# explainable_drifts = []
-# p=0.05
-# s, time_index = time_series.construct_time_series(ocel,timedelta(days=7),[(max,feature_extraction.EVENT_NUM_OF_OBJECTS)],[(sum, feature_extraction.EXECUTION_IDENTITY),(lambda x: sum(x)/len(x), feature_extraction.EXECUTION_THROUGHPUT)],ocpa.algo.filtering.log.time_filtering.start)
-# print(s)
-# loc = {k:[bp for bp in rpt.Pelt().fit(s[k]/np.max(s[k])).predict(pen=0.5)] for k in s.keys()}
-# print(loc)
-# phi_1 = lambda x:x
-# phi_2 = lambda x:x
-# for feat_1 in s.keys():
-#     for feat_2 in s.keys():
-#         if feat_1== feat_2:
-#             continue
-#         loc_1 = loc[feat_1]
-#         loc_2 = loc[feat_2]
-#         for d in loc_1:
-#             for d_ in loc_2:
-#                 if d_ < d:
-#                     #Granger test
-#                     try:
-#                         res = grangercausalitytests(pd.DataFrame({feat_1:s[feat_1],feat_2:s[feat_2]}),[d-d_])
-#                     except ValueError:
-#                         #insufficient observations are not added
-#                         continue
-#                     #print(res)
-#                     p_value = res[d-d_][0]['ssr_ftest'][1]
-#                     if p_value <= p:
-#                         explainable_drifts.append((feat_1,feat_2,d,d_,p_value))
-#
-# print(explainable_drifts)
-#
-#
-# ###Visualization
-# data_df = pd.DataFrame({k:s[k] for k in s.keys()})
-# viz_df = pd.concat([pd.DataFrame({"date":time_index}), data_df], axis=1)
-# viz_df.set_index('date', inplace=True)
-# sns.set_style("darkgrid")
-# sns.lineplot(data = viz_df)
-# plt.savefig("time_series.png")
-#
-# for feat in s.keys():
-#     plt.clf()
-#     data_df = pd.DataFrame({feat:s[feat]})
-#     viz_df = pd.concat([pd.DataFrame({"date":time_index}), data_df], axis=1)
-#     viz_df.set_index('date', inplace=True)
-#     sns.set_style("darkgrid")
-#     sns.lineplot(data = viz_df)
-#     plt.savefig("time_series"+feat[1]+".png")
+if False:
+    explainable_drifts = []
+    p=0.05
+    s, time_index = time_series.construct_time_series(ocel,timedelta(days=7),[],[],ocpa.algo.filtering.log.time_filtering.start)
+    print(s)
+    loc = {k:[bp for bp in rpt.Pelt().fit(s[k]/np.max(s[k])).predict(pen=0.2)] for k in s.keys()}
+    print(loc)
+    phi_1 = lambda x:x
+    phi_2 = lambda x:x
+    for feat_1 in s.keys():
+        for feat_2 in s.keys():
+            if feat_1== feat_2:
+                continue
+            loc_1 = loc[feat_1]
+            loc_2 = loc[feat_2]
+            for d in loc_1:
+                for d_ in loc_2:
+                    if d_ < d:
+                        #Granger test
+                        try:
+                            res = grangercausalitytests(pd.DataFrame({feat_1:s[feat_1],feat_2:s[feat_2]}),[d-d_])
+                        except ValueError:
+                            #insufficient observations are not added
+                            continue
+                        #print(res)
+                        p_value = res[d-d_][0]['ssr_ftest'][1]
+                        if p_value <= p:
+                            explainable_drifts.append((feat_1,feat_2,d,d_,p_value))
+
+    print(explainable_drifts)
+
+
+    # ###Visualization
+    data_df = pd.DataFrame({k:s[k] for k in s.keys()})
+    viz_df = pd.concat([pd.DataFrame({"date":time_index}), data_df], axis=1)
+    viz_df.set_index('date', inplace=True)
+    sns.set_style("darkgrid")
+    sns.lineplot(data = viz_df)
+    plt.savefig("time_series_example.png")
+
+    for feat in s.keys():
+        plt.clf()
+        data_df = pd.DataFrame({feat:s[feat]})
+        viz_df = pd.concat([pd.DataFrame({"date":time_index}), data_df], axis=1)
+        viz_df.set_index('date', inplace=True)
+        sns.set_style("darkgrid")
+        sns.lineplot(data = viz_df)
+        plt.savefig("time_series_example"+feat[1][0]+".png")
 #######EXAMPLE OVER
 
 
 
 #Visualizing different inclusion functions
-if False:
+if True:
     feat_to_s = {}
     for f_in in [ocpa.algo.filtering.log.time_filtering.start, ocpa.algo.filtering.log.time_filtering.end, ocpa.algo.filtering.log.time_filtering.contained, ocpa.algo.filtering.log.time_filtering.spanning, ocpa.algo.filtering.log.time_filtering.events]:
         s_time= time.time()
         s, time_index = time_series.construct_time_series(ocel, timedelta(days=7),
-                                                          [(avg, feature_extraction.EVENT_NUM_OF_OBJECTS)],
+                                                          [(avg, (feature_extraction.EVENT_NUM_OF_OBJECTS,()))],
                                                           [(
                                                           avg,
-                                                          feature_extraction.EXECUTION_THROUGHPUT)],
+                                                          (feature_extraction.EXECUTION_THROUGHPUT,()))],
                                                           f_in)
         print("total time series: " + str(time.time() - s_time))
         for feat in s.keys():
@@ -175,21 +178,20 @@ if False:
             else:
                 label.set_visible(False)
         plot_.set_title("Time Series for " + "Different Inclusion Functions")
-        plot_.set_ylabel("Average throughput time in s" if feat[1] == "exec_throughput" else "Average number of objects per event")
+        plot_.set_ylabel("Average throughput time in s" if feat[1][0] == "exec_throughput" else "Average number of objects per event")
         plot_.set_xlabel(
             "Date")
-        plt.savefig("time_series" + feat[1] +"_inclusion"+ ".png",dpi=600)
+        plt.savefig("Inclusion_function_comparison_feature_" + feat[1][0] +".png",dpi=600)
 
 #Visualizing different window sizes
-if False:
+if True:
     feat_to_s = {}
     window_array = [28,6,1,7]#[1,3,7,30]
     for w in window_array:
         s, time_index = time_series.construct_time_series(ocel, timedelta(days=w),
                                                           [],
-                                                          [(
-                                                              avg,
-                                                              feature_extraction.EXECUTION_THROUGHPUT)],
+                                                          [(avg,
+                                                            (feature_extraction.EXECUTION_THROUGHPUT,()))],
                                                           ocpa.algo.filtering.log.time_filtering.start)
         for feat in s.keys():
             if feat not in feat_to_s.keys():
@@ -198,7 +200,7 @@ if False:
     for w in window_array:
         s, time_index = time_series.construct_time_series(ocel, timedelta(days=w),
                                                           [(avg,
-                                                            feature_extraction.EVENT_NUM_OF_OBJECTS)],
+                                                            (feature_extraction.EVENT_NUM_OF_OBJECTS,()))],
                                                           [],
                                                           ocpa.algo.filtering.log.time_filtering.events)
         for feat in s.keys():
@@ -242,10 +244,10 @@ if False:
             else:
                 label.set_visible(False)
         plot_.set_title("Time Series for " + "Different Window Sizes")
-        plot_.set_ylabel("Average throughput time in s" if feat[1] == "exec_throughput" else "Average number of objects per event")
+        plot_.set_ylabel("Average throughput time in s" if feat[1][0] == "exec_throughput" else "Average number of objects per event")
         plot_.set_xlabel(
             "Date")
-        plt.savefig("time_series" + feat[1] + "_window_" + ".png",dpi=600)
+        plt.savefig("Window_size_comparison_feature_" + feat[1][0]  + ".png",dpi=600)
 
 
 
@@ -262,63 +264,64 @@ if False:
     #     plt.savefig("time_series" + feat[1] +"_"+f_in.__name__+ ".png")
 
 #Scalability
-feature_array = [(avg,(feature_extraction.EXECUTION_THROUGHPUT,())),(sum, (feature_extraction.EXECUTION_IDENTITY,())),(avg, (feature_extraction.EXECUTION_FEATURE,("event_RequestedAmount",))),(std_dev, (feature_extraction.EXECUTION_FEATURE,("event_RequestedAmount",))),(max, (feature_extraction.EXECUTION_FEATURE,("event_RequestedAmount",))),(sum, (feature_extraction.EXECUTION_FEATURE,("event_RequestedAmount",))),(avg, (feature_extraction.EXECUTION_FEATURE,("event_RequestedAmount",))),      (avg, (feature_extraction.EXECUTION_FEATURE,("event_OfferedAmount",))),(std_dev, (feature_extraction.EXECUTION_FEATURE,("event_OfferedAmount",))),(max, (feature_extraction.EXECUTION_FEATURE,("event_OfferedAmount",))),(sum, (feature_extraction.EXECUTION_FEATURE,("event_OfferedAmount",))),(avg, (feature_extraction.EXECUTION_FEATURE,("event_OfferedAmount",))),(avg, (feature_extraction.EXECUTION_SERVICE_TIME,("event_start_timestamp",))),(std_dev, (feature_extraction.EXECUTION_SERVICE_TIME,("event_start_timestamp",))),(sum, (feature_extraction.EXECUTION_SERVICE_TIME,("event_start_timestamp",))),(max, (feature_extraction.EXECUTION_SERVICE_TIME,("event_start_timestamp",))),(median, (feature_extraction.EXECUTION_SERVICE_TIME,("event_start_timestamp",))),(avg, (feature_extraction.EXECUTION_AVG_SERVICE_TIME,("event_start_timestamp",))),(max, (feature_extraction.EXECUTION_AVG_SERVICE_TIME,("event_start_timestamp",))),(std_dev, (feature_extraction.EXECUTION_AVG_SERVICE_TIME,("event_start_timestamp",))),(avg,(feature_extraction.EXECUTION_NUM_OBJECT,())), (avg,(feature_extraction.EXECUTION_NUM_OF_STARTING_EVENTS,())), (avg,(feature_extraction.EXECUTION_NUM_OF_EVENTS,())), (avg,(feature_extraction.EXECUTION_UNIQUE_ACTIVITIES,())),(median,(feature_extraction.EXECUTION_THROUGHPUT,())),(max,(feature_extraction.EXECUTION_NUM_OBJECT,())), (sum,(feature_extraction.EXECUTION_NUM_OF_STARTING_EVENTS,())), (sum,(feature_extraction.EXECUTION_NUM_OF_EVENTS,())),(avg,(feature_extraction.EXECUTION_UNIQUE_ACTIVITIES,())), (max,(feature_extraction.EXECUTION_UNIQUE_ACTIVITIES,())), (median,(feature_extraction.EXECUTION_UNIQUE_ACTIVITIES,())), (max,(feature_extraction.EXECUTION_NUM_OF_END_EVENTS,())), (avg,(feature_extraction.EXECUTION_NUM_OF_END_EVENTS,())), (max,(feature_extraction.EXECUTION_LAST_EVENT_TIME_BEFORE,())), (avg,(feature_extraction.EXECUTION_LAST_EVENT_TIME_BEFORE,())),(std_dev,(feature_extraction.EXECUTION_THROUGHPUT,())), (std_dev,(feature_extraction.EXECUTION_LAST_EVENT_TIME_BEFORE,())),(max,(feature_extraction.EXECUTION_THROUGHPUT,()))]
-times = {}
-explainable_drifts = []
-p=0.01
-for l in range(1,len(feature_array)):
-    #Time Series Extraction
-    s_time = time.time()
-    s, time_index = time_series.construct_time_series(ocel, timedelta(days=7),[],feature_array[:l+1],ocpa.algo.filtering.log.time_filtering.start)
-    extraction_time = time.time()-s_time
-    #Concept Drift Detection
-    s_time = time.time()
-    loc = {k: [bp for bp in rpt.Pelt().fit(s[k] / np.max(s[k])).predict(pen=0.05)] for k in s.keys()}
-    #print(loc)
-    detection_time = time.time() - s_time
+if True:
+    feature_array = [(avg,(feature_extraction.EXECUTION_THROUGHPUT,())),(sum, (feature_extraction.EXECUTION_IDENTITY,())),(avg, (feature_extraction.EXECUTION_FEATURE,("event_RequestedAmount",))),(std_dev, (feature_extraction.EXECUTION_FEATURE,("event_RequestedAmount",))),(max, (feature_extraction.EXECUTION_FEATURE,("event_RequestedAmount",))),(sum, (feature_extraction.EXECUTION_FEATURE,("event_RequestedAmount",))),(avg, (feature_extraction.EXECUTION_FEATURE,("event_RequestedAmount",))),      (avg, (feature_extraction.EXECUTION_FEATURE,("event_OfferedAmount",))),(std_dev, (feature_extraction.EXECUTION_FEATURE,("event_OfferedAmount",))),(max, (feature_extraction.EXECUTION_FEATURE,("event_OfferedAmount",))),(sum, (feature_extraction.EXECUTION_FEATURE,("event_OfferedAmount",))),(avg, (feature_extraction.EXECUTION_FEATURE,("event_OfferedAmount",))),(avg, (feature_extraction.EXECUTION_SERVICE_TIME,("event_start_timestamp",))),(std_dev, (feature_extraction.EXECUTION_SERVICE_TIME,("event_start_timestamp",))),(sum, (feature_extraction.EXECUTION_SERVICE_TIME,("event_start_timestamp",))),(max, (feature_extraction.EXECUTION_SERVICE_TIME,("event_start_timestamp",))),(median, (feature_extraction.EXECUTION_SERVICE_TIME,("event_start_timestamp",))),(avg, (feature_extraction.EXECUTION_AVG_SERVICE_TIME,("event_start_timestamp",))),(max, (feature_extraction.EXECUTION_AVG_SERVICE_TIME,("event_start_timestamp",))),(std_dev, (feature_extraction.EXECUTION_AVG_SERVICE_TIME,("event_start_timestamp",))),(avg,(feature_extraction.EXECUTION_NUM_OBJECT,())), (avg,(feature_extraction.EXECUTION_NUM_OF_STARTING_EVENTS,())), (avg,(feature_extraction.EXECUTION_NUM_OF_EVENTS,())), (avg,(feature_extraction.EXECUTION_UNIQUE_ACTIVITIES,())),(median,(feature_extraction.EXECUTION_THROUGHPUT,())),(max,(feature_extraction.EXECUTION_NUM_OBJECT,())), (sum,(feature_extraction.EXECUTION_NUM_OF_STARTING_EVENTS,())), (sum,(feature_extraction.EXECUTION_NUM_OF_EVENTS,())),(avg,(feature_extraction.EXECUTION_UNIQUE_ACTIVITIES,())), (max,(feature_extraction.EXECUTION_UNIQUE_ACTIVITIES,())), (median,(feature_extraction.EXECUTION_UNIQUE_ACTIVITIES,())), (max,(feature_extraction.EXECUTION_NUM_OF_END_EVENTS,())), (avg,(feature_extraction.EXECUTION_NUM_OF_END_EVENTS,())), (max,(feature_extraction.EXECUTION_LAST_EVENT_TIME_BEFORE,())), (avg,(feature_extraction.EXECUTION_LAST_EVENT_TIME_BEFORE,())),(std_dev,(feature_extraction.EXECUTION_THROUGHPUT,())), (std_dev,(feature_extraction.EXECUTION_LAST_EVENT_TIME_BEFORE,())),(max,(feature_extraction.EXECUTION_THROUGHPUT,()))]
+    times = {}
+    explainable_drifts = []
+    p=0.01
+    for l in range(1,len(feature_array)):
+        #Time Series Extraction
+        s_time = time.time()
+        s, time_index = time_series.construct_time_series(ocel, timedelta(days=7),[],feature_array[:l+1],ocpa.algo.filtering.log.time_filtering.start)
+        extraction_time = time.time()-s_time
+        #Concept Drift Detection
+        s_time = time.time()
+        loc = {k: [bp for bp in rpt.Pelt().fit(s[k] / np.max(s[k])).predict(pen=0.05)] for k in s.keys()}
+        #print(loc)
+        detection_time = time.time() - s_time
 
-    #Cause-Effect
-    s_time = time.time()
-    phi_1 = lambda x:x
-    phi_2 = lambda x:x
-    for feat_1 in s.keys():
-        for feat_2 in s.keys():
-            if feat_1== feat_2:
-                continue
-            loc_1 = loc[feat_1]
-            loc_2 = loc[feat_2]
-            for d in loc_1:
-                for d_ in loc_2:
-                    if d_ < d:
-                        #Granger test
-                        try:
-                            res = grangercausalitytests(pd.DataFrame({feat_1:s[feat_1],feat_2:s[feat_2]}),[d-d_])
-                        except (ValueError, stats_exceptions.InfeasibleTestError ) as err:
-                            #insufficient observations are not added
-                            continue
-                        #print(res)
-                        p_value = res[d-d_][0]['ssr_ftest'][1]
-                        if p_value <= p:
-                            explainable_drifts.append((feat_1,feat_2,d,d_,p_value))
+        #Cause-Effect
+        s_time = time.time()
+        phi_1 = lambda x:x
+        phi_2 = lambda x:x
+        for feat_1 in s.keys():
+            for feat_2 in s.keys():
+                if feat_1== feat_2:
+                    continue
+                loc_1 = loc[feat_1]
+                loc_2 = loc[feat_2]
+                for d in loc_1:
+                    for d_ in loc_2:
+                        if d_ < d:
+                            #Granger test
+                            try:
+                                res = grangercausalitytests(pd.DataFrame({feat_1:s[feat_1],feat_2:s[feat_2]}),[d-d_])
+                            except (ValueError, stats_exceptions.InfeasibleTestError ) as err:
+                                #insufficient observations are not added
+                                continue
+                            #print(res)
+                            p_value = res[d-d_][0]['ssr_ftest'][1]
+                            if p_value <= p:
+                                explainable_drifts.append((feat_1,feat_2,d,d_,p_value))
 
-    correlation_time = time.time() - s_time
-    time_vector = [extraction_time,detection_time,correlation_time]
-    all_times = sum(time_vector)
-    times[l+1] = [all_times] + time_vector
-    print(str(l+1)+" features:")
-    print(times[l+1])
-    print(explainable_drifts)
-print(times)
-
-time_df = pd.DataFrame.from_dict(times,orient='index',columns = ["Total Time","Extraction Time","Concept Drift Detection","Granger Causality"])
-#time_df.set_index("Number of Features", inplace=True)
-print(time_df)
-sns.set_style("darkgrid")
-plot_ = sns.lineplot(data=time_df)
-plot_.set_title("Runtime for Different Number of Features")
-plot_.set_ylabel("Runtime in s")
-plot_.set_xlabel("Number of Features")
-plt.savefig("Runtimes_Framework_.png",dpi=600)
+        correlation_time = time.time() - s_time
+        time_vector = [extraction_time,detection_time,correlation_time]
+        all_times = sum(time_vector)
+        times[l+1] = [all_times] + time_vector
+        print(str(l+1)+" features:")
+        print(times[l+1])
+        print(explainable_drifts)
+    print(times)
+    plt.clf()
+    time_df = pd.DataFrame.from_dict(times,orient='index',columns = ["Total Time","Extraction Time","Concept Drift Detection","Granger Causality"])
+    #time_df.set_index("Number of Features", inplace=True)
+    print(time_df)
+    sns.set_style("darkgrid")
+    plot_ = sns.lineplot(data=time_df)
+    plot_.set_title("Runtime for Different Number of Features")
+    plot_.set_ylabel("Runtime in s")
+    plot_.set_xlabel("Number of Features")
+    plt.savefig("Runtimes_framework_comparison.png",dpi=600)
 # feature_storage = feature_extraction.apply(ocel,[feature_extraction.EVENT_NUM_OF_OBJECTS],[feature_extraction.EXECUTION_NUM_OF_EVENTS,feature_extraction.EXECUTION_NUM_OF_END_EVENTS])
 #
 #
