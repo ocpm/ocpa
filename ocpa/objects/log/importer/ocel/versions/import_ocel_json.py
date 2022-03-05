@@ -66,15 +66,22 @@ def apply(file_path, parameters=None):
             del el[prefix + "timestamp"]
             for k2 in el[prefix + "vmap"]:
                 if k2 == start_time_col:
-                    continue
-                el["event_" + k2] = el[prefix + "vmap"][k2]
-            el["event_" + start_time_col] = el[prefix + start_time_col]
+                    el["event_" + start_time_col] = el[prefix + start_time_col]
+                else:
+                    el["event_" + k2] = el[prefix + "vmap"][k2]
+            # el["event_" + start_time_col] = el[prefix + start_time_col]
             del el[prefix + "vmap"]
             for k2 in el[prefix + "omap"]:
                 el[k2] = el[prefix + "omap"][k2]
             del el[prefix + "omap"]
 
         eve_df = pd.DataFrame(eve_stream)
+        # if an object is empty for an event, replace them with empty list []
+        for col in eve_df.columns:
+            if 'event' not in col:
+                eve_df[col] = eve_df[col].apply(
+                    lambda d: d if isinstance(d, list) else [])
+
         obj_df = pd.DataFrame(obj_stream)
 
         eve_df.type = "succint"
@@ -142,7 +149,8 @@ def parse_events(data: Dict[str, Any], cfg: JsonParseParameters) -> Dict[str, Ev
         if "start_time" not in item[1][vmap_name]:
             events[item[0]].vmap["start_time"] = None
         else:
-            events[item[0]].vmap["start_time"] = datetime.fromisoformat(events[item[0]].vmap["start_time"])
+            events[item[0]].vmap["start_time"] = datetime.fromisoformat(
+                events[item[0]].vmap["start_time"])
     sorted_events = sorted(events.items(), key=lambda kv: kv[1].time)
     return OrderedDict(sorted_events)
 

@@ -7,6 +7,11 @@ ocpa.egg-info/dependency_links.txt
 ocpa.egg-info/requires.txt
 ocpa.egg-info/top_level.txt
 ocpa/algo/__init__.py
+ocpa/algo/conformance/__init__.py
+ocpa/algo/conformance/token_based_replay/__init__.py
+ocpa/algo/conformance/token_based_replay/algorithm.py
+ocpa/algo/conformance/token_based_replay/versions/__init__.py
+ocpa/algo/conformance/token_based_replay/versions/token_based_replay.py
 ocpa/algo/discovery/__init__.py
 ocpa/algo/discovery/mvp/__init__.py
 ocpa/algo/discovery/mvp/projection/__init__.py
@@ -51,4 +56,8 @@ ocpa/visualization/oc_petri_net/util/__init__.py
 ocpa/visualization/oc_petri_net/util/util.py
 ocpa/visualization/oc_petri_net/versions/__init__.py
 ocpa/visualization/oc_petri_net/versions/annotated_with_diagnostics.py
+<<<<<<< HEAD
 ocpa/visualization/oc_petri_net/versions/control_flow.py
+=======
+ocpa/visualization/oc_petri_net/versions/control_flow.py
+>>>>>>> public/master

@@ -2,7 +2,7 @@ from typing import Dict, List
 
 
 class VmapParameters:
-    def __init__(self, vmap_params, vmap_availables=None):
+    def __init__(self, vmap_params=None):
         self.vmap_params = vmap_params
 
 
@@ -14,8 +14,8 @@ class JsonParseParameters(VmapParameters):
     # Mapping from internal log keys to data internal keys
     log_params: Dict[str, str]
 
-    def __init__(self, vmap_params, vmap_availables):
-        super().__init__(vmap_params, vmap_availables)
+    def __init__(self, vmap_params=None):
+        super().__init__(vmap_params)
         self.event_params = {'act': 'ocel:activity',
                              'time': 'ocel:timestamp',
                              'omap': 'ocel:omap',
@@ -25,6 +25,7 @@ class JsonParseParameters(VmapParameters):
         self.log_params = {'attr_names': 'ocel:attribute-names',
                            'obj_types': 'ocel:object-types',
                            'ordering': 'ocel:ordering',
+                           'version': 'ocel:version',
                            'events': 'ocel:events',
                            'objects': 'ocel:objects',
                            'meta': 'ocel:global-log'}
