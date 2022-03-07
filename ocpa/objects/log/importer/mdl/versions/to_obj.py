@@ -29,7 +29,7 @@ def add_event(events: Dict[str, Event], index, row, cfg) -> None:
 
 def safe_split(row_obj):
     try:
-        if '{' in row_obj:
+        if '{' in row_obj or '[' in row_obj:
             return [x.strip() for x in row_obj[1:-1].split(',')]
         else:
             return row_obj.split(',')

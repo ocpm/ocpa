@@ -12,7 +12,6 @@ def apply(df, persp, parameters=None):
             df.type = "exploded"
     except:
         pass
-
     cols = [x for x in df.columns if x.startswith("event_") or x == persp]
     df = df[cols].dropna(subset=[persp])
 
@@ -23,7 +22,7 @@ def apply(df, persp, parameters=None):
 
     df = df.rename(columns=renaming)
     df = df.dropna(subset=["concept:name"])
-
+    print(df)
     log = log_conv_factory.apply(df)
 
     return log
