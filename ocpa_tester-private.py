@@ -14,6 +14,7 @@ import ocpa.visualization.log.variants.factory as log_viz
 import ocpa.objects.log.importer.ocel.factory as import_factory
 import ocpa.algo.feature_extraction.factory as feature_extraction
 from ocpa.algo.feature_extraction import time_series
+from ocpa.algo.feature_extraction import tabular
 from datetime import date, timedelta
 from statsmodels.tsa.stattools import grangercausalitytests
 import statsmodels.tools.sm_exceptions as stats_exceptions
@@ -53,7 +54,7 @@ filename = "example_logs/mdl/BPI2017-Full-MDL.csv"
 ots = ["application", "offer"]
 
 
-event_df = pd.read_csv(filename, sep=',')[:20000]
+event_df = pd.read_csv(filename, sep=',')[:200]
 event_df["event_timestamp"] = pd.to_datetime(event_df["event_timestamp"])
 
 
@@ -93,8 +94,9 @@ print(ocel.log)
 #print("Precision: "+str(precision))
 #print("Fitness: "+str(fitness))
 
-F = [(feature_extraction.EVENT_NUM_OF_OBJECTS,())]
+F = [(feature_extraction.EVENT_NUM_OF_OBJECTS,()),(feature_extraction.EVENT_TYPE_COUNT,("offer",))]
 feature_storage = feature_extraction.apply(ocel,F,[])
+tabular.construct_table(feature_storage)
 
 
 # #######EXAMPLE

@@ -86,6 +86,7 @@ def number_of_objects(node,ocel, params):
     #return len(ocel.log.loc[node.event_id]["event_objects"])
 
 def event_type_count(node, ocel, params):
+    return len(ocel.get_value(node.event_id, params[0]))
     return
 
 
