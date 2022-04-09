@@ -17,6 +17,9 @@ EVENT_CURRENT_ACTIVITIES = "event_current_activities"
 EVENT_AGG_PREVIOUS_CHAR_VALUES = "event_aggregate_previous_char"
 EVENT_PRECEDING_CHAR_VALUES = "event_preceding_char_values"
 EVENT_CHAR_VALUE = "event_char_value"
+EVENT_CURRENT_RESOURCE_WORKLOAD = "event_current_resource_workload"
+EVENT_CURRENT_TOTAL_WORKLOAD = "event_current_total_workload"
+EVENT_RESOURCE ="event_resource"
 
 EXECUTION_NUM_OF_EVENTS ="num_events"
 EXECUTION_NUM_OF_END_EVENTS = "num_end_events"
@@ -41,7 +44,10 @@ VERSIONS = {
                   EVENT_CURRENT_ACTIVITIES:event_features.current_activities,
                   EVENT_AGG_PREVIOUS_CHAR_VALUES:event_features.agg_previous_char_values,
                   EVENT_PRECEDING_CHAR_VALUES:event_features.preceding_char_values,
-                  EVENT_CHAR_VALUE:event_features.characteristic_value
+                  EVENT_CHAR_VALUE:event_features.characteristic_value,
+                  EVENT_CURRENT_RESOURCE_WORKLOAD:event_features.current_resource_workload,
+                  EVENT_CURRENT_TOTAL_WORKLOAD:event_features.current_total_workload,
+                  EVENT_RESOURCE:event_features.event_resource
                   },
     EXECUTION_BASED: {EXECUTION_NUM_OF_EVENTS:execution_features.number_of_events,
                       EXECUTION_NUM_OF_END_EVENTS:execution_features.number_of_ending_events,

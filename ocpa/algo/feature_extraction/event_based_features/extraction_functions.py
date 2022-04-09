@@ -96,14 +96,39 @@ def characteristic_value(node, ocel, params):
     return ocel.get_value(node.event_id,attribute)
 
 #resource
+#might have performance problems
 def current_resource_workload(node, ocel, params):
-    return
+    res_column = params[0]
+    time_horizon = params[1]
+    t_e = ocel.get_value(node.event_id,"event_timestamp")
+    res = ocel.get_value(node.event_id,res_column)
+    all_events = ocel.log["event_id"].tolist()
+    result = 0
+    for e in all_events:
+        if t_e - time_horizon <= ocel.get_value(e,"event_timestamp") <= t_e:
+            if ocel.get_value(e,res_column) == res:
+                result += 1
+    return result
 
 def current_total_workload(node, ocel, params):
-    return
+    res_column = params[0]
+    time_horizon = params[1]
+    t_e = ocel.get_value(node.event_id, "event_timestamp")
+    all_events = ocel.log["event_id"].tolist()
+    result = 0
+    for e in all_events:
+        if t_e - time_horizon <= ocel.get_value(e, "event_timestamp") <= t_e:
+            result += 1
+    return result
+
 
 def event_resource(node, ocel, params):
-    return
+    res_column = params[0]
+    resource = params[1]
+    if ocel.get_value(node.event_id, res_column) == resource:
+        return 1
+    else:
+        return 0
 
 
 #performance
