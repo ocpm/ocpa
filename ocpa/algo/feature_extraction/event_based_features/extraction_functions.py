@@ -1,3 +1,4 @@
+import datetime
 #helper functions:
 def get_recent_events(event, case_index, ocel):
     case = ocel.cases[case_index]
@@ -133,13 +134,45 @@ def event_resource(node, ocel, params):
 
 #performance
 def execution_duration(node, ocel, params):
-    return
+    e_id = node.event_id
+    cases = ocel.case_mappings[e_id]
+    value_array = []
+    for case in cases:
+        c_res = 0
+        timestamps = [ocel.get_value(e,"event_timestamp") for e in ocel.cases[case]]
+        duration = max(timestamps) - min(timestamps)
+        value_array.append(duration)
+
+    return sum(value_array, datetime.timedelta(0)) / len(value_array)
 
 def elapsed_time(node, ocel, params):
-    return
+    e_id = node.event_id
+    cases = ocel.case_mappings[e_id]
+    value_array = []
+    for case in cases:
+        c_res = 0
+        events = get_recent_events(e_id,case,ocel)
+        timestamps = [ocel.get_value(e, "event_timestamp") for e in events]
+        duration = max(timestamps) - min(timestamps)
+        value_array.append(duration)
+
+    return sum(value_array, datetime.timedelta(0)) / len(value_array)
 
 def remaining_time(node, ocel, params):
-    return
+    e_id = node.event_id
+    cases = ocel.case_mappings[e_id]
+    value_array = []
+    for case in cases:
+        c_res = 0
+        prev_events = get_recent_events(e_id, case, ocel)
+        following_events = [e for e in ocel.cases[case] if e not in prev_events]
+        following_events.append(e_id)
+
+        timestamps = [ocel.get_value(e, "event_timestamp") for e in following_events]
+        duration = max(timestamps) - min(timestamps)
+        value_array.append(duration)
+
+    return sum(value_array, datetime.timedelta(0)) / len(value_array)
 
 def flow_time(node, ocel, params):
     return

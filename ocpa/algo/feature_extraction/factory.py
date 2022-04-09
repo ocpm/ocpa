@@ -24,6 +24,10 @@ EVENT_CURRENT_TOTAL_OBJECT_COUNT = "event_current_total_object_count"
 EVENT_PREVIOUS_OBJECT_COUNT = "event_previous_object_count"
 EVENT_PREVIOUS_TYPE_COUNT = "event_previous_type_count"
 EVENT_OBJECTS = "event_objects"
+EVENT_EXECUTION_DURATION = "event_execution_time"
+EVENT_ELAPSED_TIME ="event_elapsed_time"
+EVENT_REMAINING_TIME ="event_remaining_time"
+
 
 EXECUTION_NUM_OF_EVENTS ="num_events"
 EXECUTION_NUM_OF_END_EVENTS = "num_end_events"
@@ -55,7 +59,11 @@ VERSIONS = {
                   EVENT_CURRENT_TOTAL_OBJECT_COUNT:event_features.current_total_object_count,
                   EVENT_PREVIOUS_OBJECT_COUNT:event_features.previous_object_count,
                   EVENT_PREVIOUS_TYPE_COUNT:event_features.previous_type_count,
-                  EVENT_OBJECTS:event_features.event_objects
+                  EVENT_OBJECTS:event_features.event_objects,
+                  EVENT_EXECUTION_DURATION:event_features.execution_duration,
+                  EVENT_ELAPSED_TIME:event_features.elapsed_time,
+                  EVENT_REMAINING_TIME:event_features.remaining_time
+
                   },
     EXECUTION_BASED: {EXECUTION_NUM_OF_EVENTS:execution_features.number_of_events,
                       EXECUTION_NUM_OF_END_EVENTS:execution_features.number_of_ending_events,
