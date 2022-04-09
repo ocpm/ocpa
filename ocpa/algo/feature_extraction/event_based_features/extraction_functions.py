@@ -1,25 +1,99 @@
+#helper functions:
+def get_recent_events(event, case_index, ocel):
+    case = ocel.cases[case_index]
+    subset_events = []
+    for e in case:
+        if ocel.get_value(e, "event_timestamp") <= ocel.get_value(event, "event_timestamp"):
+            subset_events.append(e)
+    return subset_events
+
 #Control Flow
 def current_activities(node, ocel, params):
-    return
+    #other current end activities (without finished events)
+    act = params[0]
+    e_id = node.event_id
+    cases = ocel.case_mappings[e_id]
+    value_array = []
+    for case in cases:
+        c_res = 0
+        recent_events = get_recent_events(e_id, case, ocel)
+        subgraph = ocel.eog.subgraph(recent_events)
+        end_nodes = [n for n in subgraph.nodes if len(list(subgraph.out_edges(n)))==0 ]
+        for e in end_nodes:
+            if ocel.get_value(e,"event_activity") == act:
+                c_res = 1
+        value_array.append(c_res)
+
+    return sum(value_array)/len(value_array)
 
 def preceding_activities(node, ocel, params):
-    return
+    act = params[0]
+    e_id = node.event_id
+    in_edges = ocel.eog.in_edges(e_id)
+    count = 0
+    for (source,target) in in_edges:
+        if ocel.get_value(source,"event_activity") == act:
+            count+=1
+    return count
 
 def previous_activity_count(node,ocel,params):
-    return
+    act = params[0]
+    e_id = node.event_id
+    cases = ocel.case_mappings[e_id]
+    value_array = []
+    for c in cases:
+        c_count = 0
+        case = ocel.cases[c]
+        for e in case:
+            if ocel.get_value(e,"event_timestamp") > ocel.get_value(e_id,"event_timestamp"):
+                continue
+            else:
+                if ocel.get_value(e,"event_activity") == act:
+                    c_count+=1
+        value_array += [c_count]
+
+    return sum(value_array)/len(value_array)
 
 def event_activity(node, ocel, params):
-    return
+    act = params[0]
+    if ocel.get_value(node.event_id,"event_activity") == act:
+        return 1
+    else:
+        return 0
 
 #data flow
 def agg_previous_char_values(node, ocel, params):
+    attribute = params[0]
+    aggregation = params[1]
+    e_id = node.event_id
+    cases = ocel.case_mappings[e_id]
+    value_array = []
+    for c in cases:
+        c_vals = []
+        events = get_recent_events(e_id, c, ocel)
+        for e in events:
+            c_vals.append(ocel.get_value(e,attribute))
+        value_array += [aggregation(c_vals)]
+
+    return sum(value_array) / len(value_array)
     return
 
 def preceding_char_values(node,ocel,params):
+    attribute = params[0]
+    aggregation = params[1]
+    e_id = node.event_id
+    in_edges = ocel.eog.in_edges(e_id)
+    value_array = []
+    for (source, target) in in_edges:
+        v = ocel.get_value(source,attribute)
+        value_array.append(v)
+
+    return aggregation(value_array)
     return
 
 def characteristic_value(node, ocel, params):
-    return
+    attribute = params[0]
+    return ocel.get_value(node.event_id,attribute)
 
 #resource
 def current_resource_workload(node, ocel, params):

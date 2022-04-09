@@ -100,12 +100,13 @@ class OCEL():
         #self._log = self._log[self._log.apply(lambda x: any([len(x[ot]) > 0 for ot in self._object_types]))]
         if precalc:
             self._eog = self.eog_from_log()
-            self._cases, self._case_objects = self.calculate_cases()
+            self._cases, self._case_objects, self._case_mappings = self.calculate_cases()
             self._variants, self._variant_frequency, self._variant_graphs, self._variants_dict = self.calculate_variants()
         else:
             self._eog = None
             self._cases = None
             self._case_objects = None
+            self._case_mappings = None
             self._variants = None
             self._variant_graphs = None
             self._variant_frequency = None
@@ -125,13 +126,18 @@ class OCEL():
 
     def _get_case_objects(self):
         if self._case_objects == None:
-            self._cases, self._case_objects = self.calculate_cases()
+            self._cases, self._case_objects, self._case_mappings = self.calculate_cases()
         return self._case_objects
 
     def _get_cases(self):
         if self._cases == None:
-            self._cases, self._case_objects = self.calculate_cases()
+            self._cases, self._case_objects, self._case_mappings  = self.calculate_cases()
         return self._cases
+
+    def _get_case_mappings(self):
+        if self._cases == None:
+            self._cases, self._case_objects, self._case_mappings  = self.calculate_cases()
+        return self._case_mappings
 
     def _get_variants(self):
         if self._variants == None:
@@ -167,11 +173,14 @@ class OCEL():
         return self._variants_dict
 
 
+
+
     log = property(_get_log, _set_log)
     object_types = property(_get_object_types, _set_object_types)
     eog = property(_get_eog)
     cases = property(_get_cases)
     case_objects = property(_get_case_objects)
+    case_mappings = property(_get_case_mappings)
     variants = property(_get_variants)
     variant_frequency = property(_get_variant_frequency)
     variant_graphs = property(_get_variant_graphs)
@@ -208,6 +217,9 @@ class OCEL():
         return EOG
 
     def calculate_cases(self):
+        cases = []
+        obs = []
+        case_mapping = {}
         if self._execution_extraction == "weakly":
             ocel = self.log.copy()
             ocel["event_objects"] = ocel.apply(lambda x: set([(ot, o) for ot in self.object_types for o in x[ot]]),
@@ -224,7 +236,7 @@ class OCEL():
                         case_obs += [ob]
                 obs.append(list(set(case_obs)))
             ocel.drop('event_objects', axis=1, inplace=True)
-            return cases, obs
+            #return cases, obs
         elif self._execution_extraction == "leading":
             ocel = self.log.copy()
             ocel["event_objects"] = ocel.apply(lambda x: set([(ot, o) for ot in self.object_types for o in x[ot]]),
@@ -287,7 +299,15 @@ class OCEL():
                 cases.append(case)
                 obs.append(list(obs_case))
             ocel.drop('event_objects', axis=1, inplace=True)
-            return cases, obs
+            #create case mapping
+            case_mapping = {}
+        for case_index in range(0,len(cases)):
+            case = cases[case_index]
+            for event in case:
+                if not event in case_mapping.keys():
+                    case_mapping[event] = []
+                case_mapping[event] += [case_index]
+        return cases, obs, case_mapping
 
     def _project_subgraph_on_activity(self, v_g,case_id,mapping_objects,mapping_activity):
         v_g_ = v_g.copy()

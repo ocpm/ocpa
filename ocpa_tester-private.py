@@ -75,6 +75,8 @@ event_df["event_id"] = list(range(0, len(event_df)))
 event_df.index = list(range(0, len(event_df)))
 event_df["event_id"] = event_df["event_id"].astype(float).astype(int)
 event_df["event_start_timestamp"] = pd.to_datetime(event_df["event_start_timestamp"])
+#####FAKE FEATURE VALUE
+event_df["fake_feat"] = 1
 ocel = OCEL(event_df, ots)
 t_start = time.time()
 print("Number of process executions: "+str(len(ocel.cases)))
@@ -93,8 +95,7 @@ print(ocel.log)
 #    ocel, ocpn, contexts=contexts, bindings=bindings)
 #print("Precision: "+str(precision))
 #print("Fitness: "+str(fitness))
-
-F = [(feature_extraction.EVENT_NUM_OF_OBJECTS,()),(feature_extraction.EVENT_TYPE_COUNT,("offer",))]
+F = [(feature_extraction.EVENT_NUM_OF_OBJECTS,()),(feature_extraction.EVENT_TYPE_COUNT,("offer",)),(feature_extraction.EVENT_PRECEDING_ACTIVITES,("Create application",)),(feature_extraction.EVENT_PREVIOUS_ACTIVITY_COUNT,("Create application",)),(feature_extraction.EVENT_CURRENT_ACTIVITIES,("Create application",)),(feature_extraction.EVENT_AGG_PREVIOUS_CHAR_VALUES,("fake_feat",sum)),(feature_extraction.EVENT_PRECEDING_CHAR_VALUES,("fake_feat",sum)),(feature_extraction.EVENT_CHAR_VALUE,("fake_feat",))]
 feature_storage = feature_extraction.apply(ocel,F,[])
 tabular.construct_table(feature_storage)
 

@@ -11,7 +11,12 @@ EVENT_NUM_OF_OBJECTS ="num_objects"
 EVENT_SERVICE_TIME ="event_service"
 EVENT_IDENTITY = "event_identity"
 EVENT_TYPE_COUNT = "event_type_count"
-
+EVENT_PRECEDING_ACTIVITES = "event_preceding_activities"
+EVENT_PREVIOUS_ACTIVITY_COUNT = "event_previous_activity_count"
+EVENT_CURRENT_ACTIVITIES = "event_current_activities"
+EVENT_AGG_PREVIOUS_CHAR_VALUES = "event_aggregate_previous_char"
+EVENT_PRECEDING_CHAR_VALUES = "event_preceding_char_values"
+EVENT_CHAR_VALUE = "event_char_value"
 
 EXECUTION_NUM_OF_EVENTS ="num_events"
 EXECUTION_NUM_OF_END_EVENTS = "num_end_events"
@@ -30,7 +35,14 @@ VERSIONS = {
     EVENT_BASED: {EVENT_NUM_OF_OBJECTS:event_features.number_of_objects,
                   EVENT_SERVICE_TIME:event_features.service_time,
                   EVENT_IDENTITY:event_features.event_identity,
-                  EVENT_TYPE_COUNT: event_features.event_type_count},
+                  EVENT_TYPE_COUNT: event_features.event_type_count,
+                  EVENT_PRECEDING_ACTIVITES:event_features.preceding_activities,
+                  EVENT_PREVIOUS_ACTIVITY_COUNT:event_features.previous_activity_count,
+                  EVENT_CURRENT_ACTIVITIES:event_features.current_activities,
+                  EVENT_AGG_PREVIOUS_CHAR_VALUES:event_features.agg_previous_char_values,
+                  EVENT_PRECEDING_CHAR_VALUES:event_features.preceding_char_values,
+                  EVENT_CHAR_VALUE:event_features.characteristic_value
+                  },
     EXECUTION_BASED: {EXECUTION_NUM_OF_EVENTS:execution_features.number_of_events,
                       EXECUTION_NUM_OF_END_EVENTS:execution_features.number_of_ending_events,
                       EXECUTION_THROUGHPUT:execution_features.throughput_time,
