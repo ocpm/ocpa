@@ -20,6 +20,10 @@ EVENT_CHAR_VALUE = "event_char_value"
 EVENT_CURRENT_RESOURCE_WORKLOAD = "event_current_resource_workload"
 EVENT_CURRENT_TOTAL_WORKLOAD = "event_current_total_workload"
 EVENT_RESOURCE ="event_resource"
+EVENT_CURRENT_TOTAL_OBJECT_COUNT = "event_current_total_object_count"
+EVENT_PREVIOUS_OBJECT_COUNT = "event_previous_object_count"
+EVENT_PREVIOUS_TYPE_COUNT = "event_previous_type_count"
+EVENT_OBJECTS = "event_objects"
 
 EXECUTION_NUM_OF_EVENTS ="num_events"
 EXECUTION_NUM_OF_END_EVENTS = "num_end_events"
@@ -47,7 +51,11 @@ VERSIONS = {
                   EVENT_CHAR_VALUE:event_features.characteristic_value,
                   EVENT_CURRENT_RESOURCE_WORKLOAD:event_features.current_resource_workload,
                   EVENT_CURRENT_TOTAL_WORKLOAD:event_features.current_total_workload,
-                  EVENT_RESOURCE:event_features.event_resource
+                  EVENT_RESOURCE:event_features.event_resource,
+                  EVENT_CURRENT_TOTAL_OBJECT_COUNT:event_features.current_total_object_count,
+                  EVENT_PREVIOUS_OBJECT_COUNT:event_features.previous_object_count,
+                  EVENT_PREVIOUS_TYPE_COUNT:event_features.previous_type_count,
+                  EVENT_OBJECTS:event_features.event_objects
                   },
     EXECUTION_BASED: {EXECUTION_NUM_OF_EVENTS:execution_features.number_of_events,
                       EXECUTION_NUM_OF_END_EVENTS:execution_features.number_of_ending_events,

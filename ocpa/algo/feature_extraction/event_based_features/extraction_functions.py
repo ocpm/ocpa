@@ -169,16 +169,53 @@ def waiting_time(node, ocel, params):
 
 #objects
 def current_total_object_count(node, ocel, params):
-    return
+    time_horizon = params[0]
+    t_e = ocel.get_value(node.event_id, "event_timestamp")
+    all_events = ocel.log["event_id"].tolist()
+    all_obs = set()
+    for e in all_events:
+        if t_e - time_horizon <= ocel.get_value(e, "event_timestamp") <= t_e:
+            all_obs = all_obs.union(set(ocel.get_value(e,"event_objects")))
+    return len(list(all_obs))
 
 def previous_object_count(node, ocel, params):
-    return
+    e_id = node.event_id
+    cases = ocel.case_mappings[e_id]
+    value_array = []
+    for c in cases:
+        all_obs = set()
+        events = get_recent_events(e_id, c, ocel)
+        for e in events:
+            all_obs = all_obs.union(set(ocel.get_value(e,"event_objects")))
+        value_array += [len(list(all_obs))]
+
+    return sum(value_array) / len(value_array)
 
 def previous_type_count(node, ocel, params):
-    return
+    t = params[0]
+    e_id = node.event_id
+    cases = ocel.case_mappings[e_id]
+    value_array = []
+    for c in cases:
+        all_obs = set()
+        events = get_recent_events(e_id, c, ocel)
+        for e in events:
+            obs = ocel.get_value(e, "event_objects")
+            for o in obs:
+                (ot, ob_i) = o
+                if ot == t:
+                    all_obs.add(o)
+        value_array += [len(list(all_obs))]
+
+    return sum(value_array) / len(value_array)
+
 
 def event_objects(node, ocel, params):
-    return
+    ob = params[0]
+    if ob in ocel.get_value(node.event_id,"event_objects"):
+        return 1
+    else:
+        return 0
 
 def number_of_objects(node,ocel, params):
     return len(ocel.get_value(node.event_id,"event_objects"))
