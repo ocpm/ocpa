@@ -8,6 +8,7 @@ EVENT_BASED = "event_based"
 EXECUTION_BASED = "execution_based"
 
 EVENT_NUM_OF_OBJECTS ="num_objects"
+EVENT_ACTIVITY = "event_activity"
 EVENT_SERVICE_TIME ="event_service"
 EVENT_IDENTITY = "event_identity"
 EVENT_TYPE_COUNT = "event_type_count"
@@ -27,7 +28,13 @@ EVENT_OBJECTS = "event_objects"
 EVENT_EXECUTION_DURATION = "event_execution_time"
 EVENT_ELAPSED_TIME ="event_elapsed_time"
 EVENT_REMAINING_TIME ="event_remaining_time"
-
+EVENT_DURATION = "event_duration"
+EVENT_FLOW_TIME ="event_flow_time"
+EVENT_SYNCHRONIZATION_TIME = "event_synchronization_time"
+EVENT_SOJOURN_TIME = "event_sojourn_time"
+EVENT_WAITING_TIME = "event_waiting_time"
+EVENT_POOLING_TIME = "event_pooling_time"
+EVENT_LAGGING_TIME = "event_lagging_time"
 
 EXECUTION_NUM_OF_EVENTS ="num_events"
 EXECUTION_NUM_OF_END_EVENTS = "num_end_events"
@@ -44,6 +51,7 @@ EXECUTION_AVG_SERVICE_TIME = "exec_avg_service_time"
 
 VERSIONS = {
     EVENT_BASED: {EVENT_NUM_OF_OBJECTS:event_features.number_of_objects,
+                  EVENT_ACTIVITY:event_features.event_activity,
                   EVENT_SERVICE_TIME:event_features.service_time,
                   EVENT_IDENTITY:event_features.event_identity,
                   EVENT_TYPE_COUNT: event_features.event_type_count,
@@ -62,7 +70,15 @@ VERSIONS = {
                   EVENT_OBJECTS:event_features.event_objects,
                   EVENT_EXECUTION_DURATION:event_features.execution_duration,
                   EVENT_ELAPSED_TIME:event_features.elapsed_time,
-                  EVENT_REMAINING_TIME:event_features.remaining_time
+                  EVENT_REMAINING_TIME:event_features.remaining_time,
+                  EVENT_DURATION:event_features.event_duration,
+                  EVENT_LAGGING_TIME:event_features.lagging_time,
+                  EVENT_POOLING_TIME:event_features.pooling_time,
+                  EVENT_WAITING_TIME:event_features.waiting_time,
+                  EVENT_SOJOURN_TIME:event_features.sojourn_time,
+                  EVENT_SYNCHRONIZATION_TIME:event_features.sojourn_time,
+                  EVENT_FLOW_TIME:event_features.flow_time
+
 
                   },
     EXECUTION_BASED: {EXECUTION_NUM_OF_EVENTS:execution_features.number_of_events,
