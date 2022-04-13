@@ -7,9 +7,11 @@ def construct_table(feature_storage):
     features = feature_storage.event_features
     df = pd.DataFrame(columns=features)
     print(df)
+    dict_list = []
     for g in feature_storage.feature_graphs:
         for node in g.nodes:
+            dict_list.append(node.attributes)
             #print(node.attributes)
-            df = df.append(node.attributes, ignore_index = True)
+    df = pd.DataFrame(dict_list)
     print(df)
     return df

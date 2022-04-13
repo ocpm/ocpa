@@ -15,7 +15,16 @@ from ocpa.algo.feature_extraction import time_series
 from ocpa.algo.feature_extraction import tabular, sequential
 import numpy as np
 import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, mean_absolute_error
+from sklearn.metrics import accuracy_score
 from statistics import median as median
+from keras.models import Sequential
+from keras.layers import Dense
+from keras.layers import LSTM
+from keras.layers import Dropout
 # TODO: Preprocessing and conversion from other types of OCEL
 
 
@@ -32,7 +41,7 @@ filename = "example_logs/mdl/BPI2017-Full-MDL.csv"
 ots = ["application", "offer"]
 
 
-event_df = pd.read_csv(filename, sep=',')[:5000]
+event_df = pd.read_csv(filename, sep=',')[:50]
 event_df["event_timestamp"] = pd.to_datetime(event_df["event_timestamp"])
 
 
@@ -56,8 +65,8 @@ print(str(time.time()-t_start))
 print(ocel.log)
 #ALL FEATURES
 #F = [(feature_extraction.EVENT_NUM_OF_OBJECTS,()),(feature_extraction.EVENT_TYPE_COUNT,("offer",)),(feature_extraction.EVENT_PRECEDING_ACTIVITES,("Create application",)),(feature_extraction.EVENT_PREVIOUS_ACTIVITY_COUNT,("Create application",)),(feature_extraction.EVENT_CURRENT_ACTIVITIES,("Create application",)),(feature_extraction.EVENT_AGG_PREVIOUS_CHAR_VALUES,("fake_feat",sum)),(feature_extraction.EVENT_PRECEDING_CHAR_VALUES,("fake_feat",sum)),(feature_extraction.EVENT_CHAR_VALUE,("fake_feat",)),(feature_extraction.EVENT_CURRENT_RESOURCE_WORKLOAD,("fake_feat",timedelta(days=1))),(feature_extraction.EVENT_CURRENT_TOTAL_WORKLOAD,("fake_feat",timedelta(days=1))),(feature_extraction.EVENT_RESOURCE,("fake_feat",1)),(feature_extraction.EVENT_CURRENT_TOTAL_OBJECT_COUNT,(timedelta(days=1),)),(feature_extraction.EVENT_PREVIOUS_OBJECT_COUNT,()),(feature_extraction.EVENT_PREVIOUS_TYPE_COUNT,("offer",)),(feature_extraction.EVENT_OBJECTS,(('application', "{'Application_1966208034'}"),)),(feature_extraction.EVENT_EXECUTION_DURATION,()),(feature_extraction.EVENT_ELAPSED_TIME,()),(feature_extraction.EVENT_REMAINING_TIME,()),(feature_extraction.EVENT_FLOW_TIME,(ocpn,)),(feature_extraction.EVENT_SYNCHRONIZATION_TIME,(ocpn,)),(feature_extraction.EVENT_POOLING_TIME,(ocpn,"offer")),(feature_extraction.EVENT_WAITING_TIME,(ocpn,"event_start_timestamp"))]
-ocpn = ocpn_discovery_factory.apply(ocel, parameters={"debug": False})
-if True:
+#ocpn = ocpn_discovery_factory.apply(ocel, parameters={"debug": False})
+if False:
     #F = [(feature_extraction.EVENT_NUM_OF_OBJECTS,()),(feature_extraction.EVENT_TYPE_COUNT,("offer",)),(feature_extraction.EVENT_PRECEDING_ACTIVITES,("Create application",)),(feature_extraction.EVENT_PREVIOUS_OBJECT_COUNT,()),(feature_extraction.EVENT_PREVIOUS_TYPE_COUNT,("offer",)),(feature_extraction.EVENT_ELAPSED_TIME,()),(feature_extraction.EVENT_REMAINING_TIME,())]
     F = [(feature_extraction.EVENT_FLOW_TIME,(ocpn,)),(feature_extraction.EVENT_SYNCHRONIZATION_TIME,(ocpn,)),(feature_extraction.EVENT_POOLING_TIME,(ocpn,"offer")),(feature_extraction.EVENT_WAITING_TIME,(ocpn,"event_start_timestamp"))]
 
@@ -114,10 +123,57 @@ if False:
         "Date")
     plt.savefig("CS_time_series.png",dpi=600)
 
+##Case Study 2 - Regression
+if False:
+    activities = list(set(ocel.log["event_activity"].tolist()))
+    F = [(feature_extraction.EVENT_REMAINING_TIME,()),(feature_extraction.EVENT_PREVIOUS_TYPE_COUNT,("offer",)),(feature_extraction.EVENT_ELAPSED_TIME,())] + [(feature_extraction.EVENT_ACTIVITY,(act,)) for act in activities] + [(feature_extraction.EVENT_PREVIOUS_ACTIVITY_COUNT,(act,)) for act in activities]
+    feature_storage = feature_extraction.apply(ocel, F, [])
+    table = tabular.construct_table(feature_storage)
+    y = table[F[0]]
+    x = table.drop(F[0], axis = 1)
+    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3, random_state=4715)
+    scaler = StandardScaler()
+    x_train = scaler.fit_transform(x_train)
+    x_test = scaler.transform(x_test)
+    model = LinearRegression()
+    model.fit(x_train, y_train)
+    y_pred = model.predict(x_test)
+    print('MAE: ', mean_absolute_error(y_test, y_pred)/3600/24)
+    test = pd.DataFrame({'Predicted value': y_pred, 'Actual value': y_test})
+    fig = plt.figure(figsize=(16, 8))
+    test = test.reset_index()
+    test = test.drop(['index'], axis=1)
+    plt.plot(test[:100])
+    plt.legend(['Actual value', 'Predicted value'])
+    plt.savefig("prediction_reg.png",dpi=600)
 
 #CASE Study 3 - Visualizing Sequence
-activities = list(set(ocel.log["event_activity"].tolist()))
-F = [(feature_extraction.EVENT_ACTIVITY,(act,)) for act in activities]
-feature_storage = feature_extraction.apply(ocel,F,[])
-sequences = sequential.construct_sequence(feature_storage)
-print(sequences[0])
+if False:
+    activities = list(set(ocel.log["event_activity"].tolist()))
+    F = [(feature_extraction.EVENT_ACTIVITY,(act,)) for act in activities]
+    feature_storage = feature_extraction.apply(ocel,F,[])
+    sequences = sequential.construct_sequence(feature_storage)
+
+    print(sequences[0])
+
+#CASE Study 4 - Prediction - LSTM
+if True:
+    k=4
+    activities = list(set(ocel.log["event_activity"].tolist()))
+    F = [(feature_extraction.EVENT_REMAINING_TIME,())]+[(feature_extraction.EVENT_ACTIVITY, (act,)) for act in activities]
+    feature_storage = feature_extraction.apply(ocel, F, [])
+    features = [feat for feat in feature_storage.event_features if feat != (feature_extraction.EVENT_REMAINING_TIME,())]
+    target = (feature_extraction.EVENT_REMAINING_TIME,())
+    sequences = sequential.construct_sequence(feature_storage)
+    X = []
+    y = []
+    for s in sequences:
+        if len(s) != 0:
+            for i in range(k-1,len(s)):
+                seq = []
+                for j in range(i-(k-1),i+1):
+                    seq.append([s[j][feat] for feat in features])
+                y.append(s[i][target])
+                X.append(seq)
+    print(X)
+    print(y)
