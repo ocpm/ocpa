@@ -9,30 +9,14 @@ from statistics import stdev
 import uuid
 from copy import deepcopy
 from ocpa.objects.oc_petri_net.obj import ObjectCentricPetriNet
-from pm4py.objects.petri.utils import remove_place, remove_transition
-from pm4py.objects.petri.utils import add_arc_from_to
-from pm4py.objects.petri.petrinet import PetriNet, Marking
+from pm4py.objects.petri.petrinet import PetriNet
 from pm4py.algo.filtering.log.attributes import attributes_filter
-from pm4py.algo.filtering.log.variants import variants_filter
-from pm4py.algo.filtering.log.paths import paths_filter
 from pm4py.statistics.variants.log import get as variants_module
 from pm4py.visualization.petrinet.util import performance_map
 from ocpa.algo.enhancement.token_replay_based_performance.util import run_timed_replay
-from pm4py.objects.conversion.dfg import converter as dfg_converter
-from pm4py.statistics.end_activities.log import get as ea_get
-from pm4py.statistics.start_activities.log import get as sa_get
-from pm4py.algo.discovery.dfg import algorithm as dfg_discovery
-from pm4py.algo.discovery.inductive import algorithm as inductive_miner
-from pm4py.algo.discovery.alpha import algorithm as alpha_miner
-import pm4py
-# from pm4pymdl.algo.mvp.utils import succint_mdl_to_exploded_mdl, clean_frequency, clean_arc_frequency
 from ocpa.objects.log.importer.mdl.util import succint_mdl_to_exploded_mdl, clean_frequency, clean_arc_frequency
 from ocpa.algo.discovery.mvp.projection import algorithm as projection_factory
 run_timed_replay
-# from pm4py.algo.conformance.tokenreplay import algorithm as tr_factory
-
-PARAM_ACTIVITY_KEY = pm4py.util.constants.PARAMETER_CONSTANT_ACTIVITY_KEY
-MAX_FREQUENCY = float("inf")
 
 
 @dataclass
@@ -58,17 +42,65 @@ class EventOccurrence:
 
 
 class PerformanceAnalysis:
-    def __init__(self):
+    def __init__(self, object_map):
         self.perf_records = {}
+        self.object_map = object_map
 
     def correspond(self, eo: EventOccurrence, V: Set[TokenVisit]):
-        return [v for v in V if v.end == eo.event[ocpa_constants.DEFAULT_START_TIMESTAMP_KEY]]
+        input_places = [
+            in_arc.source for in_arc in eo.transition.in_arcs]
+        return [v for v in V if v.end == eo.event[ocpa_constants.DEFAULT_START_TIMESTAMP_KEY] and v.token[0] in input_places]
 
-    def analyze(self, eos: Set[EventOccurrence], tvs: Set[TokenVisit]):
-        self.perf_records['waiting'] = {}
-        self.perf_records['service'] = {}
-        self.perf_records['sojourn'] = {}
-        self.perf_records['synchronization'] = {}
+    def analyze(self, eos: Set[EventOccurrence], tvs: Set[TokenVisit], ots: Set[str], parameters):
+        # compute measures
+        if 'waiting_time' in parameters['measures']:
+            p_waiting = True
+        else:
+            p_waiting = False
+        if 'service_time' in parameters['measures']:
+            p_service = True
+        else:
+            p_service = False
+        if 'sojourn_time' in parameters['measures']:
+            p_sojourn = True
+        else:
+            p_sojourn = False
+        if 'synchronization_time' in parameters['measures']:
+            p_sync = True
+        else:
+            p_sync = False
+        if 'pooling_time' in parameters['measures']:
+            p_pooling = True
+        else:
+            p_pooling = False
+        if 'lagging_time' in parameters['measures']:
+            p_lagging = True
+        else:
+            p_lagging = False
+
+        if 'flow_time' in parameters['measures']:
+            p_flow = True
+        else:
+            p_flow = False
+
+        if p_waiting:
+            self.perf_records['waiting'] = {}
+        if p_service:
+            self.perf_records['service'] = {}
+        if p_sojourn:
+            self.perf_records['sojourn'] = {}
+        if p_sync:
+            self.perf_records['synchronization'] = {}
+        if p_pooling:
+            self.perf_records['pooling'] = {}
+            for ot in ots:
+                self.perf_records['pooling'][ot] = {}
+        if p_lagging:
+            self.perf_records['lagging'] = {}
+            for ot in ots:
+                self.perf_records['lagging'][ot] = {}
+        if p_flow:
+            self.perf_records['flow'] = {}
         eos_len = len(eos)
         i = 0
         for eo in eos:
@@ -76,42 +108,139 @@ class PerformanceAnalysis:
             if i % 1000 == 0:
                 print(f'{i}/{eos_len}')
             R = self.correspond(eo, tvs)
-            waiting = self.measure_waiting(eo, R)
-            service = self.measure_service(eo, R)
-            sojourn = waiting + service
-            sync = self.measure_synchronization(eo, R)
-            if eo.transition.label in self.perf_records['waiting']:
-                self.perf_records['waiting'][eo.transition.label].append(
-                    waiting)
-            else:
-                self.perf_records['waiting'][eo.transition.label] = [waiting]
+            if p_waiting:
+                waiting = self.measure_waiting(eo, R)
+                if eo.transition.label in self.perf_records['waiting']:
+                    self.perf_records['waiting'][eo.transition.label].append(
+                        waiting)
+                else:
+                    self.perf_records['waiting'][eo.transition.label] = [
+                        waiting]
+            if p_service:
+                service = self.measure_service(eo, R)
+                if eo.transition.label in self.perf_records['service']:
+                    self.perf_records['service'][eo.transition.label].append(
+                        service)
+                else:
+                    self.perf_records['service'][eo.transition.label] = [
+                        service]
+            if p_sojourn:
+                if p_waiting is not True and p_service is not True:
+                    waiting = self.measure_waiting(eo, R)
+                    service = self.measure_service(eo, R)
+                elif p_waiting is True and p_service is not True:
+                    service = self.measure_service(eo, R)
+                elif p_waiting is not True and p_service is True:
+                    waiting = self.measure_waiting(eo, R)
 
-            if eo.transition.label in self.perf_records['service']:
-                self.perf_records['service'][eo.transition.label].append(
-                    service)
-            else:
-                self.perf_records['service'][eo.transition.label] = [service]
+                sojourn = waiting + service
 
-            if eo.transition.label in self.perf_records['sojourn']:
-                self.perf_records['sojourn'][eo.transition.label].append(
-                    sojourn)
-            else:
-                self.perf_records['sojourn'][eo.transition.label] = [sojourn]
+                if eo.transition.label in self.perf_records['sojourn']:
+                    self.perf_records['sojourn'][eo.transition.label].append(
+                        sojourn)
+                else:
+                    self.perf_records['sojourn'][eo.transition.label] = [
+                        sojourn]
+            if p_sync:
+                sync = self.measure_synchronization(eo, R)
+                if eo.transition.label in self.perf_records['synchronization']:
+                    self.perf_records['synchronization'][eo.transition.label].append(
+                        sync)
+                else:
+                    self.perf_records['synchronization'][eo.transition.label] = [
+                        sync]
+            if p_pooling:
+                for ot in ots:
+                    ot_pooling = self.measure_pooling(eo, R, ot)
+                    if eo.transition.label in self.perf_records['pooling'][ot]:
+                        self.perf_records['pooling'][ot][eo.transition.label].append(
+                            ot_pooling)
+                    else:
+                        self.perf_records['pooling'][ot][eo.transition.label] = [
+                            ot_pooling]
+            if p_lagging:
+                for ot in ots:
+                    ot_lagging = self.measure_lagging(eo, R, ot)
+                    if eo.transition.label in self.perf_records['lagging'][ot]:
+                        self.perf_records['lagging'][ot][eo.transition.label].append(
+                            ot_lagging)
+                    else:
+                        self.perf_records['lagging'][ot][eo.transition.label] = [
+                            ot_lagging]
+            if p_flow:
+                if p_waiting is not True and p_service is not True:
+                    if p_waiting is not True and p_service is not True:
+                        waiting = self.measure_waiting(eo, R)
+                        service = self.measure_service(eo, R)
+                    elif p_waiting is True and p_service is not True:
+                        service = self.measure_service(eo, R)
+                    elif p_waiting is not True and p_service is True:
+                        waiting = self.measure_waiting(eo, R)
+                    else:
+                        waiting = self.measure_waiting(eo, R)
+                        service = self.measure_service(eo, R)
+                    sojourn = waiting + service
+                    sync = self.measure_synchronization(eo, R)
+                elif p_sojourn is True and p_sync is not True:
+                    sync = self.measure_synchronization(eo, R)
+                elif p_sojourn is not True and p_sync is True:
+                    if p_waiting is not True and p_service is not True:
+                        waiting = self.measure_waiting(eo, R)
+                        service = self.measure_service(eo, R)
+                    elif p_waiting is True and p_service is not True:
+                        service = self.measure_service(eo, R)
+                    elif p_waiting is not True and p_service is True:
+                        waiting = self.measure_waiting(eo, R)
+                    else:
+                        waiting = self.measure_waiting(eo, R)
+                        service = self.measure_service(eo, R)
+                    sojourn = waiting + service
+                flow = sojourn + sync
+                if eo.transition.label in self.perf_records['flow']:
+                    self.perf_records['flow'][eo.transition.label].append(
+                        flow)
+                else:
+                    self.perf_records['flow'][eo.transition.label] = [
+                        flow]
 
-            if eo.transition.label in self.perf_records['synchronization']:
-                self.perf_records['synchronization'][eo.transition.label].append(
-                    sync)
-            else:
-                self.perf_records['synchronization'][eo.transition.label] = [
-                    sync]
+        # aggregate measures
+        perf_diag = {}
+        if p_waiting:
+            perf_diag['agg_waiting_time'] = aggregate_perf_records(
+                self.perf_records, measure_name='waiting', aggregation_measure='all')
+        if p_service:
+            perf_diag['agg_service_time'] = aggregate_perf_records(
+                self.perf_records, measure_name='service', aggregation_measure='all')
+        if p_sojourn:
+            perf_diag['agg_sojourn_time'] = aggregate_perf_records(
+                self.perf_records, measure_name='sojourn', aggregation_measure='all')
+        if p_sync:
+            perf_diag['agg_synchronization_time'] = aggregate_perf_records(
+                self.perf_records, measure_name='synchronization', aggregation_measure='all')
 
-        return self.perf_records
+        if p_pooling:
+            perf_diag['agg_pooling_time'] = {}
+            for persp in ots:
+                perf_diag['agg_pooling_time'][persp] = aggregate_perf_records(
+                    self.perf_records, measure_name='pooling', aggregation_measure='all', ot=persp)
+
+        if p_lagging:
+            perf_diag['agg_lagging_time'] = {}
+            for persp in ots:
+                perf_diag['agg_lagging_time'][persp] = aggregate_perf_records(
+                    self.perf_records, measure_name='lagging', aggregation_measure='all', ot=persp)
+        if p_flow:
+            perf_diag['agg_flow_time'] = aggregate_perf_records(
+                self.perf_records, measure_name='flow', aggregation_measure='all')
+        return perf_diag
 
     def measure_waiting(self, eo: EventOccurrence, R: Set[TokenVisit]):
         if len(R) > 0:
             start_times = [r.start for r in R]
             waiting = (
                 eo.event[ocpa_constants.DEFAULT_START_TIMESTAMP_KEY] - min(start_times)).total_seconds()
+            if waiting < 0:
+                return 0
             return waiting
         else:
             return 0
@@ -119,13 +248,43 @@ class PerformanceAnalysis:
     def measure_service(self, eo: EventOccurrence, R: Set[TokenVisit]):
         service = (
             eo.event[ocpa_constants.DEFAULT_TIMESTAMP_KEY] - eo.event[ocpa_constants.DEFAULT_START_TIMESTAMP_KEY]).total_seconds()
+        if service < 0:
+            return 0
         return service
 
     def measure_synchronization(self, eo: EventOccurrence, R: Set[TokenVisit]):
         if len(R) > 0:
             start_times = [r.start for r in R]
             sync = (max(start_times) - min(start_times)).total_seconds()
+            if sync < 0:
+                return 0
             return sync
+        else:
+            return 0
+
+    def measure_pooling(self, eo: EventOccurrence, R: Set[TokenVisit], ot: str):
+        ot_R = [r for r in R if r.token[1] in self.object_map[ot]]
+        if len(ot_R) > 0:
+            ot_start_times = [
+                r.start for r in ot_R]
+            pooling = (max(ot_start_times) -
+                       min(ot_start_times)).total_seconds()
+            if pooling < 0:
+                return 0
+            return pooling
+        else:
+            return 0
+
+    def measure_lagging(self, eo: EventOccurrence, R: Set[TokenVisit], ot: str):
+        ot_R = [r for r in R if r.token[1] in self.object_map[ot]]
+        if len(ot_R) > 0:
+            start_times = [r.start for r in R]
+            ot_start_times = [
+                r.start for r in ot_R]
+            lagging = (max(ot_start_times) - min(start_times)).total_seconds()
+            if lagging < 0:
+                return 0
+            return lagging
         else:
             return 0
 
@@ -168,7 +327,51 @@ def aggregate_stats(perf_records, measure_name, elem, aggregation_measure):
     return aggr_stat
 
 
-def aggregate_perf_records(perf_records, measure_name="waiting", aggregation_measure='all'):
+def aggregate_ot_stats(perf_records, measure_name, ot, elem, aggregation_measure):
+    """
+    Aggregate the perf_records
+
+    Parameters
+    -----------
+    perf_records
+        Element perf_records
+    elem
+        Current element
+    aggregation_measure
+        Aggregation measure (e.g. mean, min) to use
+
+    Returns
+    -----------
+    aggr_stat
+        Aggregated perf_records
+    """
+    aggr_stat = 0
+    if aggregation_measure == "mean" or aggregation_measure is None:
+        if ot in perf_records[measure_name]:
+            aggr_stat = mean(perf_records[measure_name][ot][elem])
+    elif aggregation_measure == "median":
+        if ot in perf_records[measure_name]:
+            aggr_stat = median(perf_records[measure_name][ot][elem])
+    elif aggregation_measure == "stdev":
+        if ot in perf_records[measure_name]:
+            if len(perf_records[measure_name][ot][elem]) > 1:
+                aggr_stat = stdev(perf_records[measure_name][ot][elem])
+        else:
+            aggr_stat = 0
+    elif aggregation_measure == "sum":
+        if ot in perf_records[measure_name]:
+            aggr_stat = sum(perf_records[measure_name][ot][elem])
+    elif aggregation_measure == "min":
+        if ot in perf_records[measure_name]:
+            aggr_stat = min(perf_records[measure_name][ot][elem])
+    elif aggregation_measure == "max":
+        if ot in perf_records[measure_name]:
+            aggr_stat = max(perf_records[measure_name][ot][elem])
+    aggr_stat = human_readable_stat(aggr_stat)
+    return aggr_stat
+
+
+def aggregate_perf_records(perf_records, measure_name="waiting", aggregation_measure='all', ot=None):
     """
     Gets aggregated perf_records
 
@@ -187,22 +390,39 @@ def aggregate_perf_records(perf_records, measure_name="waiting", aggregation_mea
         Aggregated perf_records for arcs, transitions, places
     """
     aggregated_perf_records = {}
-    for elem in perf_records[measure_name].keys():
-        if aggregation_measure == 'all':
-            for agg in ['mean', 'median', 'min', 'max', 'stdev']:
+
+    if ot is not None:
+        if ot in perf_records[measure_name]:
+            for elem in perf_records[measure_name][ot].keys():
+                if aggregation_measure == 'all':
+                    for agg in ['mean', 'median', 'min', 'max', 'stdev']:
+                        aggr_stat = aggregate_ot_stats(
+                            perf_records, measure_name, ot, elem, agg)
+                        if elem not in aggregated_perf_records:
+                            aggregated_perf_records[elem] = {}
+                        aggregated_perf_records[elem][agg] = aggr_stat
+                else:
+                    aggr_stat = aggregate_ot_stats(
+                        perf_records, measure_name, ot, elem, agg)
+                    if elem not in aggregated_perf_records:
+                        aggregated_perf_records[elem] = {}
+                    aggregated_perf_records[elem][agg] = aggr_stat
+    else:
+
+        for elem in perf_records[measure_name].keys():
+            if aggregation_measure == 'all':
+                for agg in ['mean', 'median', 'min', 'max', 'stdev']:
+                    aggr_stat = aggregate_stats(
+                        perf_records, measure_name, elem, agg)
+                    if elem not in aggregated_perf_records:
+                        aggregated_perf_records[elem] = {}
+                    aggregated_perf_records[elem][agg] = aggr_stat
+            else:
                 aggr_stat = aggregate_stats(
-                    perf_records, measure_name, elem, agg)
-        # aggr_stat_hr = human_readable_stat(aggr_stat)
+                    perf_records, measure_name, elem, aggregation_measure)
                 if elem not in aggregated_perf_records:
                     aggregated_perf_records[elem] = {}
-                aggregated_perf_records[elem][agg] = aggr_stat
-        else:
-            aggr_stat = aggregate_stats(
-                perf_records, measure_name, elem, aggregation_measure)
-            # aggr_stat_hr = human_readable_stat(aggr_stat)
-            if elem not in aggregated_perf_records:
-                aggregated_perf_records[elem] = {}
-            aggregated_perf_records[elem][aggregation_measure] = aggr_stat
+                aggregated_perf_records[elem][aggregation_measure] = aggr_stat
     return aggregated_perf_records
 
 
@@ -239,6 +459,12 @@ def apply(ocpn, df, parameters=None):
     if parameters is None:
         parameters = {}
 
+    if 'measures' not in parameters:
+        parameters['measures'] = ['sojourn time']
+
+    if 'agg' not in parameters:
+        parameters['agg'] = ['mean']
+
     allowed_activities = parameters["allowed_activities"] if "allowed_activities" in parameters else None
     debug = parameters["debug"] if "debug" in parameters else False
 
@@ -259,21 +485,6 @@ def apply(ocpn, df, parameters=None):
     tvs = []
     eos = []
 
-    diag = dict()
-
-    diag["act_freq"] = {}
-    diag["arc_freq"] = {}
-    diag["group_size_hist"] = {}
-    diag["act_freq_replay"] = {}
-    diag["group_size_hist_replay"] = {}
-    diag["aligned_traces"] = {}
-    diag["place_fitness_per_trace"] = {}
-    diag["agg_statistics_frequency"] = {}
-    diag["agg_performance_min"] = {}
-    diag["agg_performance_max"] = {}
-    diag["agg_performance_median"] = {}
-    diag["agg_performance_mean"] = {}
-
     diff_log = 0
     diff_model = 0
     diff_token_replay = 0
@@ -281,13 +492,20 @@ def apply(ocpn, df, parameters=None):
     diff_basic_stats = 0
 
     persps = ocpn.object_types
-    # # when replaying streaming log, some objects are missing.
-    # persps = [x for x in persps if x in df.columns]
+    object_map = {}
+
+    replay_diag = dict()
+    replay_diag["act_freq"] = {}
+    replay_diag["arc_freq_persps"] = {}
+    replay_diag["group_size_hist"] = {}
+    replay_diag["place_fitness_per_trace"] = {}
 
     for persp in persps:
         net, im, fm = ocpn.nets[persp]
         aa = time.time()
-
+        object_map[persp] = set(df[persp])
+        # remove nan
+        object_map[persp] = {x for x in object_map[persp] if x == x}
         log = projection_factory.apply(df, persp, parameters=parameters)
 
         if allowed_activities is not None:
@@ -310,16 +528,16 @@ def apply(ocpn, df, parameters=None):
         xx1 = time.time()
         activ_count = projection_factory.apply(
             df, persp, variant="activity_occurrence", parameters=parameters)
+        replay_diag["act_freq"][persp] = activ_count
 
         xx2 = time.time()
 
         ee = time.time()
         variants_idx = variants_module.get_variants_from_log_trace_idx(log)
-        # variants = variants_module.convert_variants_trace_idx_to_trace_obj(log, variants_idx)
-        # parameters_tr = {PARAM_ACTIVITY_KEY: "concept:name", "variants": variants}
 
         aligned_traces, place_fitness_per_trace, transition_fitness_per_trace, notexisting_activities_in_model = run_timed_replay(
             log, net, im, fm, parameters={"enable_pltr_fitness": True, "disable_variants": True})
+        replay_diag["place_fitness_per_trace"][persp] = place_fitness_per_trace
 
         token_visits = [y for x in aligned_traces for y in x['token_visits']]
         event_occurrences = [
@@ -333,19 +551,13 @@ def apply(ocpn, df, parameters=None):
         element_statistics = performance_map.single_element_statistics(
             log, net, im, aligned_traces, variants_idx)
 
-        agg_statistics = aggregate_frequencies(
-            element_statistics)
-        # agg_performance_min = aggregate_statistics(
-        #     element_statistics, measure="performance", aggregation_measure="min")
-        # agg_performance_max = aggregate_statistics(
-        #     element_statistics, measure="performance", aggregation_measure="max")
-        # agg_performance_median = aggregate_statistics(
-        #     element_statistics, measure="performance", aggregation_measure="median")
-        # agg_performance_mean = aggregate_statistics(
-        #     element_statistics, measure="performance", aggregation_measure="mean")
+        agg_statistics = aggregate_frequencies(element_statistics)
+        replay_diag["arc_freq_persps"][persp] = agg_statistics
 
-        group_size_hist = projection_factory.apply(
-            df, persp, variant="group_size_hist", parameters=parameters)
+        if 'group_size' in parameters['measures']:
+            group_size_hist = projection_factory.apply(
+                df, persp, variant="group_size_hist", parameters=parameters)
+            replay_diag["group_size_hist"][persp] = group_size_hist
 
         occurrences = {}
         for trans in transition_fitness_per_trace:
@@ -358,82 +570,115 @@ def apply(ocpn, df, parameters=None):
                             occurrences[trans.label].add(
                                 (case_id, event["event_id"]))
 
-        # len_different_ids = {}
-        # for act in occurrences:
-        #     len_different_ids[act] = len(set(x[1] for x in occurrences[act]))
-
-        # eid_acti_count = {}
-        # for act in occurrences:
-        #     eid_acti_count[act] = {}
-        #     for x in occurrences[act]:
-        #         if not x[0] in eid_acti_count:
-        #             eid_acti_count[act][x[0]] = 0
-        #         eid_acti_count[act][x[0]] = eid_acti_count[act][x[0]] + 1
-        #     eid_acti_count[act] = sorted(list(eid_acti_count[act].values()))
-
-        # Diagnostics on transitions
-        diag["act_freq"][persp] = activ_count
-        diag["arc_freq"][persp] = agg_statistics
-        # diag["aligned_traces"][persp] = aligned_traces
-        diag["place_fitness_per_trace"][persp] = place_fitness_per_trace
-        diag["agg_statistics_frequency"][persp] = agg_statistics
-        # diag["agg_performance_min"][persp] = agg_performance_min
-        # diag["agg_performance_max"][persp] = agg_performance_max
-        # diag["agg_performance_median"][persp] = agg_performance_median
-        # diag["agg_performance_mean"][persp] = agg_performance_mean
-        diag["group_size_hist"][persp] = group_size_hist
-        # diag["act_freq_replay"][persp] = len_different_ids
-        # diag["group_size_hist_replay"][persp] = eid_acti_count
+    replay_diag["act_freq"] = merge_act_freq(replay_diag["act_freq"])
+    replay_diag["arc_freq"] = merge_replay(ocpn,
+                                           replay_diag["arc_freq_persps"])
+    merged_group_size_hist = merge_group_size_hist(
+        replay_diag["group_size_hist"])
+    replay_diag["group_size_hist"] = agg_merged_group_size_hist(
+        merged_group_size_hist)
+    replay_diag["place_fitness_per_trace"] = merge_place_fitness(
+        replay_diag["place_fitness_per_trace"])
 
     tvs = list(set(tvs))
     eos = list(set(eos))
-    pa = PerformanceAnalysis()
-    perf_records = pa.analyze(eos, tvs)
-    # for eo in eos:
-    #     perf_records['']
-    #     if eo.transition.label == 'Cancel application':
-    #         R = pa.correspond(eo, tvs)
-    #         print(f'Event: {eo}')
-    #         print(f'Corresponding Tokens: {R}')
-    #         print(f'Waiting Time: {pa.measure_waiting(eo, R)}')
+    pa = PerformanceAnalysis(object_map)
+    perf_diag = pa.analyze(eos, tvs, persps, parameters)
 
-    # with open("replay-{}.txt".format(persp), "w") as text_file:
-    #     text_file.write(str(tvs))
-    diag['agg_waiting_time'] = aggregate_perf_records(perf_records,
-                                                      measure_name='waiting', aggregation_measure='all')
-    diag['agg_service_time'] = aggregate_perf_records(perf_records,
-                                                      measure_name='service', aggregation_measure='all')
-    diag['agg_sojourn_time'] = aggregate_perf_records(perf_records,
-                                                      measure_name='sojourn', aggregation_measure='all')
-    diag['agg_synchronization_time'] = aggregate_perf_records(perf_records,
-                                                              measure_name='synchronization', aggregation_measure='all')
+    # merge replay diagnostics and performance diagnostics
+    diag = {**perf_diag, **replay_diag}
 
-    # diag["computation_statistics"] = {"diff_log": diff_log, "diff_model": diff_model,
-    #                                   "diff_token_replay": diff_token_replay,
-    #                                   "diff_performance_annotation": diff_performance_annotation,
-    #                                   "diff_basic_stats": diff_basic_stats}
+    return transform_diagnostics(ocpn, diag, parameters)
 
-    # Transitions
-    diag["replayed_act_freq"] = merge_act_freq(diag["act_freq"])
-    diag["replayed_arc_frequency"] = merge_replay(diag["arc_freq"])
-    merged_group_size_hist = merge_group_size_hist(diag["group_size_hist"])
-    diag["agg_merged_group_size_hist"] = agg_merged_group_size_hist(
-        merged_group_size_hist)
-    diag["replayed_place_fitness"] = merge_place_fitness(
-        diag["place_fitness_per_trace"])
-    # diag["replayed_performance_median"] = merge_agg_performance(
-    #     diag["agg_performance_median"])
-    # diag["replayed_performance_mean"] = merge_agg_performance(
-    #     diag["agg_performance_mean"])
-    # diag["replayed_performance_min"] = merge_agg_performance(
-    #     diag["agg_performance_min"])
-    # diag["replayed_performance_max"] = merge_agg_performance(
-    #     diag["agg_performance_max"])
 
-    # Places
+def transform_diagnostics(ocpn, diag, parameters):
 
-    print(diag)
-    return diag
+    if 'waiting_time' in parameters['measures']:
+        p_waiting = True
+    else:
+        p_waiting = False
+    if 'service_time' in parameters['measures']:
+        p_service = True
+    else:
+        p_service = False
+    if 'sojourn_time' in parameters['measures']:
+        p_sojourn = True
+    else:
+        p_sojourn = False
+    if 'synchronization_time' in parameters['measures']:
+        p_sync = True
+    else:
+        p_sync = False
+    if 'pooling_time' in parameters['measures']:
+        p_pooling = True
+    else:
+        p_pooling = False
+    if 'lagging_time' in parameters['measures']:
+        p_lagging = True
+    else:
+        p_lagging = False
+    if 'group_size' in parameters['measures']:
+        p_group_size = True
+    else:
+        p_group_size = False
+    if 'act_freq' in parameters['measures']:
+        p_act_freq = True
+    else:
+        p_act_freq = False
+    if 'arc_freq' in parameters['measures']:
+        p_arc_freq = True
+    else:
+        p_arc_freq = False
+    if 'flow_time' in parameters['measures']:
+        p_flow = True
+    else:
+        p_flow = False
+
+    transformed_diag = {}
+
+    for tr in ocpn.transitions:
+        if tr.silent == False:
+            transformed_diag[tr.name] = {}
+            # transformed_diag[tr.name]["act_freq"] = textualize_act_freq(
+            #     tr.name, diag['act_freq'])
+            transformed_diag[tr.name]["act_freq"] = diag['act_freq'][tr.name]
+
+            if p_group_size:
+                transformed_diag[tr.name]["group_size_hist"] = textualize_group_size(
+                    tr.name, parameters['agg'], diag["group_size_hist"])
+
+            if p_waiting:
+                transformed_diag[tr.name]['waiting_time'] = textualize_waiting_time(
+                    tr.name, parameters['agg'], diag['agg_waiting_time'])
+
+            if p_service:
+                transformed_diag[tr.name]['service_time'] = textualize_service_time(
+                    tr.name, parameters['agg'], diag['agg_service_time'])
+
+            if p_sojourn:
+                transformed_diag[tr.name]['sojourn_time'] = textualize_sojourn_time(
+                    tr.name, parameters['agg'], diag['agg_sojourn_time'])
+
+            if p_sync:
+                transformed_diag[tr.name]['synchronization_time'] = textualize_synchronization_time(
+                    tr.name, parameters['agg'], diag['agg_synchronization_time'])
+
+            if p_pooling:
+                transformed_diag[tr.name]['pooling_time'] = textualize_pooling_time(
+                    tr.name, ocpn.object_types, parameters['agg'], diag['agg_pooling_time'])
+
+            if p_lagging:
+                transformed_diag[tr.name]['lagging_time'] = textualize_lagging_time(
+                    tr.name, ocpn.object_types, parameters['agg'], diag['agg_lagging_time'])
+
+            if p_flow:
+                transformed_diag[tr.name]['flow_time'] = textualize_flow_time(
+                    tr.name, parameters['agg'], diag['agg_flow_time'])
+
+    transformed_diag['arc_freq'] = diag['arc_freq']
+    print(transformed_diag)
+
+    return transformed_diag
 
 
 # def merge_agg_performance(agg_performance):
@@ -444,12 +689,30 @@ def apply(ocpn, df, parameters=None):
 #     return merged_agg_performance
 
 
-def merge_replay(replay):
+def merge_replay(ocpn, replay):
     merged_replay = dict()
+    arcs = [a for a in ocpn.arcs]
     for persp in replay.keys():
         for elem in replay[persp].keys():
             if type(elem) is PetriNet.Arc:
-                merged_replay[elem.__repr__()] = replay[persp][elem]
+                arc_name = ""
+                if type(elem.source) == PetriNet.Place:
+                    arc_name += "(p)" + elem.source.name
+                else:
+                    if elem.source.label:
+                        arc_name += "(t)" + elem.source.label
+                    else:
+                        arc_name += "(t)" + elem.source.name
+                arc_name += "->"
+                if type(elem.target) == PetriNet.Place:
+                    arc_name += "(p)" + elem.target.name
+                else:
+                    if elem.target.label:
+                        arc_name += "(t)" + elem.target.label
+                    else:
+                        arc_name += "(t)" + elem.target.name
+
+                merged_replay[arc_name] = replay[persp][elem]
     return merged_replay
 
 
@@ -517,3 +780,121 @@ def agg_merged_group_size_hist(merged_group_size_hist):
                 merged_group_size_hist[act][persp])
 
     return agg_merged_group_size_hist
+
+
+def textualize_act_freq(tr_name, act_freq):
+    text = "Activity frequency: "
+    text += f'{act_freq[tr_name]}'
+    return text
+
+
+def textualize_waiting_time(tr_name, aggs, waiting_time):
+    record = {}
+    text = "Waiting time: {"
+    for agg in aggs:
+        text += f' {agg}: '
+        if agg in waiting_time[tr_name]:
+            record[agg] = waiting_time[tr_name][agg]
+            text += f'{waiting_time[tr_name][agg]}'
+    text += '}'
+    return record
+
+
+def textualize_service_time(tr_name, aggs, service_time):
+    record = {}
+    text = "Service time: {"
+    for agg in aggs:
+        text += f' {agg}: '
+        if agg in service_time[tr_name]:
+            record[agg] = service_time[tr_name][agg]
+            text += f'{service_time[tr_name][agg]}'
+    text += '}'
+    return record
+
+
+def textualize_sojourn_time(tr_name, aggs, sojourn_time):
+    record = {}
+    text = "sojourn time: {"
+    for agg in aggs:
+        text += f' {agg}: '
+        if agg in sojourn_time[tr_name]:
+            record[agg] = sojourn_time[tr_name][agg]
+            text += f'{sojourn_time[tr_name][agg]}'
+    text += '}'
+    return record
+
+
+def textualize_synchronization_time(tr_name, aggs, synchronization_time):
+    record = {}
+    text = "synchronization time: {"
+    for agg in aggs:
+        text += f' {agg}: '
+        if agg in synchronization_time[tr_name]:
+            record[agg] = synchronization_time[tr_name][agg]
+            text += f'{synchronization_time[tr_name][agg]}'
+    text += '}'
+    return record
+
+
+def textualize_group_size(tr_name, aggs, group_size):
+    record = {}
+    text = "Number of objects: { "
+    for agg in aggs:
+        text += f'{agg}: {{'
+        record[agg] = {}
+        if agg in group_size[tr_name]:
+            for obj_type in group_size[tr_name][agg].keys():
+                record[agg][obj_type] = group_size[tr_name][agg][obj_type]
+                text += f" {obj_type}={group_size[tr_name][agg][obj_type]} "
+        text += '} '
+    text += '}'
+    return record
+
+
+def textualize_lagging_time(tr_name, obj_types, aggs, lagging_time):
+    record = {}
+    text = "lagging time: { "
+    for obj_type in obj_types:
+        record[obj_type] = {}
+        if tr_name in lagging_time[obj_type]:
+            text += f'{obj_type}: {{'
+            for agg in aggs:
+                if agg in lagging_time[obj_type][tr_name]:
+                    record[obj_type][agg] = lagging_time[obj_type][tr_name][agg]
+                    text += f'{agg}: {{'
+                    text += f" {obj_type}={lagging_time[obj_type][tr_name][agg]} "
+                    text += '} '
+            text += '} '
+    text += '}'
+    return record
+
+
+def textualize_pooling_time(tr_name, obj_types, aggs, pooling_time):
+    record = {}
+    text = "Pooling time: { "
+    for obj_type in obj_types:
+        record[obj_type] = {}
+        if tr_name in pooling_time[obj_type]:
+            text += f'{obj_type}: {{'
+            for agg in aggs:
+                if agg in pooling_time[obj_type][tr_name]:
+                    record[obj_type][agg] = pooling_time[obj_type][tr_name][agg]
+                    text += f'{agg}: {{'
+                    text += f" {obj_type}={pooling_time[obj_type][tr_name][agg]} "
+                    text += '} '
+            text += '} '
+    text += '}'
+
+    return record
+
+
+def textualize_flow_time(tr_name, aggs, flow_time):
+    record = {}
+    text = "flow time: {"
+    for agg in aggs:
+        text += f' {agg}: '
+        if agg in flow_time[tr_name]:
+            record[agg] = flow_time[tr_name][agg]
+            text += f'{flow_time[tr_name][agg]}'
+    text += '}'
+    return record

@@ -9,22 +9,23 @@ from ocpa.objects.log.obj import Event, Obj, ObjectCentricEventLog, MetaObjectCe
 
 
 def add_event(events: Dict[str, Event], index, row, cfg) -> None:
+    print(cfg["val_names"])
     events[str(index)] = Event(
         id=str(index),
         act=row[cfg["act_name"]],
         time=to_datetime(row[cfg["time_name"]]),
         omap=list(itertools.chain.from_iterable(
             [safe_split(row[obj])
-             for obj in cfg["obj_names"] if (row[obj] != '{}' and str(row[obj]).lower() != "nan")]
+             for obj in cfg["obj_names"] if (row[obj] != '{}' and row[obj] != [] and row[obj] != '[]' and row[obj] != '' and str(row[obj]).lower() != "nan")]
         )),
         vmap={attr: row[attr] for attr in cfg["val_names"]})
 
     # add start time if exists, otherwise None for performance analysis
     if "start_time" in cfg:
-        events[str(index)].vmap["start_time"] = to_datetime(
+        events[str(index)].vmap["event_start_timestamp"] = to_datetime(
             row[cfg["start_time"]])
     else:
-        events[str(index)].vmap["start_time"] = None
+        events[str(index)].vmap["event_start_timestamp"] = None
 
 
 def safe_split(row_obj):
@@ -58,7 +59,7 @@ def apply(df: pd.DataFrame, parameters: Dict) -> ObjectCentricEventLog:
                 # Only nonempty sets of objects ids per object type
                 list(itertools.chain.from_iterable(
                     [[obj_id + '/' + str(obj) for i, obj_id in enumerate(safe_split(row[obj]))]
-                     for obj in parameters["obj_names"] if row[obj] != '{}' and str(row[obj]).lower() != "nan"]
+                     for obj in parameters["obj_names"] if row[obj] != '{}' and row[obj] != [] and row[obj] != '[]' and row[obj] != '' and str(row[obj]).lower() != "nan"]
                 ))
                 )
         acts.add(row[parameters["act_name"]])

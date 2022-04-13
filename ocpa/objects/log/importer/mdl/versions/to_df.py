@@ -3,20 +3,19 @@ from ast import literal_eval
 import math
 
 
-def apply(all_df, parameters=None):
+def apply(df, parameters=None):
     if parameters is None:
         raise ValueError("Specify parsing parameters")
 
-    # eve_cols = [x for x in all_df.columns if x.startswith("event_")]
-    # obj_cols = [x for x in all_df.columns if not x.startswith("event_")]
+    # eve_cols = [x for x in df.columns if x.startswith("event_")]
+    # obj_cols = [x for x in df.columns if not x.startswith("event_")]
     obj_cols = parameters['obj_names']
-    df = all_df
 
     def _eval(x):
         if x == 'set()':
             x = '{}'
         if type(x) == float and math.isnan(x):
-            return None
+            return '[]'
         else:
             return literal_eval(x)
 
@@ -24,16 +23,25 @@ def apply(all_df, parameters=None):
         for c in obj_cols:
             df[c] = df[c].apply(_eval)
 
+    df['activity'] = df[parameters['act_name']]
+    del df[parameters['act_name']]
+    df['timestamp'] = df[parameters['time_name']]
+    del df[parameters['time_name']]
+    if "start_time" in parameters:
+        df['start_timestamp'] = df[parameters['start_time']]
+        del df[parameters['start_time']]
+
     rename_dict = {}
-    for col in [x for x in all_df.columns if not x.startswith("event_")]:
+    for col in [x for x in df.columns if not x.startswith("event_")]:
         if col not in obj_cols:
             rename_dict[col] = 'event_' + col
     df.rename(columns=rename_dict, inplace=True)
 
-    df[parameters['time_name']] = pd.to_datetime(df[parameters['time_name']])
+    df['event_timestamp'] = pd.to_datetime(df['event_timestamp'])
+    print(df)
     if "start_time" in parameters:
         df["event_start_timestamp"] = pd.to_datetime(
-            df[parameters['start_time']])
+            df['event_start_timestamp'])
     df = df.dropna(subset=["event_id"])
     df["event_id"] = df["event_id"].astype(str)
     df.type = "succint"

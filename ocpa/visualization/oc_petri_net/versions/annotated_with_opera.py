@@ -1,7 +1,6 @@
 import uuid
 import tempfile
 from graphviz import Digraph
-from pm4py.objects.petri.petrinet import PetriNet
 from ocpa.objects.oc_petri_net.obj import ObjectCentricPetriNet
 from ocpa.visualization.oc_petri_net.util.util import equal_arc
 from statistics import median, mean
@@ -26,165 +25,42 @@ def apply(ocpn, diagnostics, parameters=None):
     all_objs = {}
     trans_names = {}
 
-    act_count = diagnostics["replayed_act_freq"]
-    agg_merged_group_size_hist = diagnostics["agg_merged_group_size_hist"]
-    replayed_place_fitness = diagnostics["replayed_place_fitness"]
-    replayed_arc_frequency = diagnostics["replayed_arc_frequency"]
-
-    agg_waiting_time = diagnostics["agg_waiting_time"]
-    agg_service_time = diagnostics["agg_service_time"]
-    agg_sojourn_time = diagnostics["agg_sojourn_time"]
-    agg_synchronization_time = diagnostics["agg_synchronization_time"]
-
-    if 'act_freq' in parameters:
-        act_freq = parameters['act_freq']
+    if 'waiting_time' in parameters['measures']:
+        p_waiting = True
     else:
-        act_freq = False
-
-    if 'max_group_size' in parameters:
-        max_group_size = parameters['max_group_size']
+        p_waiting = False
+    if 'service_time' in parameters['measures']:
+        p_service = True
     else:
-        max_group_size = False
-
-    if 'min_group_size' in parameters:
-        min_group_size = parameters['min_group_size']
+        p_service = False
+    if 'sojourn_time' in parameters['measures']:
+        p_sojourn = True
     else:
-        min_group_size = False
-
-    if 'mean_group_size' in parameters:
-        mean_group_size = parameters['mean_group_size']
+        p_sojourn = False
+    if 'synchronization_time' in parameters['measures']:
+        p_sync = True
     else:
-        mean_group_size = False
-
-    if 'median_group_size' in parameters:
-        median_group_size = parameters['median_group_size']
+        p_sync = False
+    if 'pooling_time' in parameters['measures']:
+        p_pooling = True
     else:
-        median_group_size = False
-
-    if 'produced_token' in parameters:
-        produced_token = parameters['produced_token']
+        p_pooling = False
+    if 'lagging_time' in parameters['measures']:
+        p_lagging = True
     else:
-        produced_token = False
-
-    if 'consumed_token' in parameters:
-        consumed_token = parameters['consumed_token']
+        p_lagging = False
+    if 'group_size' in parameters['measures']:
+        p_group_size = True
     else:
-        consumed_token = False
-
-    if 'missing_token' in parameters:
-        missing_token = parameters['missing_token']
+        p_group_size = False
+    if 'act_freq' in parameters['measures']:
+        p_act_freq = True
     else:
-        missing_token = False
-
-    if 'remaining_token' in parameters:
-        remaining_token = parameters['remaining_token']
+        p_act_freq = False
+    if 'arc_freq' in parameters['measures']:
+        p_arc_freq = True
     else:
-        remaining_token = False
-
-    if 'arc_freq' in parameters:
-        arc_freq = parameters['arc_freq']
-    else:
-        arc_freq = False
-
-    if 'mean_waiting_time' in parameters:
-        mean_waiting_time = parameters['mean_waiting_time']
-    else:
-        mean_waiting_time = False
-
-    if 'median_waiting_time' in parameters:
-        median_waiting_time = parameters['median_waiting_time']
-    else:
-        median_waiting_time = False
-
-    if 'min_waiting_time' in parameters:
-        min_waiting_time = parameters['min_waiting_time']
-    else:
-        min_waiting_time = False
-
-    if 'max_waiting_time' in parameters:
-        max_waiting_time = parameters['max_waiting_time']
-    else:
-        max_waiting_time = False
-
-    if 'stdev_waiting_time' in parameters:
-        stdev_waiting_time = parameters['stdev_waiting_time']
-    else:
-        stdev_waiting_time = False
-
-    if 'mean_service_time' in parameters:
-        mean_service_time = parameters['mean_service_time']
-    else:
-        mean_service_time = False
-
-    if 'median_service_time' in parameters:
-        median_service_time = parameters['median_service_time']
-    else:
-        median_service_time = False
-
-    if 'min_service_time' in parameters:
-        min_service_time = parameters['min_service_time']
-    else:
-        min_service_time = False
-
-    if 'max_service_time' in parameters:
-        max_service_time = parameters['max_service_time']
-    else:
-        max_service_time = False
-
-    if 'stdev_service_time' in parameters:
-        stdev_service_time = parameters['stdev_service_time']
-    else:
-        stdev_service_time = False
-
-    if 'mean_sojourn_time' in parameters:
-        mean_sojourn_time = parameters['mean_sojourn_time']
-    else:
-        mean_sojourn_time = False
-
-    if 'median_sojourn_time' in parameters:
-        median_sojourn_time = parameters['median_sojourn_time']
-    else:
-        median_sojourn_time = False
-
-    if 'min_sojourn_time' in parameters:
-        min_sojourn_time = parameters['min_sojourn_time']
-    else:
-        min_sojourn_time = False
-
-    if 'max_sojourn_time' in parameters:
-        max_sojourn_time = parameters['max_sojourn_time']
-    else:
-        max_sojourn_time = False
-
-    if 'stdev_sojourn_time' in parameters:
-        stdev_sojourn_time = parameters['stdev_sojourn_time']
-    else:
-        stdev_sojourn_time = False
-
-    if 'mean_synchronization_time' in parameters:
-        mean_synchronization_time = parameters['mean_synchronization_time']
-    else:
-        mean_synchronization_time = False
-
-    if 'median_synchronization_time' in parameters:
-        median_synchronization_time = parameters['median_synchronization_time']
-    else:
-        median_synchronization_time = False
-
-    if 'min_synchronization_time' in parameters:
-        min_synchronization_time = parameters['min_synchronization_time']
-    else:
-        min_synchronization_time = False
-
-    if 'max_synchronization_time' in parameters:
-        max_synchronization_time = parameters['max_synchronization_time']
-    else:
-        max_synchronization_time = False
-
-    if 'stdev_synchronization_time' in parameters:
-        stdev_synchronization_time = parameters['stdev_synchronization_time']
-    else:
-        stdev_synchronization_time = False
+        p_arc_freq = False
 
     pl_count = 1
     tr_count = 1
@@ -205,10 +81,10 @@ def apply(ocpn, diagnostics, parameters=None):
         color = color_mapping[pl.object_type]
 
         pl_label = pl.name
-        if missing_token == True:
-            pl_str = "p=%d r=%d\\nc=%d m=%d" % (
-                replayed_place_fitness[pl.name]["p"], replayed_place_fitness[pl.name]["r"], replayed_place_fitness[pl.name]["c"], replayed_place_fitness[pl.name]["m"])
-            pl_label += "\n %s" % (pl_str)
+        # if missing_token == True:
+        #     pl_str = "p=%d r=%d\\nc=%d m=%d" % (
+        #         diagnostics["place_fitness_per_trace"][pl.name]["p"], diagnostics["place_fitness_per_trace"][pl.name]["r"], diagnostics["place_fitness_per_trace"][pl.name]["c"], diagnostics["place_fitness_per_trace"][pl.name]["m"])
+        #     pl_label += "\n %s" % (pl_str)
 
         if pl.initial == True:
             g.node("(p)%s" % (pl.name), pl.name, shape="circle", style="filled", fillcolor=color, color=color,
@@ -231,124 +107,37 @@ def apply(ocpn, diagnostics, parameters=None):
             all_objs[tr] = this_uuid
         elif tr.name not in trans_names:
             tr_label = tr.name
-            tr_xlabel = "Performance of %s" % (tr.name)
-            if act_freq == True:
-                tr_label += "\n (%d)" % (act_count[tr.name])
+            tr_xlabel = "?"
+            # tr_xlabel = "Performance of %s" % (tr.name)
+            tr_label += f"\n {diagnostics[tr.name]['act_freq']}"
 
-            if max_group_size == True:
-                tr_xlabel += "<br/> max. number of objects: "
-                for obj_type in agg_merged_group_size_hist[tr.name]["max"].keys():
-                    tr_xlabel += "%s=%d " % (obj_type,
-                                             agg_merged_group_size_hist[tr.name]["max"][obj_type])
+            # if p_group_size:
+            #     tr_xlabel += f'\n {diagnostics[tr.name]["group_size_hist"]}'
 
-            if min_group_size == True:
-                tr_xlabel += "<br/> min. number of objects: "
-                for obj_type in agg_merged_group_size_hist[tr.name]["min"].keys():
-                    tr_xlabel += "%s=%d " % (obj_type,
-                                             agg_merged_group_size_hist[tr.name]["min"][obj_type])
+            # if p_waiting:
+            #     tr_xlabel += '<br/>'
+            #     tr_xlabel += diagnostics[tr.name]['waiting_time']
 
-            if mean_group_size == True:
-                tr_xlabel += "<br/> mean number of objects: "
-                for obj_type in agg_merged_group_size_hist[tr.name]["mean"].keys():
-                    tr_xlabel += "%s=%d " % (
-                        obj_type, agg_merged_group_size_hist[tr.name]["mean"][obj_type])
+            # if p_service:
+            #     tr_xlabel += '<br/>'
+            #     tr_xlabel += diagnostics[tr.name]['service_time']
 
-            if median_group_size == True:
-                tr_xlabel += "<br/> median number of objects: "
-                for obj_type in agg_merged_group_size_hist[tr.name]["median"].keys():
-                    tr_xlabel += "%s=%d " % (
-                        obj_type, agg_merged_group_size_hist[tr.name]["median"][obj_type])
-            if mean_waiting_time == True:
-                tr_xlabel += "<br/> mean waiting time: "
-                if tr.name in agg_waiting_time:
-                    tr_xlabel += "%s " % (agg_waiting_time[tr.name]["mean"])
-            if median_waiting_time == True:
-                tr_xlabel += "<br/> median waiting time: "
-                if tr.name in agg_waiting_time:
-                    tr_xlabel += "%s " % (agg_waiting_time[tr.name]["median"])
-            if min_waiting_time == True:
-                tr_xlabel += "<br/> min. waiting time: "
-                if tr.name in agg_waiting_time:
-                    tr_xlabel += "%s " % (agg_waiting_time[tr.name]["min"])
-            if max_waiting_time == True:
-                tr_xlabel += "<br/> max. waiting time: "
-                if tr.name in agg_waiting_time:
-                    tr_xlabel += "%s " % (agg_waiting_time[tr.name]["max"])
-            if stdev_waiting_time == True:
-                tr_xlabel += "<br/> stdev. waiting time: "
-                if tr.name in agg_waiting_time:
-                    tr_xlabel += "%s " % (agg_waiting_time[tr.name]["stdev"])
+            # if p_sojourn:
+            #     tr_xlabel += '<br/>'
+            #     tr_xlabel += diagnostics[tr.name]['sojourn_time']
 
-            if mean_service_time == True:
-                tr_xlabel += "<br/> mean service time: "
-                if tr.name in agg_service_time:
-                    tr_xlabel += "%s " % (agg_service_time[tr.name]["mean"])
-            if median_service_time == True:
-                tr_xlabel += "<br/> median service time: "
-                if tr.name in agg_service_time:
-                    tr_xlabel += "%s " % (agg_service_time[tr.name]["median"])
-            if min_service_time == True:
-                tr_xlabel += "<br/> min. service time: "
-                if tr.name in agg_service_time:
-                    tr_xlabel += "%s " % (agg_service_time[tr.name]["min"])
-            if max_service_time == True:
-                tr_xlabel += "<br/> max. service time: "
-                if tr.name in agg_service_time:
-                    tr_xlabel += "%s " % (agg_service_time[tr.name]["max"])
-            if stdev_service_time == True:
-                tr_xlabel += "<br/> stdev. service time: "
-                if tr.name in agg_service_time:
-                    tr_xlabel += "%s " % (agg_service_time[tr.name]["stdev"])
+            # if p_sync:
+            #     tr_xlabel += '<br/>'
+            #     tr_xlabel += diagnostics[tr.name]['synchronization_time']
 
-            if mean_sojourn_time == True:
-                tr_xlabel += "<br/> mean sojourn time: "
-                if tr.name in agg_sojourn_time:
-                    tr_xlabel += "%s " % (agg_sojourn_time[tr.name]["mean"])
-            if median_sojourn_time == True:
-                tr_xlabel += "<br/> median sojourn time: "
-                if tr.name in agg_sojourn_time:
-                    tr_xlabel += "%s " % (agg_sojourn_time[tr.name]["median"])
-            if min_sojourn_time == True:
-                tr_xlabel += "<br/> min. sojourn time: "
-                if tr.name in agg_sojourn_time:
-                    tr_xlabel += "%s " % (agg_sojourn_time[tr.name]["min"])
-            if max_sojourn_time == True:
-                tr_xlabel += "<br/> max. sojourn time: "
-                if tr.name in agg_sojourn_time:
-                    tr_xlabel += "%s " % (agg_sojourn_time[tr.name]["max"])
-            if stdev_sojourn_time == True:
-                tr_xlabel += "<br/> stdev. sojourn time: "
-                if tr.name in agg_sojourn_time:
-                    tr_xlabel += "%s " % (agg_sojourn_time[tr.name]["stdev"])
+            # if p_pooling:
+            #     tr_xlabel += '<br/>'
+            #     tr_xlabel += diagnostics[tr.name]['pooling_time']
 
-            if mean_synchronization_time == True:
-                tr_xlabel += "<br/> mean synchronization time: "
-                if tr.name in agg_synchronization_time:
-                    tr_xlabel += "%s " % (
-                        agg_synchronization_time[tr.name]["mean"])
-            if median_synchronization_time == True:
-                tr_xlabel += "<br/> median synchronization time: "
-                if tr.name in agg_synchronization_time:
-                    tr_xlabel += "%s " % (
-                        agg_synchronization_time[tr.name]["median"])
-            if min_synchronization_time == True:
-                tr_xlabel += "<br/> min. synchronization time: "
-                if tr.name in agg_synchronization_time:
-                    tr_xlabel += "%s " % (
-                        agg_synchronization_time[tr.name]["min"])
-            if max_synchronization_time == True:
-                tr_xlabel += "<br/> max. synchronization time: "
-                if tr.name in agg_synchronization_time:
-                    tr_xlabel += "%s " % (
-                        agg_synchronization_time[tr.name]["max"])
-            if stdev_synchronization_time == True:
-                tr_xlabel += "<br/> stdev. synchronization time: "
-                if tr.name in agg_synchronization_time:
-                    tr_xlabel += "%s " % (
-                        agg_synchronization_time[tr.name]["stdev"])
-
-            # g.node("(t)%s" % (tr.name), "%s" % (tr_label), shape="box", fontsize="36.0",
-            #        labelfontsize="36.0", xlabel='''<<FONT POINT-SIZE="11">%s</FONT>>''' % (tr_xlabel))
+            # if p_lagging:
+            #     tr_xlabel += '<br/>'
+            #     tr_xlabel += diagnostics[tr.name]['lagging_time']
+            #     tr_xlabel += '<br/>'
             g.node("(t)%s" % (tr.name), "%s" % (tr_label), shape="box", fontsize="36.0",
                    labelfontsize="36.0", xlabel='''<<FONT POINT-SIZE="5">%s</FONT>>''' % (tr_xlabel))
             trans_names[tr.name] = tr.name
@@ -373,9 +162,8 @@ def apply(ocpn, diagnostics, parameters=None):
         color = color_mapping[object_type]
 
         penwidth = "1"
-        if arc_freq == True:
-            freq = replayed_arc_frequency[arc.__repr__()]
-            arc_annotation += "\n freq=%s" % (freq)
+        freq = diagnostics["arc_freq"][arc.__repr__()]
+        arc_annotation += f"{freq}"
         if arc.variable == True:
             g.edge(all_objs[source_node], all_objs[target_node],
                    label=arc_annotation, color=color + ":white:" + color, fontsize="13.0", penwidth=penwidth)
@@ -390,3 +178,54 @@ def apply(ocpn, diagnostics, parameters=None):
 
     g.format = image_format
     return g
+
+
+def add_group_size(tr_name, agg, group_size):
+    added_tr_xlabel = f"<br/> {agg} number of objects: "
+    if agg in group_size[tr_name]:
+        for obj_type in group_size[tr_name][agg].keys():
+            added_tr_xlabel += "%s=%d " % (obj_type,
+                                           group_size[tr_name][agg][obj_type])
+    return added_tr_xlabel
+
+
+def add_waiting_time(tr_name, agg, waiting_time):
+    added_tr_xlabel = f"<br/> {agg} waiting time: "
+    if tr_name in waiting_time and agg in waiting_time[tr_name]:
+        added_tr_xlabel += "%s " % (waiting_time[tr_name][agg])
+    return added_tr_xlabel
+
+
+def add_service_time(tr_name, agg, service_time):
+    added_tr_xlabel = f"<br/> {agg} service time: "
+    if tr_name in service_time and agg in service_time[tr_name]:
+        added_tr_xlabel += "%s " % (service_time[tr_name][agg])
+    return added_tr_xlabel
+
+
+def add_sojourn_time(tr_name, agg, sojourn_time):
+    added_tr_xlabel = f"<br/> {agg} sojourn time: "
+    if tr_name in sojourn_time and agg in sojourn_time[tr_name]:
+        added_tr_xlabel += "%s " % (sojourn_time[tr_name][agg])
+    return added_tr_xlabel
+
+
+def add_synchronization_time(tr_name, agg, synchronization_time):
+    added_tr_xlabel = f"<br/> {agg} synchronization time: "
+    if tr_name in synchronization_time and agg in synchronization_time[tr_name]:
+        added_tr_xlabel += "%s " % (synchronization_time[tr_name][agg])
+    return added_tr_xlabel
+
+
+def add_pooling_time(tr_name, ot, agg, pooling_time):
+    added_tr_xlabel = f"<br/> {agg} pooling time: "
+    if tr_name in pooling_time[ot] and agg in pooling_time[ot][tr_name]:
+        added_tr_xlabel += "%s " % (pooling_time[ot][tr_name][agg])
+    return added_tr_xlabel
+
+
+def add_lagging_time(tr_name, ot, agg, lagging_time):
+    added_tr_xlabel = f"<br/> {agg} lagging time: "
+    if tr_name in lagging_time[ot] and agg in lagging_time[ot][tr_name]:
+        added_tr_xlabel += "%s " % (lagging_time[ot][tr_name][agg])
+    return added_tr_xlabel

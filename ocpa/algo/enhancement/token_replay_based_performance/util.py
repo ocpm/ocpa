@@ -439,7 +439,7 @@ def apply_trace(trace, net, initial_marking, final_marking, trans_map, enable_pl
     act_trans = []
     transitions_with_problems = []
     vis_mark = []
-    my_mark = {'start': [], 'end': []}
+    my_mark = {'history': [], 'start': [], 'end': []}
     my_event_mark = []
     activating_transition_index = {}
     activating_transition_interval = []
@@ -531,6 +531,12 @@ def apply_trace(trace, net, initial_marking, final_marking, trans_map, enable_pl
                             p, pmap = get_produced_tokens(tt5)
                             for pl, count in pmap.items():
                                 for k in range(count):
+                                    # if i > 0:
+                                    #     my_mark['history'].append(
+                                    #         [pl, trace._attributes[xes_util.DEFAULT_TRACEID_KEY], trace[i-1][ocpa_constants.DEFAULT_START_TIMESTAMP_KEY]])
+                                    # else:
+                                    #     my_mark['history'].append(
+                                    #         [pl, trace._attributes[xes_util.DEFAULT_TRACEID_KEY], trace[i][ocpa_constants.DEFAULT_START_TIMESTAMP_KEY]])
                                     if i > 0:
                                         my_mark['start'].append(
                                             [pl, trace._attributes[xes_util.DEFAULT_TRACEID_KEY], trace[i-1][ocpa_constants.DEFAULT_TIMESTAMP_KEY]])
@@ -585,6 +591,8 @@ def apply_trace(trace, net, initial_marking, final_marking, trans_map, enable_pl
                     p, pmap = get_produced_tokens(t)
                     for pl, count in pmap.items():
                         for k in range(count):
+                            # my_mark['history'].append(
+                            #     [pl, trace._attributes[xes_util.DEFAULT_TRACEID_KEY], trace[i][ocpa_constants.DEFAULT_START_TIMESTAMP_KEY]])
                             my_mark['start'].append(
                                 [pl, trace._attributes[xes_util.DEFAULT_TRACEID_KEY], trace[i][ocpa_constants.DEFAULT_TIMESTAMP_KEY]])
                     consumed = consumed + c
@@ -663,6 +671,8 @@ def apply_trace(trace, net, initial_marking, final_marking, trans_map, enable_pl
                             p, pmap = get_produced_tokens(t)
                             for pl, count in pmap.items():
                                 for k in range(count):
+                                    # my_mark['history'].append(
+                                    #     [pl, trace._attributes[xes_util.DEFAULT_TRACEID_KEY], trace[i][ocpa_constants.DEFAULT_START_TIMESTAMP_KEY]])
                                     my_mark['start'].append(
                                         [pl, trace._attributes[xes_util.DEFAULT_TRACEID_KEY], trace[i][ocpa_constants.DEFAULT_TIMESTAMP_KEY]])
                             if enable_pltr_fitness:
@@ -710,6 +720,8 @@ def apply_trace(trace, net, initial_marking, final_marking, trans_map, enable_pl
                                 p, pmap = get_produced_tokens(t)
                                 for pl, count in pmap.items():
                                     for k in range(count):
+                                        # my_mark['history'].append(
+                                        #     [pl, trace._attributes[xes_util.DEFAULT_TRACEID_KEY], trace[i][ocpa_constants.DEFAULT_START_TIMESTAMP_KEY]])
                                         my_mark['start'].append(
                                             [pl, trace._attributes[xes_util.DEFAULT_TRACEID_KEY], trace[i][ocpa_constants.DEFAULT_TIMESTAMP_KEY]])
                                 if enable_pltr_fitness:
@@ -827,7 +839,6 @@ def apply_trace(trace, net, initial_marking, final_marking, trans_map, enable_pl
                             "this_activated_transitions": this_activated_trans,
                             "this_visited_markings": this_visited_markings,
                             "previousActivity": previous_activity}
-
     tvs = []
     for start_token in my_mark['start']:
         start_token_name = (start_token[0], start_token[1])

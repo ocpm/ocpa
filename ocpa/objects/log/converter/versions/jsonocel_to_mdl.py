@@ -4,11 +4,10 @@ import pandas as pd
 def apply(ocel, return_obj_df=True, parameters=None):
     if parameters is None:
         parameters = {}
-
     if 'return_obj_df' in parameters:
         return_obj_df = parameters['return_obj_df']
     else:
-        return_obj_df = None
+        return_obj_df = True
 
     prefix = "ocel:"
 
@@ -18,9 +17,9 @@ def apply(ocel, return_obj_df=True, parameters=None):
     obj_type = {}
     for obj in objects:
         obj_type[objects[obj].id] = objects[obj].type
-
     eve_stream = []
     for ev in events:
+        # print(events[ev])
         new_omap = {}
         for obj in events[ev].omap:
             typ = obj_type[obj]
@@ -34,7 +33,10 @@ def apply(ocel, return_obj_df=True, parameters=None):
         el["event_activity"] = events[ev].act
         el["event_timestamp"] = events[ev].time
         for k2 in events[ev].vmap:
-            el["event_" + k2] = events[ev].vmap[k2]
+            if k2.startswith("event_"):
+                el[k2] = events[ev].vmap[k2]
+            else:
+                el["event_" + k2] = events[ev].vmap[k2]
         for k2 in new_omap:
             el[k2] = new_omap[k2]
         eve_stream.append(el)
