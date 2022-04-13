@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from typing import List, Dict, Set, Tuple, Any
+from collections import deque
 
 
 
@@ -228,6 +229,7 @@ class ObjectCentricPetriNet(object):
         self.__arcs = arcs if arcs != None else set()
         self.__properties = dict() if properties is None else properties
         self.__nets = nets if nets is not None else dict()
+        self.__following_activities = None
 
     @property
     def name(self):
@@ -261,6 +263,36 @@ class ObjectCentricPetriNet(object):
     def nets(self):
         return self.__nets
 
+    @property
+    def following_activities(self):
+        if not self.__following_activities:
+            self.__following_activities = self.calculate_model_following_activities()
+        return self.__following_activities
+
+
+    def calculate_model_following_activities(self):
+        following_activities = []
+        for t in self.transitions:
+            print(t.name)
+            print(t.silent)
+            if not t.silent:
+                #breadth-first search for reachable activities
+                q = deque([t])
+                elem_set = set([t.name])
+                while len(q) != 0:
+                    el = q.pop()
+                    if isinstance(el, ObjectCentricPetriNet.Transition):
+                        if not el.silent:
+                            if not el==t:
+                                following_activities.append((t.name,el.name))
+                                continue
+                    source_arcs = [arc.target for arc in self.arcs if arc.source == el]
+                    next_elements = [e for e in source_arcs if e.name not in elem_set]
+                    elem_set = elem_set.union(set([e.name for e in next_elements]))
+                    for e in next_elements:
+                        q.append(e)
+        print(following_activities)
+        return following_activities
 
     def add_arc(self, arc):
         self.__arcs.add(arc)
