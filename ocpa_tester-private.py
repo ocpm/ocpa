@@ -14,6 +14,7 @@ import ocpa.algo.feature_extraction.factory as feature_extraction
 from ocpa.algo.feature_extraction import time_series
 from ocpa.algo.feature_extraction import tabular, sequential
 import numpy as np
+from ast import literal_eval
 import seaborn as sns
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
@@ -25,6 +26,9 @@ from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import LSTM
 from keras.layers import Dropout
+import keras.backend as K
+import shap
+
 # TODO: Preprocessing and conversion from other types of OCEL
 
 
@@ -41,16 +45,25 @@ filename = "example_logs/mdl/BPI2017-Full-MDL.csv"
 ots = ["application", "offer"]
 
 
-event_df = pd.read_csv(filename, sep=',')[:50]
+event_df = pd.read_csv(filename, sep=',')[:10000]
 event_df["event_timestamp"] = pd.to_datetime(event_df["event_timestamp"])
 
+
+def eval(x):
+    try:
+        return literal_eval(x.replace('set()', '{}'))
+    except:
+        return []
 
 
 
 print(event_df)
 for ot in ots:
-    event_df[ot] = event_df[ot].map(
-        lambda x: [y.strip() for y in x.split(',')] if isinstance(x, str) else [])
+    ####Option 1
+    event_df[ot] = event_df[ot].apply(eval)
+    ####Option 2
+    #event_df[ot] = event_df[ot].map(
+    #    lambda x: [y.strip() for y in x.split(',')] if isinstance(x, str) else [])
 event_df["event_id"] = list(range(0, len(event_df)))
 event_df.index = list(range(0, len(event_df)))
 event_df["event_id"] = event_df["event_id"].astype(float).astype(int)
@@ -58,6 +71,7 @@ event_df["event_start_timestamp"] = pd.to_datetime(event_df["event_start_timesta
 #####FAKE FEATURE VALUE
 event_df["event_fake_feat"] = 1
 event_df.drop(columns = "Unnamed: 0", inplace=True)
+#event_df.drop(columns = "Unnamed: 1", inplace=True)
 ocel = OCEL(event_df, ots)
 t_start = time.time()
 print("Number of process executions: "+str(len(ocel.cases)))
@@ -124,17 +138,25 @@ if False:
     plt.savefig("CS_time_series.png",dpi=600)
 
 ##Case Study 2 - Regression
-if False:
+if True:
     activities = list(set(ocel.log["event_activity"].tolist()))
-    F = [(feature_extraction.EVENT_REMAINING_TIME,()),(feature_extraction.EVENT_PREVIOUS_TYPE_COUNT,("offer",)),(feature_extraction.EVENT_ELAPSED_TIME,())] + [(feature_extraction.EVENT_ACTIVITY,(act,)) for act in activities] + [(feature_extraction.EVENT_PREVIOUS_ACTIVITY_COUNT,(act,)) for act in activities]
+    F = [(feature_extraction.EVENT_REMAINING_TIME,()),
+         #(feature_extraction.EVENT_PREVIOUS_TYPE_COUNT,("offer",)),
+         (feature_extraction.EVENT_ELAPSED_TIME,())] + [(feature_extraction.EVENT_ACTIVITY,(act,)) for act in activities] + [(feature_extraction.EVENT_PREVIOUS_ACTIVITY_COUNT,(act,)) for act in activities]
     feature_storage = feature_extraction.apply(ocel, F, [])
     table = tabular.construct_table(feature_storage)
     y = table[F[0]]
     x = table.drop(F[0], axis = 1)
+    #y.rename(columns={f: ''.join(f) for f in y.columns}, inplace=True)
+    print(x.columns)
+    x.rename(columns={f:str(f) for f in x.columns}, inplace=True)
+
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3, random_state=4715)
+
     scaler = StandardScaler()
     x_train = scaler.fit_transform(x_train)
     x_test = scaler.transform(x_test)
+    X100 = shap.utils.sample(x_train, 100)
     model = LinearRegression()
     model.fit(x_train, y_train)
     y_pred = model.predict(x_test)
@@ -146,6 +168,11 @@ if False:
     plt.plot(test[:100])
     plt.legend(['Actual value', 'Predicted value'])
     plt.savefig("prediction_reg.png",dpi=600)
+    plt.clf()
+    explainer = shap.Explainer(model.predict, X100,feature_names=x.columns.tolist())
+    shap_values = explainer(x_train)
+    shap.plots.waterfall(shap_values[5], max_display=70, show =False)
+    plt.savefig('shap_reg.png')
 
 #CASE Study 3 - Visualizing Sequence
 if False:
@@ -157,14 +184,20 @@ if False:
     print(sequences[0])
 
 #CASE Study 4 - Prediction - LSTM
-if True:
+if False:
     k=4
     activities = list(set(ocel.log["event_activity"].tolist()))
-    F = [(feature_extraction.EVENT_REMAINING_TIME,())]+[(feature_extraction.EVENT_ACTIVITY, (act,)) for act in activities]
+    #F = [(feature_extraction.EVENT_REMAINING_TIME,())]+[(feature_extraction.EVENT_ACTIVITY, (act,)) for act in activities]
+    F = [(feature_extraction.EVENT_REMAINING_TIME,()),(feature_extraction.EVENT_PREVIOUS_TYPE_COUNT,("offer",)),(feature_extraction.EVENT_ELAPSED_TIME,())] + [(feature_extraction.EVENT_ACTIVITY,(act,)) for act in activities] + [(feature_extraction.EVENT_PREVIOUS_ACTIVITY_COUNT,(act,)) for act in activities]
+
+    print("Calculate Features")
     feature_storage = feature_extraction.apply(ocel, F, [])
-    features = [feat for feat in feature_storage.event_features if feat != (feature_extraction.EVENT_REMAINING_TIME,())]
+    print("set Features")
+    features = [feat for feat in F if feat != (feature_extraction.EVENT_REMAINING_TIME,())]
     target = (feature_extraction.EVENT_REMAINING_TIME,())
+    print("construct sequences")
     sequences = sequential.construct_sequence(feature_storage)
+    print("construct dataset")
     X = []
     y = []
     for s in sequences:
@@ -175,5 +208,40 @@ if True:
                     seq.append([s[j][feat] for feat in features])
                 y.append(s[i][target])
                 X.append(seq)
-    print(X)
-    print(y)
+    x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=4715)
+    #print(x_train)
+    #print(y_train)
+    #print(x_test)
+    #print(y_test)
+    x_train, x_test, y_train, y_test = np.array(x_train), np.array(x_test), np.array(y_train), np.array(y_test)
+    scaler = StandardScaler()
+    x_train = scaler.fit_transform(x_train.reshape(-1, x_train.shape[-1])).reshape(x_train.shape)
+    x_test = scaler.transform(x_test.reshape(-1, x_test.shape[-1])).reshape(x_test.shape)
+    print(x_train[:25])
+    print(y_train[:25])
+    print(x_test[:25])
+    print(y_test[:25])
+    regressor = Sequential()
+
+    regressor.add(LSTM(units=10, return_sequences=True, input_shape=(x_train.shape[1], x_train.shape[2])))
+    regressor.add(Dropout(0.1))
+    regressor.add(LSTM(units=10))
+    regressor.add(Dropout(0.1))
+    regressor.add(Dense(units=1))
+    regressor.compile(optimizer='adam', loss='mean_squared_error')
+    K.set_value(regressor.optimizer.learning_rate, 0.15)
+    regressor.fit(x_train, y_train, epochs=500, batch_size=64)
+
+    y_pred = regressor.predict(x_test)
+    y_pred = np.transpose(y_pred)
+    y_pred = y_pred[0]
+    print(y_pred[:10])
+    print(y_test[:10])
+    print('MAE: ', mean_absolute_error(y_test, y_pred) / 3600 / 24)
+    test = pd.DataFrame({'Predicted value': y_pred, 'Actual value': y_test})
+    fig = plt.figure(figsize=(16, 8))
+    test = test.reset_index()
+    test = test.drop(['index'], axis=1)
+    plt.plot(test[:100])
+    plt.legend(['Actual value', 'Predicted value'])
+    plt.savefig("prediction_lstm.png", dpi=600)
