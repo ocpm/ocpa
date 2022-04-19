@@ -29,6 +29,8 @@ from keras.layers import Dropout
 import keras.backend as K
 import shap
 
+
+
 # TODO: Preprocessing and conversion from other types of OCEL
 
 
@@ -45,7 +47,7 @@ filename = "example_logs/mdl/BPI2017-Full-MDL.csv"
 ots = ["application", "offer"]
 
 
-event_df = pd.read_csv(filename, sep=',')[:10000]
+event_df = pd.read_csv(filename, sep=',')#[:10000]
 event_df["event_timestamp"] = pd.to_datetime(event_df["event_timestamp"])
 
 
@@ -80,7 +82,7 @@ print(ocel.log)
 #ALL FEATURES
 #F = [(feature_extraction.EVENT_NUM_OF_OBJECTS,()),(feature_extraction.EVENT_TYPE_COUNT,("offer",)),(feature_extraction.EVENT_PRECEDING_ACTIVITES,("Create application",)),(feature_extraction.EVENT_PREVIOUS_ACTIVITY_COUNT,("Create application",)),(feature_extraction.EVENT_CURRENT_ACTIVITIES,("Create application",)),(feature_extraction.EVENT_AGG_PREVIOUS_CHAR_VALUES,("fake_feat",sum)),(feature_extraction.EVENT_PRECEDING_CHAR_VALUES,("fake_feat",sum)),(feature_extraction.EVENT_CHAR_VALUE,("fake_feat",)),(feature_extraction.EVENT_CURRENT_RESOURCE_WORKLOAD,("fake_feat",timedelta(days=1))),(feature_extraction.EVENT_CURRENT_TOTAL_WORKLOAD,("fake_feat",timedelta(days=1))),(feature_extraction.EVENT_RESOURCE,("fake_feat",1)),(feature_extraction.EVENT_CURRENT_TOTAL_OBJECT_COUNT,(timedelta(days=1),)),(feature_extraction.EVENT_PREVIOUS_OBJECT_COUNT,()),(feature_extraction.EVENT_PREVIOUS_TYPE_COUNT,("offer",)),(feature_extraction.EVENT_OBJECTS,(('application', "{'Application_1966208034'}"),)),(feature_extraction.EVENT_EXECUTION_DURATION,()),(feature_extraction.EVENT_ELAPSED_TIME,()),(feature_extraction.EVENT_REMAINING_TIME,()),(feature_extraction.EVENT_FLOW_TIME,(ocpn,)),(feature_extraction.EVENT_SYNCHRONIZATION_TIME,(ocpn,)),(feature_extraction.EVENT_POOLING_TIME,(ocpn,"offer")),(feature_extraction.EVENT_WAITING_TIME,(ocpn,"event_start_timestamp"))]
 #ocpn = ocpn_discovery_factory.apply(ocel, parameters={"debug": False})
-if False:
+if True:
     #F = [(feature_extraction.EVENT_NUM_OF_OBJECTS,()),(feature_extraction.EVENT_TYPE_COUNT,("offer",)),(feature_extraction.EVENT_PRECEDING_ACTIVITES,("Create application",)),(feature_extraction.EVENT_PREVIOUS_OBJECT_COUNT,()),(feature_extraction.EVENT_PREVIOUS_TYPE_COUNT,("offer",)),(feature_extraction.EVENT_ELAPSED_TIME,()),(feature_extraction.EVENT_REMAINING_TIME,())]
     F = [(feature_extraction.EVENT_FLOW_TIME,(ocpn,)),(feature_extraction.EVENT_SYNCHRONIZATION_TIME,(ocpn,)),(feature_extraction.EVENT_POOLING_TIME,(ocpn,"offer")),(feature_extraction.EVENT_WAITING_TIME,(ocpn,"event_start_timestamp"))]
 
@@ -138,7 +140,7 @@ if False:
     plt.savefig("CS_time_series.png",dpi=600)
 
 ##Case Study 2 - Regression
-if True:
+if False:
     activities = list(set(ocel.log["event_activity"].tolist()))
     F = [(feature_extraction.EVENT_REMAINING_TIME,()),
          #(feature_extraction.EVENT_PREVIOUS_TYPE_COUNT,("offer",)),
@@ -188,7 +190,7 @@ if False:
     k=4
     activities = list(set(ocel.log["event_activity"].tolist()))
     #F = [(feature_extraction.EVENT_REMAINING_TIME,())]+[(feature_extraction.EVENT_ACTIVITY, (act,)) for act in activities]
-    F = [(feature_extraction.EVENT_REMAINING_TIME,()),(feature_extraction.EVENT_PREVIOUS_TYPE_COUNT,("offer",)),(feature_extraction.EVENT_ELAPSED_TIME,())] + [(feature_extraction.EVENT_ACTIVITY,(act,)) for act in activities] + [(feature_extraction.EVENT_PREVIOUS_ACTIVITY_COUNT,(act,)) for act in activities]
+    F = [(feature_extraction.EVENT_REMAINING_TIME,()),(feature_extraction.EVENT_PREVIOUS_TYPE_COUNT,("offer",)),(feature_extraction.EVENT_ELAPSED_TIME,())] + [(feature_extraction.EVENT_ACTIVITY,(act,)) for act in activities] #+ [(feature_extraction.EVENT_PREVIOUS_ACTIVITY_COUNT,(act,)) for act in activities]
 
     print("Calculate Features")
     feature_storage = feature_extraction.apply(ocel, F, [])
@@ -217,6 +219,7 @@ if False:
     scaler = StandardScaler()
     x_train = scaler.fit_transform(x_train.reshape(-1, x_train.shape[-1])).reshape(x_train.shape)
     x_test = scaler.transform(x_test.reshape(-1, x_test.shape[-1])).reshape(x_test.shape)
+    X100 = shap.utils.sample(x_train, 100)
     print(x_train[:25])
     print(y_train[:25])
     print(x_test[:25])
@@ -230,7 +233,8 @@ if False:
     regressor.add(Dense(units=1))
     regressor.compile(optimizer='adam', loss='mean_squared_error')
     K.set_value(regressor.optimizer.learning_rate, 0.15)
-    regressor.fit(x_train, y_train, epochs=500, batch_size=64)
+    #regressor.fit(x_train, y_train, epochs=500, batch_size=64)
+    regressor.fit(x_train, y_train, epochs=50, batch_size=64)
 
     y_pred = regressor.predict(x_test)
     y_pred = np.transpose(y_pred)
@@ -244,4 +248,21 @@ if False:
     test = test.drop(['index'], axis=1)
     plt.plot(test[:100])
     plt.legend(['Actual value', 'Predicted value'])
-    plt.savefig("prediction_lstm.png", dpi=600)
+    plt.savefig("prediction_lstm_.png", dpi=600)
+    plt.clf()
+
+    def f(X):
+        X = X.reshape(X.shape[0], k,int(X.shape[1]/k))
+        return regressor.predict(X)
+    print(X100.shape)
+    print(x_train.shape)
+    explainer = shap.KernelExplainer(f, X100.reshape(X100.shape[0],X100.shape[1]*X100.shape[2]))#, feature_names=[str(f) for f in features])
+    shap_values = explainer.shap_values(x_train[:5].reshape(x_train[:5].shape[0],x_train[3].shape[0]*x_train[3].shape[1]), nsamples = 100)
+    shap_values = shap_values[0].reshape(shap_values[0].shape[0],k,int(shap_values[0].shape[1]/k))
+    print(shap_values[0])
+    ax = sns.heatmap(np.transpose(shap_values[0]),xticklabels = ["-3 events","-2 events","-1 event","current event"], yticklabels = [str(f) for f in features])
+    ax.figure.tight_layout()
+    #print(shap_values)
+    #shap.plots.waterfall(shap_values[0][0], max_display=160, show=False)
+    plt.savefig('shap_lstm.png')
+
