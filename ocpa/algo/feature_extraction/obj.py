@@ -1,3 +1,7 @@
+import numpy as np
+import pandas as pd
+from sklearn.preprocessing import StandardScaler
+import random
 class Feature_Storage:
     class Feature_Graph:
         class Node:
@@ -92,6 +96,9 @@ class Feature_Storage:
         self._edge_features = []
         self._case_features = execution_features
         self._feature_graphs = []
+        self._scaler = None
+        self._training_indices = None
+        self._test_indices = None
 
     def _get_event_features(self):
         return self._event_features
@@ -114,6 +121,73 @@ class Feature_Storage:
     def _set_execution_features(self, execution_features):
         self._case_features = execution_features
 
+    def _get_training_indices(self):
+        return self._training_indices
+
+    def _get_test_indices(self):
+        return self._test_indices
+
+    def _get_scaler(self):
+        return self._scaler
+
     event_features = property(_get_event_features, _set_event_features)
     execution_features = property(_get_execution_features, _set_execution_features)
     feature_graphs = property(_get_feature_graphs, _set_feature_graphs)
+    training_indices = property(_get_training_indices)
+    test_indices = property(_get_test_indices)
+    scaler = property(_get_scaler)
+
+
+    def _event_id_table(self, feature_graphs):
+        features = self.event_features
+        df = pd.DataFrame(columns=["event_id"] + [features])
+        dict_list = []
+        for g in feature_graphs:
+            for node in g.nodes:
+                dict_list.append({**{"event_id":node.event_id},**node.attributes})
+                # print(node.attributes)
+        df = pd.DataFrame(dict_list)
+        return df
+
+    def _create_mapper(self,table):
+        arr = table.to_numpy()
+        column_mapping = {k: v for v, k in enumerate(list(table.columns.values))}
+        mapper = dict()
+        for row in arr:
+            e_id = row[column_mapping["event_id"]]
+            mapper[e_id] = {k:row[column_mapping[k]] for k in column_mapping.keys() if k != "event_id"}
+        return mapper
+
+    def extract_normalized_train_test_split(self,test_size,state=1):
+        graphs_indices = list(range(0,len(self.feature_graphs)))
+        random.Random(state).shuffle(graphs_indices)
+        split_index = int((1-test_size)*len(graphs_indices))
+        print(split_index)
+        self._training_indices = graphs_indices[:split_index]
+        self._test_indices = graphs_indices[split_index:]
+        train_graphs, test_graphs = [self.feature_graphs[i] for i in self._training_indices], [ self.feature_graphs[i] for i in self._test_indices]
+        #Normalize
+        features = self.event_features
+        train_table = self._event_id_table(train_graphs)
+        test_table = self._event_id_table(test_graphs)
+        scaler = StandardScaler()
+        train_table[self.event_features] = scaler.fit_transform(train_table[self.event_features])
+        test_table[self.event_features] = scaler.transform(test_table[self.event_features])
+        self._scaler = scaler
+        #update features features
+        #for efficiency
+        train_mapper = self._create_mapper(train_table)
+        test_mapper = self._create_mapper(test_table)
+        #change original values!
+        for g in [self.feature_graphs[i] for i in self.training_indices]:
+            for node in g.nodes:
+                for att in node.attributes.keys():
+                    node.attributes[att] = train_mapper[node.event_id][att]
+        for g in [self.feature_graphs[i] for i in self.test_indices]:
+            for node in g.nodes:
+                for att in node.attributes.keys():
+                    node.attributes[att] = test_mapper[node.event_id][att]
+
+
+
+

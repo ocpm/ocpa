@@ -112,7 +112,7 @@ def apply(ocel, event_based_features =[], execution_based_features = [], event_a
     for case in ocel.cases:
         s_time = time.time()
         case_graph = ocel.eog.subgraph(case)
-        feature_graph = Feature_Storage.Feature_Graph(case_id=0, graph=case_graph, ocel=ocel)
+        feature_graph = Feature_Storage.Feature_Graph(case_id=id, graph=case_graph, ocel=ocel)
         subgraph_time += time.time() - s_time
         s_time=time.time()
         for execution_feature in execution_based_features:

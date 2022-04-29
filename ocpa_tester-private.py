@@ -28,10 +28,11 @@ from keras.layers import LSTM
 from keras.layers import Dropout
 import keras.backend as K
 import shap
+import random
+from datetime import timedelta
 
 
 
-# TODO: Preprocessing and conversion from other types of OCEL
 
 
 def avg(x):
@@ -43,13 +44,13 @@ def std_dev(x):
     m = sum(x) / len(x)
     return sum((xi - m) ** 2 for xi in x) / len(x)
 
-filename = "example_logs/mdl/BPI2017-Full-MDL.csv"
+filename = "example_logs/mdl/BPI2017-Final.csv"
 ots = ["application", "offer"]
 
 
-event_df = pd.read_csv(filename, sep=',')#[:10000]
+event_df = pd.read_csv(filename, sep=',')#[:20000]
 event_df["event_timestamp"] = pd.to_datetime(event_df["event_timestamp"])
-
+event_df = event_df.sort_values(by='event_timestamp')
 
 def eval(x):
     try:
@@ -72,24 +73,26 @@ event_df["event_id"] = event_df["event_id"].astype(float).astype(int)
 event_df["event_start_timestamp"] = pd.to_datetime(event_df["event_start_timestamp"])
 #####FAKE FEATURE VALUE
 event_df["event_fake_feat"] = 1
-event_df.drop(columns = "Unnamed: 0", inplace=True)
+#event_df.drop(columns = "Unnamed: 0", inplace=True)
 #event_df.drop(columns = "Unnamed: 1", inplace=True)
 ocel = OCEL(event_df, ots)
 t_start = time.time()
 print("Number of process executions: "+str(len(ocel.cases)))
 print(str(time.time()-t_start))
 print(ocel.log)
+activities = list(set(ocel.log["event_activity"].tolist()))
+F = [(feature_extraction.EVENT_REMAINING_TIME,()),
+     (feature_extraction.EVENT_PREVIOUS_TYPE_COUNT,("offer",)),
+     (feature_extraction.EVENT_ELAPSED_TIME,())] + [(feature_extraction.EVENT_AGG_PREVIOUS_CHAR_VALUES,("event_RequestedAmount",max))] \
+    + [(feature_extraction.EVENT_PRECEDING_ACTIVITES,(act,)) for act in activities]
+#+[(feature_extraction.EVENT_ACTIVITY,(act,)) for act in activities] + [(feature_extraction.EVENT_PREVIOUS_ACTIVITY_COUNT,(act,)) for act in activities]
+feature_storage = feature_extraction.apply(ocel, F, [])
+feature_storage.extract_normalized_train_test_split(0.3,state = 3)
 #ALL FEATURES
 #F = [(feature_extraction.EVENT_NUM_OF_OBJECTS,()),(feature_extraction.EVENT_TYPE_COUNT,("offer",)),(feature_extraction.EVENT_PRECEDING_ACTIVITES,("Create application",)),(feature_extraction.EVENT_PREVIOUS_ACTIVITY_COUNT,("Create application",)),(feature_extraction.EVENT_CURRENT_ACTIVITIES,("Create application",)),(feature_extraction.EVENT_AGG_PREVIOUS_CHAR_VALUES,("fake_feat",sum)),(feature_extraction.EVENT_PRECEDING_CHAR_VALUES,("fake_feat",sum)),(feature_extraction.EVENT_CHAR_VALUE,("fake_feat",)),(feature_extraction.EVENT_CURRENT_RESOURCE_WORKLOAD,("fake_feat",timedelta(days=1))),(feature_extraction.EVENT_CURRENT_TOTAL_WORKLOAD,("fake_feat",timedelta(days=1))),(feature_extraction.EVENT_RESOURCE,("fake_feat",1)),(feature_extraction.EVENT_CURRENT_TOTAL_OBJECT_COUNT,(timedelta(days=1),)),(feature_extraction.EVENT_PREVIOUS_OBJECT_COUNT,()),(feature_extraction.EVENT_PREVIOUS_TYPE_COUNT,("offer",)),(feature_extraction.EVENT_OBJECTS,(('application', "{'Application_1966208034'}"),)),(feature_extraction.EVENT_EXECUTION_DURATION,()),(feature_extraction.EVENT_ELAPSED_TIME,()),(feature_extraction.EVENT_REMAINING_TIME,()),(feature_extraction.EVENT_FLOW_TIME,(ocpn,)),(feature_extraction.EVENT_SYNCHRONIZATION_TIME,(ocpn,)),(feature_extraction.EVENT_POOLING_TIME,(ocpn,"offer")),(feature_extraction.EVENT_WAITING_TIME,(ocpn,"event_start_timestamp"))]
 #ocpn = ocpn_discovery_factory.apply(ocel, parameters={"debug": False})
-if True:
-    #F = [(feature_extraction.EVENT_NUM_OF_OBJECTS,()),(feature_extraction.EVENT_TYPE_COUNT,("offer",)),(feature_extraction.EVENT_PRECEDING_ACTIVITES,("Create application",)),(feature_extraction.EVENT_PREVIOUS_OBJECT_COUNT,()),(feature_extraction.EVENT_PREVIOUS_TYPE_COUNT,("offer",)),(feature_extraction.EVENT_ELAPSED_TIME,()),(feature_extraction.EVENT_REMAINING_TIME,())]
-    F = [(feature_extraction.EVENT_FLOW_TIME,(ocpn,)),(feature_extraction.EVENT_SYNCHRONIZATION_TIME,(ocpn,)),(feature_extraction.EVENT_POOLING_TIME,(ocpn,"offer")),(feature_extraction.EVENT_WAITING_TIME,(ocpn,"event_start_timestamp"))]
 
-    feature_storage = feature_extraction.apply(ocel,F,[])
-    table = tabular.construct_table(feature_storage)
-    print(table)
-    #sequences = sequential.construct_sequence(feature_storage)
+label_order = None
 
 
 #CASE STUDY 1 - VISUALIZING TABLE
@@ -117,100 +120,137 @@ if False:
             name = "Average Remaining Time in s"
         data_df[name] = [feat_to_s[feat][0][0][i] for i in range(0,len(feat_to_s[feat][0][0]))]
     plt.clf()
-    plt.rcParams["axes.labelsize"] = 20
-    plt.rcParams["axes.titlesize"] = 28
-    plt.figure(figsize=(10, 5))
-    sns.set(rc={'figure.figsize': (30, 8)})
+    plt.rcParams["axes.labelsize"] = 32
+    plt.rcParams["axes.titlesize"] = 32
+    plt.figure(figsize=(8, 3))
+    sns.set(rc={'figure.figsize': (12, 6)})
     data_df.set_index('date', inplace=True)
     sns.set_style("darkgrid")
-    plot_ = sns.lineplot(data=data_df["Average Number of Objects"], color = "#4C72B0")
+    plot_ = sns.lineplot(data=data_df["Average Number of Objects"], color = "#4C72B0", linewidth = 2)
     ax2 = plt.twinx()
-    sns.lineplot(data=data_df["Average Remaining Time in s"], ax = ax2, color="#DD8452")
+    sns.lineplot(data=data_df["Average Remaining Time in s"], ax = ax2, color="#DD8452", linewidth = 2)
     for index, label in enumerate(plot_.get_xticklabels()):
         if index % 2 == 0:
             label.set_visible(True)
         else:
             label.set_visible(False)
     #plot_.legend()
-    plot_.set_title("Time Series")
-    plot_.set_ylabel("Average Number of Offer Objects", color = "#4C72B0")
-    ax2.set_ylabel("Average Requested Amount", color="#DD8452")
+    plot_.set_title("Time Series",fontsize=14)
+    plot_.set_ylabel("Average Number of Offer Objects", color = "#4C72B0",fontsize=11)
+    #plot_.set_yticklabels(plot_.get_yticks(), size=14)
+    ax2.set_ylabel("Average Requested Amount", color="#DD8452",fontsize=11)
+    #ax2.set_yticklabels(ax2.get_yticks(), size=14)
     plot_.set_xlabel(
-        "Date")
-    plt.savefig("CS_time_series.png",dpi=600)
-
+        "Date",fontsize=14)
+    plt.tight_layout()
+    plt.savefig("CS_time_series_compact.png",dpi=600)
 ##Case Study 2 - Regression
-if False:
-    activities = list(set(ocel.log["event_activity"].tolist()))
-    F = [(feature_extraction.EVENT_REMAINING_TIME,()),
-         #(feature_extraction.EVENT_PREVIOUS_TYPE_COUNT,("offer",)),
-         (feature_extraction.EVENT_ELAPSED_TIME,())] + [(feature_extraction.EVENT_ACTIVITY,(act,)) for act in activities] + [(feature_extraction.EVENT_PREVIOUS_ACTIVITY_COUNT,(act,)) for act in activities]
-    feature_storage = feature_extraction.apply(ocel, F, [])
-    table = tabular.construct_table(feature_storage)
-    y = table[F[0]]
-    x = table.drop(F[0], axis = 1)
+if True:
+
+    train_table = tabular.construct_table(feature_storage, index_list = feature_storage.training_indices)
+    test_table = tabular.construct_table(feature_storage, index_list = feature_storage.test_indices)
+
+    y_train, y_test = train_table[F[0]], test_table[F[0]]
+    x_train, x_test = train_table.drop(F[0], axis = 1), test_table.drop(F[0], axis = 1)
     #y.rename(columns={f: ''.join(f) for f in y.columns}, inplace=True)
-    print(x.columns)
-    x.rename(columns={f:str(f) for f in x.columns}, inplace=True)
 
-    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3, random_state=4715)
 
-    scaler = StandardScaler()
-    x_train = scaler.fit_transform(x_train)
-    x_test = scaler.transform(x_test)
-    X100 = shap.utils.sample(x_train, 100)
+    #x_train.rename(columns={f:str(f) for f in x_train.columns}, inplace=True)
+    mapping_names = {feature_extraction.EVENT_PRECEDING_ACTIVITES: "Prec. activities:",
+                     feature_extraction.EVENT_ELAPSED_TIME: "Elapsed time",
+                     feature_extraction.EVENT_PREVIOUS_TYPE_COUNT: "Previous objects of:",
+                     feature_extraction.EVENT_AGG_PREVIOUS_CHAR_VALUES: "Max prev.:",
+                     feature_extraction.EVENT_REMAINING_TIME: "Remaining time"}
+    renaming_dict = dict()
+    for f in x_train.columns:
+        if len(f[1]) != 0:
+            renaming_dict[f] = mapping_names[f[0]] + " " + f[1][0]
+        else:
+            renaming_dict[f] = mapping_names[f[0]]
+    x_train.rename(columns=renaming_dict, inplace=True)
+    x_test.rename(columns=renaming_dict, inplace=True)
+    print(x_train.columns)
+    X100 = shap.utils.sample(x_train, 500)
     model = LinearRegression()
     model.fit(x_train, y_train)
     y_pred = model.predict(x_test)
-    print('MAE: ', mean_absolute_error(y_test, y_pred)/3600/24)
+    avg_rem = avg(y_train)
+    print('MAE baseline: ', mean_absolute_error(y_test, [avg_rem for elem in y_test]))
+    print('MAE: ', mean_absolute_error(y_test, y_pred))
+    print(y_test)
+    print(y_pred)
     test = pd.DataFrame({'Predicted value': y_pred, 'Actual value': y_test})
-    fig = plt.figure(figsize=(16, 8))
+    fig = plt.figure(figsize=(10, 8))
     test = test.reset_index()
     test = test.drop(['index'], axis=1)
-    plt.plot(test[:100])
-    plt.legend(['Actual value', 'Predicted value'])
-    plt.savefig("prediction_reg.png",dpi=600)
+    #plt.plot(test[:100])
+    #plt.legend(['Actual value', 'Predicted value'])
+    #plt.savefig("prediction_reg_tmp.png",dpi=600)
     plt.clf()
-    explainer = shap.Explainer(model.predict, X100,feature_names=x.columns.tolist())
-    shap_values = explainer(x_train)
-    shap.plots.waterfall(shap_values[5], max_display=70, show =False)
-    plt.savefig('shap_reg.png')
+    if True:
+        explainer = shap.Explainer(model.predict, x_train,feature_names=x_train.columns.tolist())
+        shap_values = explainer(x_test[:1000])
+        #shap.plots.beeswarm(shap_values,max_display=40, show = False)
+        shap.summary_plot(shap_values, max_display=60, show=False)
+        plt.gcf().axes[-1].set_aspect(100)
+        plt.gcf().axes[-1].set_box_aspect(100)
+        locs, labels = plt.yticks()
+        print(labels)
+        label_order = [l.get_text() for l in labels][::-1]
+        plt.savefig('shap_reg_tmp_bee___.png',bbox_inches='tight')
+        for i in range(0,0):
+            plt.clf()
+            #shap.plots.beeswarm(shap_values)
+            shap.plots.waterfall(shap_values[i], max_display=70, show =False)
+
+            #ax.tight_layout()
+            plt.savefig('shap_reg_tmp'+str(i)+'.png',bbox_inches='tight')
 
 #CASE Study 3 - Visualizing Sequence
 if False:
-    activities = list(set(ocel.log["event_activity"].tolist()))
-    F = [(feature_extraction.EVENT_ACTIVITY,(act,)) for act in activities]
-    feature_storage = feature_extraction.apply(ocel,F,[])
-    sequences = sequential.construct_sequence(feature_storage)
 
-    print(sequences[0])
+    #activities = list(set(ocel.log["event_activity"].tolist()))
+    F3 = [(feature_extraction.EVENT_ACTIVITY,(act,)) for act in activities] + [(feature_extraction.EVENT_TYPE_COUNT,(ot,)) for ot in ots]
+    feature_storage3 = feature_extraction.apply(ocel,F3,[])
+    sequences = sequential.construct_sequence(feature_storage3)
+    for v_id in [61]:
+        print(v_id)
+        c_id = ocel.variants_dict[ocel.variants[v_id]][0]
+
+        print(sequences[c_id])
+        print(len(sequences[c_id]))
+        print(len(ocel.cases[c_id]))
+        print(ocel.variant_frequency[v_id])
 
 #CASE Study 4 - Prediction - LSTM
-if False:
+if True:
     k=4
-    activities = list(set(ocel.log["event_activity"].tolist()))
+    ##activities = list(set(ocel.log["event_activity"].tolist()))
     #F = [(feature_extraction.EVENT_REMAINING_TIME,())]+[(feature_extraction.EVENT_ACTIVITY, (act,)) for act in activities]
-    F = [(feature_extraction.EVENT_REMAINING_TIME,()),(feature_extraction.EVENT_PREVIOUS_TYPE_COUNT,("offer",)),(feature_extraction.EVENT_ELAPSED_TIME,())] + [(feature_extraction.EVENT_ACTIVITY,(act,)) for act in activities] #+ [(feature_extraction.EVENT_PREVIOUS_ACTIVITY_COUNT,(act,)) for act in activities]
+    ##F = [(feature_extraction.EVENT_REMAINING_TIME,()),(feature_extraction.EVENT_PREVIOUS_TYPE_COUNT,("offer",)),(feature_extraction.EVENT_ELAPSED_TIME,())] + [(feature_extraction.EVENT_ACTIVITY,(act,)) for act in activities] #+ [(feature_extraction.EVENT_PREVIOUS_ACTIVITY_COUNT,(act,)) for act in activities]
 
-    print("Calculate Features")
-    feature_storage = feature_extraction.apply(ocel, F, [])
-    print("set Features")
+    ##print("Calculate Features")
+    ##feature_storage = feature_extraction.apply(ocel, F, [])
+    ##print("set Features")
     features = [feat for feat in F if feat != (feature_extraction.EVENT_REMAINING_TIME,())]
     target = (feature_extraction.EVENT_REMAINING_TIME,())
-    print("construct sequences")
-    sequences = sequential.construct_sequence(feature_storage)
-    print("construct dataset")
-    X = []
-    y = []
-    for s in sequences:
-        if len(s) != 0:
-            for i in range(k-1,len(s)):
-                seq = []
-                for j in range(i-(k-1),i+1):
-                    seq.append([s[j][feat] for feat in features])
-                y.append(s[i][target])
-                X.append(seq)
-    x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=4715)
+    train_sequences = sequential.construct_sequence(feature_storage, index_list=feature_storage.training_indices)
+    test_sequences = sequential.construct_sequence(feature_storage, index_list=feature_storage.test_indices)
+
+    x_train, y_train = sequential.construct_k_dataset(train_sequences,k,features,target)
+    x_test, y_test = sequential.construct_k_dataset(test_sequences, k, features, target)
+    # print("construct dataset")
+    # X = []
+    # y = []
+    # for s in sequences:
+    #     if len(s) != 0:
+    #         for i in range(k-1,len(s)):
+    #             seq = []
+    #             for j in range(i-(k-1),i+1):
+    #                 seq.append([s[j][feat] for feat in features])
+    #             y.append(s[i][target])
+    #             X.append(seq)
+    # x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=4715)
     #print(x_train)
     #print(y_train)
     #print(x_test)
@@ -232,23 +272,25 @@ if False:
     regressor.add(Dropout(0.1))
     regressor.add(Dense(units=1))
     regressor.compile(optimizer='adam', loss='mean_squared_error')
-    K.set_value(regressor.optimizer.learning_rate, 0.15)
+    K.set_value(regressor.optimizer.learning_rate, 0.005)
     #regressor.fit(x_train, y_train, epochs=500, batch_size=64)
-    regressor.fit(x_train, y_train, epochs=50, batch_size=64)
+    regressor.fit(x_train, y_train, epochs=30, batch_size=64)
 
     y_pred = regressor.predict(x_test)
     y_pred = np.transpose(y_pred)
     y_pred = y_pred[0]
     print(y_pred[:10])
     print(y_test[:10])
-    print('MAE: ', mean_absolute_error(y_test, y_pred) / 3600 / 24)
+    avg_rem = avg(y_train)
+    print('MAE baseline: ', mean_absolute_error(y_test, [avg_rem for elem in y_test]))
+    print('MAE: ', mean_absolute_error(y_test, y_pred))
     test = pd.DataFrame({'Predicted value': y_pred, 'Actual value': y_test})
-    fig = plt.figure(figsize=(16, 8))
+    fig = plt.figure(figsize=(7, 6))
     test = test.reset_index()
     test = test.drop(['index'], axis=1)
     plt.plot(test[:100])
     plt.legend(['Actual value', 'Predicted value'])
-    plt.savefig("prediction_lstm_.png", dpi=600)
+    plt.savefig("prediction_lstm.png", dpi=600)
     plt.clf()
 
     def f(X):
@@ -256,13 +298,44 @@ if False:
         return regressor.predict(X)
     print(X100.shape)
     print(x_train.shape)
+    number_shap = 40
     explainer = shap.KernelExplainer(f, X100.reshape(X100.shape[0],X100.shape[1]*X100.shape[2]))#, feature_names=[str(f) for f in features])
-    shap_values = explainer.shap_values(x_train[:5].reshape(x_train[:5].shape[0],x_train[3].shape[0]*x_train[3].shape[1]), nsamples = 100)
+    shap_values = explainer.shap_values(x_train[:number_shap].reshape(x_train[:number_shap].shape[0],x_train[3].shape[0]*x_train[3].shape[1]), nsamples = 100)
     shap_values = shap_values[0].reshape(shap_values[0].shape[0],k,int(shap_values[0].shape[1]/k))
     print(shap_values[0])
-    ax = sns.heatmap(np.transpose(shap_values[0]),xticklabels = ["-3 events","-2 events","-1 event","current event"], yticklabels = [str(f) for f in features])
-    ax.figure.tight_layout()
-    #print(shap_values)
-    #shap.plots.waterfall(shap_values[0][0], max_display=160, show=False)
-    plt.savefig('shap_lstm.png')
+    mapping_names = {feature_extraction.EVENT_PRECEDING_ACTIVITES: "Prec. activities:",
+                     feature_extraction.EVENT_ELAPSED_TIME: "Elapsed time",
+                     feature_extraction.EVENT_PREVIOUS_TYPE_COUNT: "Previous objects of:",
+                     feature_extraction.EVENT_AGG_PREVIOUS_CHAR_VALUES: "Max prev.:",
+                     feature_extraction.EVENT_REMAINING_TIME: "Remaining time"}
+    renaming_dict = dict()
+    for f in features:
+        if len(f[1]) != 0:
+            renaming_dict[f] = mapping_names[f[0]] + " " + f[1][0]
+        else:
+            renaming_dict[f] = mapping_names[f[0]]
+    for i in range(0,len(shap_values)):
+        plt.clf()
+        #first, reorder the features such that their order is the same as the beeswarm plot
+        curr_order = [renaming_dict[f] for f in features]
+        mapping_from_curr_to_new = {}
+        for c in curr_order:
+            for i_n in range(0,len(label_order)):
+                n= label_order[i_n]
+                if c == n:
+                    mapping_from_curr_to_new[c] = i_n
+        #reorder shap values
+        new_shap = np.copy(shap_values[i])
+        for i_c in range(0,len(curr_order)):
+            feat = curr_order[i_c]
+            for i_f in range(0,k):
+                new_shap[i_f][mapping_from_curr_to_new[feat]] = shap_values[i][i_f][i_c]
+
+
+        ax = sns.heatmap(np.transpose(new_shap),xticklabels = ["-3 events","-2 events","-1 event","current event"], yticklabels = label_order)
+        plt.xticks(rotation=45)
+        ax.figure.tight_layout()
+        #print(shap_values)
+        #shap.plots.waterfall(shap_values[0][0], max_display=160, show=False)
+        plt.savefig('shap_lstm_new_order'+str(i)+'.png', dpi=600)
 
