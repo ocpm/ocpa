@@ -352,7 +352,7 @@ class OCEL():
             zip(self.log["event_id"], self.log["event_activity"]))
         mapping_objects = dict(
             zip(self.log["event_id"], self.log["event_objects"]))
-        start_time = time.time()
+        start_timestamp = time.time()
         for v_g in self.cases:
 
             case = self._project_subgraph_on_activity(self.eog.subgraph(
@@ -372,9 +372,9 @@ class OCEL():
             variants_graph_dict[variant_string].append(case)
             case_id += 1
         #print("Before refining: "+str(len(variants_dict.keys()))+" equivalence classes")
-        #print("Time taken for first step "+str(time.time()-start_time))
+        #print("Time taken for first step "+str(time.time()-start_timestamp))
 
-        start_time = time.time()
+        start_timestamp = time.time()
         # refine the classes
         # for _class in variants_graph_dict.keys():
         #     subclass_counter = 0
@@ -393,7 +393,7 @@ class OCEL():
         #             continue
         #         subclass_counter +=1
         #         subclass_mappings[subclass_counter] = [(exec,case_id)]
-        #         if (time.time() - start_time) > timeout:
+        #         if (time.time() - start_timestamp) > timeout:
         #             raise Exception("timeout")
         #     for ind in subclass_mappings.keys():
         #         variants_dict[_class+str(ind)] = [case_id for (exec, case_id) in subclass_mappings[ind]]
@@ -402,7 +402,7 @@ class OCEL():
         #     del variants_dict[_class]
         #     del variant_graphs[_class]
         # print("After refining: "+str(len(variants_dict.keys()))+" equivalence classes")
-        # print("Time taken for second step: "+str(time.time() - start_time))
+        # print("Time taken for second step: "+str(time.time() - start_timestamp))
 
         variant_frequencies = {
             v: len(variants_dict[v]) / len(self.cases) for v in variants_dict.keys()}
@@ -437,7 +437,7 @@ class OCEL():
             zip(self.log["event_id"], self.log["event_activity"]))
         mapping_objects = dict(
             zip(self.log["event_id"], self.log["event_objects"]))
-        start_time = time.time()
+        start_timestamp = time.time()
         for v_g in self.cases:
 
             case = self._project_subgraph_on_activity(self.eog.subgraph(
@@ -454,8 +454,9 @@ class OCEL():
             case_id += 1
         print("Before refining: " +
               str(len(variants_dict.keys())) + " equivalence classes")
-        print("Time taken for first step " + str(time.time() - start_time))
-        start_time = time.time()
+        print("Time taken for first step " +
+              str(time.time() - start_timestamp))
+        start_timestamp = time.time()
         # refine the classes
         for _class in variants_graph_dict.keys():
             subclass_counter = 0
@@ -476,7 +477,7 @@ class OCEL():
                     continue
                 subclass_counter += 1
                 subclass_mappings[subclass_counter] = [(exec, case_id)]
-                if (time.time() - start_time) > timeout:
+                if (time.time() - start_timestamp) > timeout:
                     raise Exception("timeout")
             for ind in subclass_mappings.keys():
                 variants_dict[_class + str(ind)] = [case_id for (exec,
@@ -488,7 +489,8 @@ class OCEL():
             del variant_graphs[_class]
         print("After refining: " + str(len(variants_dict.keys())) +
               " equivalence classes")
-        print("Time taken for second step: " + str(time.time() - start_time))
+        print("Time taken for second step: " +
+              str(time.time() - start_timestamp))
 
         variant_frequencies = {
             v: len(variants_dict[v]) / len(self.cases) for v in variants_dict.keys()}

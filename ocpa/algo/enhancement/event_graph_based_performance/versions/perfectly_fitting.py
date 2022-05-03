@@ -119,9 +119,9 @@ def compute_waiting_time(cegs: List[CorrelatedEventGraph], sp: Subprocess = None
         last_context_event = last(
             initial_ceg.get_event_context(first_event))
         if first_event is not None and last_context_event is not None:
-            if first_event.vmap["start_time"] is not None:
+            if first_event.vmap["start_timestamp"] is not None:
                 waiting_time = (
-                    first_event.vmap["start_time"] - last_context_event.time).total_seconds()
+                    first_event.vmap["start_timestamp"] - last_context_event.time).total_seconds()
             else:
                 waiting_time = (first_event.time -
                                 last_context_event.time).total_seconds()
@@ -144,9 +144,9 @@ def compute_service_time(cegs: List[CorrelatedEventGraph], sp: Subprocess = None
         last_event = last(filtered_ceg.graph.nodes)
         first_event = first(filtered_ceg.graph.nodes)
         if last_event is not None and first_event is not None:
-            if first_event.vmap["start_time"] is not None:
+            if first_event.vmap["start_timestamp"] is not None:
                 service_time = (last_event.time -
-                                first_event.vmap["start_time"]).total_seconds()
+                                first_event.vmap["start_timestamp"]).total_seconds()
             else:
                 service_time = (last_event.time -
                                 first_event.time).total_seconds()

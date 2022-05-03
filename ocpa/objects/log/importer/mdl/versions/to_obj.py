@@ -21,9 +21,9 @@ def add_event(events: Dict[str, Event], index, row, cfg) -> None:
         vmap={attr: row[attr] for attr in cfg["val_names"]})
 
     # add start time if exists, otherwise None for performance analysis
-    if "start_time" in cfg:
+    if "start_timestamp" in cfg:
         events[str(index)].vmap["event_start_timestamp"] = to_datetime(
-            row[cfg["start_time"]])
+            row[cfg["start_timestamp"]])
     else:
         events[str(index)].vmap["event_start_timestamp"] = None
 

@@ -34,11 +34,11 @@ class EventOccurrence:
     transition: Any
     event: Any
 
-    def __hash__(self):
-        return hash(tuple([self.transition.label, self.event]))
+    # def __hash__(self):
+    #     return hash(tuple([self.transition.label, self.event]))
 
     def __eq__(self, eo):
-        return self.transition.label == eo.transition.label and self.event == eo.event
+        return self.transition.name == eo.transition.name and self.event == eo.event
 
 
 class PerformanceAnalysis:
@@ -49,7 +49,7 @@ class PerformanceAnalysis:
     def correspond(self, eo: EventOccurrence, V: Set[TokenVisit]):
         input_places = [
             in_arc.source for in_arc in eo.transition.in_arcs]
-        return [v for v in V if v.end == eo.event[ocpa_constants.DEFAULT_START_TIMESTAMP_KEY] and v.token[0] in input_places]
+        return [v for v in V if v.end == eo.event[ocpa_constants.DEFAULT_OCEL_START_TIMESTAMP_KEY] and v.token[0].name in [p.name for p in input_places]]
 
     def analyze(self, eos: Set[EventOccurrence], tvs: Set[TokenVisit], ots: Set[str], parameters):
         # compute measures
@@ -108,99 +108,89 @@ class PerformanceAnalysis:
             if i % 1000 == 0:
                 print(f'{i}/{eos_len}')
             R = self.correspond(eo, tvs)
+            # if len(R) > 1:
+            #     print(f'Event occurence: {eo}')
+            #     print(f'Token visits: {tvs}')
+            #     print(f'Corresponding: {R}')
             if p_waiting:
                 waiting = self.measure_waiting(eo, R)
-                if eo.transition.label in self.perf_records['waiting']:
-                    self.perf_records['waiting'][eo.transition.label].append(
+                if eo.transition.name in self.perf_records['waiting']:
+                    self.perf_records['waiting'][eo.transition.name].append(
                         waiting)
                 else:
-                    self.perf_records['waiting'][eo.transition.label] = [
+                    self.perf_records['waiting'][eo.transition.name] = [
                         waiting]
             if p_service:
                 service = self.measure_service(eo, R)
-                if eo.transition.label in self.perf_records['service']:
-                    self.perf_records['service'][eo.transition.label].append(
+                if eo.transition.name in self.perf_records['service']:
+                    self.perf_records['service'][eo.transition.name].append(
                         service)
                 else:
-                    self.perf_records['service'][eo.transition.label] = [
+                    self.perf_records['service'][eo.transition.name] = [
                         service]
             if p_sojourn:
-                if p_waiting is not True and p_service is not True:
-                    waiting = self.measure_waiting(eo, R)
+                if p_waiting is True and p_service is not True:
                     service = self.measure_service(eo, R)
-                elif p_waiting is True and p_service is not True:
-                    service = self.measure_service(eo, R)
+                    sojourn = waiting + service
                 elif p_waiting is not True and p_service is True:
                     waiting = self.measure_waiting(eo, R)
+                    sojourn = waiting + service
+                else:
+                    sojourn = self.measure_sojourn(eo, R)
 
-                sojourn = waiting + service
-
-                if eo.transition.label in self.perf_records['sojourn']:
-                    self.perf_records['sojourn'][eo.transition.label].append(
+                if eo.transition.name in self.perf_records['sojourn']:
+                    self.perf_records['sojourn'][eo.transition.name].append(
                         sojourn)
                 else:
-                    self.perf_records['sojourn'][eo.transition.label] = [
+                    self.perf_records['sojourn'][eo.transition.name] = [
                         sojourn]
             if p_sync:
                 sync = self.measure_synchronization(eo, R)
-                if eo.transition.label in self.perf_records['synchronization']:
-                    self.perf_records['synchronization'][eo.transition.label].append(
+                if eo.transition.name in self.perf_records['synchronization']:
+                    self.perf_records['synchronization'][eo.transition.name].append(
                         sync)
                 else:
-                    self.perf_records['synchronization'][eo.transition.label] = [
+                    self.perf_records['synchronization'][eo.transition.name] = [
                         sync]
             if p_pooling:
                 for ot in ots:
                     ot_pooling = self.measure_pooling(eo, R, ot)
-                    if eo.transition.label in self.perf_records['pooling'][ot]:
-                        self.perf_records['pooling'][ot][eo.transition.label].append(
+                    if eo.transition.name in self.perf_records['pooling'][ot]:
+                        self.perf_records['pooling'][ot][eo.transition.name].append(
                             ot_pooling)
                     else:
-                        self.perf_records['pooling'][ot][eo.transition.label] = [
+                        self.perf_records['pooling'][ot][eo.transition.name] = [
                             ot_pooling]
             if p_lagging:
                 for ot in ots:
                     ot_lagging = self.measure_lagging(eo, R, ot)
-                    if eo.transition.label in self.perf_records['lagging'][ot]:
-                        self.perf_records['lagging'][ot][eo.transition.label].append(
+                    if eo.transition.name in self.perf_records['lagging'][ot]:
+                        self.perf_records['lagging'][ot][eo.transition.name].append(
                             ot_lagging)
                     else:
-                        self.perf_records['lagging'][ot][eo.transition.label] = [
+                        self.perf_records['lagging'][ot][eo.transition.name] = [
                             ot_lagging]
             if p_flow:
-                if p_waiting is not True and p_service is not True:
-                    if p_waiting is not True and p_service is not True:
-                        waiting = self.measure_waiting(eo, R)
+                if p_sojourn is not True and p_sync is True:
+                    if p_waiting is True and p_service is not True:
                         service = self.measure_service(eo, R)
-                    elif p_waiting is True and p_service is not True:
-                        service = self.measure_service(eo, R)
+                        sojourn = waiting + service
                     elif p_waiting is not True and p_service is True:
                         waiting = self.measure_waiting(eo, R)
+                        sojourn = waiting + service
                     else:
-                        waiting = self.measure_waiting(eo, R)
-                        service = self.measure_service(eo, R)
-                    sojourn = waiting + service
-                    sync = self.measure_synchronization(eo, R)
+                        sojourn = self.measure_sojourn(eo, R)
                 elif p_sojourn is True and p_sync is not True:
                     sync = self.measure_synchronization(eo, R)
-                elif p_sojourn is not True and p_sync is True:
-                    if p_waiting is not True and p_service is not True:
-                        waiting = self.measure_waiting(eo, R)
-                        service = self.measure_service(eo, R)
-                    elif p_waiting is True and p_service is not True:
-                        service = self.measure_service(eo, R)
-                    elif p_waiting is not True and p_service is True:
-                        waiting = self.measure_waiting(eo, R)
-                    else:
-                        waiting = self.measure_waiting(eo, R)
-                        service = self.measure_service(eo, R)
-                    sojourn = waiting + service
+                else:
+                    sojourn = self.measure_sojourn(eo, R)
+                    sync = self.measure_synchronization(eo, R)
                 flow = sojourn + sync
-                if eo.transition.label in self.perf_records['flow']:
-                    self.perf_records['flow'][eo.transition.label].append(
+                if eo.transition.name in self.perf_records['flow']:
+                    self.perf_records['flow'][eo.transition.name].append(
                         flow)
                 else:
-                    self.perf_records['flow'][eo.transition.label] = [
+                    self.perf_records['flow'][eo.transition.name] = [
                         flow]
 
         # aggregate measures
@@ -238,7 +228,7 @@ class PerformanceAnalysis:
         if len(R) > 0:
             start_times = [r.start for r in R]
             waiting = (
-                eo.event[ocpa_constants.DEFAULT_START_TIMESTAMP_KEY] - min(start_times)).total_seconds()
+                eo.event[ocpa_constants.DEFAULT_OCEL_START_TIMESTAMP_KEY] - min(start_times)).total_seconds()
             if waiting < 0:
                 return 0
             return waiting
@@ -247,10 +237,21 @@ class PerformanceAnalysis:
 
     def measure_service(self, eo: EventOccurrence, R: Set[TokenVisit]):
         service = (
-            eo.event[ocpa_constants.DEFAULT_TIMESTAMP_KEY] - eo.event[ocpa_constants.DEFAULT_START_TIMESTAMP_KEY]).total_seconds()
+            eo.event[ocpa_constants.DEFAULT_OCEL_TIMESTAMP_KEY] - eo.event[ocpa_constants.DEFAULT_OCEL_START_TIMESTAMP_KEY]).total_seconds()
         if service < 0:
             return 0
         return service
+
+    def measure_sojourn(self, eo: EventOccurrence, R: Set[TokenVisit]):
+        if len(R) > 0:
+            start_times = [r.start for r in R]
+            sojourn = (
+                eo.event[ocpa_constants.DEFAULT_OCEL_TIMESTAMP_KEY] - min(start_times)).total_seconds()
+            if sojourn < 0:
+                return 0
+            return sojourn
+        else:
+            return 0
 
     def measure_synchronization(self, eo: EventOccurrence, R: Set[TokenVisit]):
         if len(R) > 0:
@@ -390,7 +391,6 @@ def aggregate_perf_records(perf_records, measure_name="waiting", aggregation_mea
         Aggregated perf_records for arcs, transitions, places
     """
     aggregated_perf_records = {}
-
     if ot is not None:
         if ot in perf_records[measure_name]:
             for elem in perf_records[measure_name][ot].keys():
@@ -468,6 +468,18 @@ def apply(ocpn, df, parameters=None):
     allowed_activities = parameters["allowed_activities"] if "allowed_activities" in parameters else None
     debug = parameters["debug"] if "debug" in parameters else False
 
+    eos = []
+
+    for i, row in df.iterrows():
+        act = row['event_activity']
+        start_timestamp = row['event_start_timestamp']
+        timestamp = row['event_timestamp']
+        event = {'event_activity': act,
+                 'event_start_timestamp': start_timestamp, 'event_timestamp': timestamp}
+        trans = ocpn.find_transition(act)
+        eo = EventOccurrence(trans, event)
+        eos.append(eo)
+
     df = succint_mdl_to_exploded_mdl(df)
 
     if len(df) == 0:
@@ -483,7 +495,6 @@ def apply(ocpn, df, parameters=None):
         df = pd.DataFrame({"event_id": [], "event_activity": []})
 
     tvs = []
-    eos = []
 
     diff_log = 0
     diff_model = 0
@@ -502,7 +513,6 @@ def apply(ocpn, df, parameters=None):
 
     for persp in persps:
         net, im, fm = ocpn.nets[persp]
-        aa = time.time()
         object_map[persp] = set(df[persp])
         # remove nan
         object_map[persp] = {x for x in object_map[persp] if x == x}
@@ -515,24 +525,12 @@ def apply(ocpn, df, parameters=None):
                 log, allowed_activities[persp])
         else:
             filtered_log = log
-        bb = time.time()
-        diff_log += (bb - aa)
-
-        cc = time.time()
-
-        dd = time.time()
-
-        diff_model += (dd - cc)
 
         # Diagonstics - Activity Counting
-        xx1 = time.time()
         activ_count = projection_factory.apply(
             df, persp, variant="activity_occurrence", parameters=parameters)
         replay_diag["act_freq"][persp] = activ_count
 
-        xx2 = time.time()
-
-        ee = time.time()
         variants_idx = variants_module.get_variants_from_log_trace_idx(log)
 
         aligned_traces, place_fitness_per_trace, transition_fitness_per_trace, notexisting_activities_in_model = run_timed_replay(
@@ -541,12 +539,12 @@ def apply(ocpn, df, parameters=None):
 
         token_visits = [y for x in aligned_traces for y in x['token_visits']]
         event_occurrences = [
-            y for x in aligned_traces for y in x['event_occurrences']]
+            y for trace in aligned_traces for y in trace['event_occurrences']]
 
         for tv in token_visits:
             tvs.append(TokenVisit(tv[0], tv[1], tv[2]))
-        for eo in event_occurrences:
-            eos.append(EventOccurrence(eo[0], eo[1]))
+        # for eo in event_occurrences:
+        #     eos.append(EventOccurrence(eo[0], eo[1]))
 
         element_statistics = performance_map.single_element_statistics(
             log, net, im, aligned_traces, variants_idx)
@@ -581,14 +579,15 @@ def apply(ocpn, df, parameters=None):
         replay_diag["place_fitness_per_trace"])
 
     tvs = list(set(tvs))
-    eos = list(set(eos))
+    # eos = list(set(eos))
     pa = PerformanceAnalysis(object_map)
     perf_diag = pa.analyze(eos, tvs, persps, parameters)
 
     # merge replay diagnostics and performance diagnostics
     diag = {**perf_diag, **replay_diag}
+    transformed_diag = transform_diagnostics(ocpn, diag, parameters)
 
-    return transform_diagnostics(ocpn, diag, parameters)
+    return transformed_diag
 
 
 def transform_diagnostics(ocpn, diag, parameters):
@@ -676,7 +675,6 @@ def transform_diagnostics(ocpn, diag, parameters):
                     tr.name, parameters['agg'], diag['agg_flow_time'])
 
     transformed_diag['arc_freq'] = diag['arc_freq']
-    print(transformed_diag)
 
     return transformed_diag
 

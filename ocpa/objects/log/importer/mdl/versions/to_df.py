@@ -27,9 +27,9 @@ def apply(df, parameters=None):
     del df[parameters['act_name']]
     df['timestamp'] = df[parameters['time_name']]
     del df[parameters['time_name']]
-    if "start_time" in parameters:
-        df['start_timestamp'] = df[parameters['start_time']]
-        del df[parameters['start_time']]
+    if "start_timestamp" in parameters:
+        df['start_timestamp'] = df[parameters['start_timestamp']]
+        del df[parameters['start_timestamp']]
 
     rename_dict = {}
     for col in [x for x in df.columns if not x.startswith("event_")]:
@@ -39,7 +39,7 @@ def apply(df, parameters=None):
 
     df['event_timestamp'] = pd.to_datetime(df['event_timestamp'])
     print(df)
-    if "start_time" in parameters:
+    if "start_timestamp" in parameters:
         df["event_start_timestamp"] = pd.to_datetime(
             df['event_start_timestamp'])
     df = df.dropna(subset=["event_id"])

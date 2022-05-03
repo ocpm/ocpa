@@ -531,12 +531,6 @@ def apply_trace(trace, net, initial_marking, final_marking, trans_map, enable_pl
                             p, pmap = get_produced_tokens(tt5)
                             for pl, count in pmap.items():
                                 for k in range(count):
-                                    # if i > 0:
-                                    #     my_mark['history'].append(
-                                    #         [pl, trace._attributes[xes_util.DEFAULT_TRACEID_KEY], trace[i-1][ocpa_constants.DEFAULT_START_TIMESTAMP_KEY]])
-                                    # else:
-                                    #     my_mark['history'].append(
-                                    #         [pl, trace._attributes[xes_util.DEFAULT_TRACEID_KEY], trace[i][ocpa_constants.DEFAULT_START_TIMESTAMP_KEY]])
                                     if i > 0:
                                         my_mark['start'].append(
                                             [pl, trace._attributes[xes_util.DEFAULT_TRACEID_KEY], trace[i-1][ocpa_constants.DEFAULT_TIMESTAMP_KEY]])
@@ -591,8 +585,6 @@ def apply_trace(trace, net, initial_marking, final_marking, trans_map, enable_pl
                     p, pmap = get_produced_tokens(t)
                     for pl, count in pmap.items():
                         for k in range(count):
-                            # my_mark['history'].append(
-                            #     [pl, trace._attributes[xes_util.DEFAULT_TRACEID_KEY], trace[i][ocpa_constants.DEFAULT_START_TIMESTAMP_KEY]])
                             my_mark['start'].append(
                                 [pl, trace._attributes[xes_util.DEFAULT_TRACEID_KEY], trace[i][ocpa_constants.DEFAULT_TIMESTAMP_KEY]])
                     consumed = consumed + c
@@ -671,8 +663,6 @@ def apply_trace(trace, net, initial_marking, final_marking, trans_map, enable_pl
                             p, pmap = get_produced_tokens(t)
                             for pl, count in pmap.items():
                                 for k in range(count):
-                                    # my_mark['history'].append(
-                                    #     [pl, trace._attributes[xes_util.DEFAULT_TRACEID_KEY], trace[i][ocpa_constants.DEFAULT_START_TIMESTAMP_KEY]])
                                     my_mark['start'].append(
                                         [pl, trace._attributes[xes_util.DEFAULT_TRACEID_KEY], trace[i][ocpa_constants.DEFAULT_TIMESTAMP_KEY]])
                             if enable_pltr_fitness:
@@ -720,8 +710,6 @@ def apply_trace(trace, net, initial_marking, final_marking, trans_map, enable_pl
                                 p, pmap = get_produced_tokens(t)
                                 for pl, count in pmap.items():
                                     for k in range(count):
-                                        # my_mark['history'].append(
-                                        #     [pl, trace._attributes[xes_util.DEFAULT_TRACEID_KEY], trace[i][ocpa_constants.DEFAULT_START_TIMESTAMP_KEY]])
                                         my_mark['start'].append(
                                             [pl, trace._attributes[xes_util.DEFAULT_TRACEID_KEY], trace[i][ocpa_constants.DEFAULT_TIMESTAMP_KEY]])
                                 if enable_pltr_fitness:

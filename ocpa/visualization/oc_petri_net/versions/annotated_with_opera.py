@@ -162,7 +162,10 @@ def apply(ocpn, diagnostics, parameters=None):
         color = color_mapping[object_type]
 
         penwidth = "1"
-        freq = diagnostics["arc_freq"][arc.__repr__()]
+        if arc.__repr__() in diagnostics["arc_freq"]:
+            freq = diagnostics["arc_freq"][arc.__repr__()]
+        else:
+            freq = ""
         arc_annotation += f"{freq}"
         if arc.variable == True:
             g.edge(all_objs[source_node], all_objs[target_node],

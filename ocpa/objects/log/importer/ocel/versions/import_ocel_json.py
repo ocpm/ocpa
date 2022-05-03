@@ -23,8 +23,8 @@ def apply(file_path, parameters=None):
     else:
         return_obj_df = None
 
-    if 'start_time' in parameters:
-        start_time_col = parameters['start_time']
+    if 'start_timestamp' in parameters:
+        start_time_col = parameters['start_timestamp']
     else:
         start_time_col = None
 
@@ -146,11 +146,11 @@ def parse_events(data: Dict[str, Any], cfg: JsonParseParameters) -> Dict[str, Ev
                                 omap=item[1][omap_name],
                                 vmap=item[1][vmap_name],
                                 time=datetime.fromisoformat(item[1][time_name]))
-        if "start_time" not in item[1][vmap_name]:
-            events[item[0]].vmap["start_time"] = None
+        if "start_timestamp" not in item[1][vmap_name]:
+            events[item[0]].vmap["start_timestamp"] = None
         else:
-            events[item[0]].vmap["start_time"] = datetime.fromisoformat(
-                events[item[0]].vmap["start_time"])
+            events[item[0]].vmap["start_timestamp"] = datetime.fromisoformat(
+                events[item[0]].vmap["start_timestamp"])
     sorted_events = sorted(events.items(), key=lambda kv: kv[1].time)
     return OrderedDict(sorted_events)
 

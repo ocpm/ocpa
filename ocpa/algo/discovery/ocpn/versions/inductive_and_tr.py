@@ -179,13 +179,14 @@ def apply(df, discovery_algorithm=discover_inductive, parameters=None):
             pl_count += 1
             # check if initial
             if pl in im:
-                p = ObjectCentricPetriNet.Place(name=p_name,
+                p = ObjectCentricPetriNet.Place(name=pl.name,
                                                 object_type=persp, initial=True)
             elif pl in fm:
                 p = ObjectCentricPetriNet.Place(
-                    name=p_name, object_type=persp, final=True)
+                    name=pl.name, object_type=persp, final=True)
             else:
-                p = ObjectCentricPetriNet.Place(name=p_name, object_type=persp)
+                p = ObjectCentricPetriNet.Place(
+                    name=pl.name, object_type=persp)
             places.append(p)
 
             for arc in pl.in_arcs:
