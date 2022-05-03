@@ -15,6 +15,7 @@ from ocpa.algo.feature_extraction import time_series
 from ocpa.algo.feature_extraction import tabular, sequential
 import numpy as np
 from ast import literal_eval
+from gnn_utils import *
 import seaborn as sns
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
@@ -48,7 +49,7 @@ filename = "example_logs/mdl/BPI2017-Final.csv"
 ots = ["application", "offer"]
 
 
-event_df = pd.read_csv(filename, sep=',')#[:20000]
+event_df = pd.read_csv(filename, sep=',')#[:200000]
 event_df["event_timestamp"] = pd.to_datetime(event_df["event_timestamp"])
 event_df = event_df.sort_values(by='event_timestamp')
 
@@ -81,6 +82,7 @@ print("Number of process executions: "+str(len(ocel.cases)))
 print(str(time.time()-t_start))
 print(ocel.log)
 activities = list(set(ocel.log["event_activity"].tolist()))
+print(str(len(activities))+" actvities")
 F = [(feature_extraction.EVENT_REMAINING_TIME,()),
      (feature_extraction.EVENT_PREVIOUS_TYPE_COUNT,("offer",)),
      (feature_extraction.EVENT_ELAPSED_TIME,())] + [(feature_extraction.EVENT_AGG_PREVIOUS_CHAR_VALUES,("event_RequestedAmount",max))] \
@@ -339,3 +341,133 @@ if True:
         #shap.plots.waterfall(shap_values[0][0], max_display=160, show=False)
         plt.savefig('shap_lstm_new_order'+str(i)+'.png', dpi=600)
 
+if True:
+    # generate training & test datasets
+    x_train, y_train = generate_graph_dataset(feature_storage.feature_graphs, feature_storage.training_indices, ocel)
+    # dgl.save_graphs('train_graph_dataset', x_train, labels = {'remaining_time': tf.constant(y_train)})
+    # x_train, y_train = dgl.load_graphs('train_graph_dataset')
+    # y_train = y_train['remaining_time']
+    x_test, y_test = generate_graph_dataset(feature_storage.feature_graphs, feature_storage.test_indices, ocel)
+    # dgl.save_graphs('test_graph_dataset', x_test, labels = {'remaining_time': tf.constant(y_test)})
+    # x_test, y_test = dgl.load_graphs('test_graph_dataset')
+    # y_test = y_test['remaining_time']
+
+    # explore data instances
+    idx = 101
+    # visualize_graph(x_train[idx], labels = 'node_id')
+    # visualize_graph(x_train[idx], labels = 'event_indices')
+    # visualize_graph(x_train[idx], labels = 'remaining_time')
+    # show_remaining_times(x_train[idx])
+    ####visualize_instance(x_train[idx], y_train[idx])
+    get_ordered_event_list(x_train[idx])['events']
+    get_ordered_event_list(x_train[idx])['features']
+
+    # initialize data loaders
+    train_loader = GraphDataLoader(
+        x_train,
+        y_train,
+        batch_size = 64,
+        shuffle = True,
+        add_self_loop = True,
+        make_bidirected = False,
+        on_gpu = False
+    )
+    test_loader = GraphDataLoader(
+        x_test,
+        y_test,
+        batch_size = 128,
+        shuffle = False,
+        add_self_loop = True,
+        make_bidirected = False,
+        on_gpu = False
+    )
+
+    # define GCN model
+    tf.keras.backend.clear_session()
+    model = GCN(24, 24)
+    optimizer = tf.keras.optimizers.Adam(lr = 0.01)
+    loss_function = tf.keras.losses.MeanAbsoluteError()
+
+    # run tensorflow training loop
+    epochs = 2
+    iter_idx = np.arange(0, train_loader.__len__())
+    loss_history = []
+    step_losses = []
+    for e in range(epochs):
+        np.random.shuffle(iter_idx)
+        current_loss = step = 0
+        for batch_id in tqdm(iter_idx):
+            step += 1
+            dgl_batch, label_batch = train_loader.__getitem__(batch_id)
+            with tf.GradientTape() as tape:
+                pred = model(dgl_batch, dgl_batch.ndata['features'])
+                loss = loss_function(label_batch, pred)
+
+            gradients = tape.gradient(loss, model.trainable_variables)
+            optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+
+            step_losses.append(loss.numpy())
+            current_loss += loss.numpy()
+            if (step % 100 == 0): print('Loss: %s'%((current_loss / step)))
+            loss_history.append(current_loss / step)
+
+    # visualize training progress
+    pd.DataFrame({'loss': loss_history, 'step_losses': step_losses}).plot(subplots = True, layout = (1, 2), sharey = True)
+
+    # evaluate model on test set
+    test_predictions = []
+    test_labels = []
+    for batch_id in tqdm(range(test_loader.__len__())):
+        dgl_batch, label_batch = test_loader.__getitem__(batch_id)
+        pred = model(dgl_batch, dgl_batch.ndata['features']).numpy()
+        test_predictions.append(pred)
+        test_labels.append(label_batch.numpy())
+    test_predictions = np.concatenate(test_predictions)
+    test_labels = np.concatenate(test_labels)
+    print(tf.keras.metrics.mean_absolute_error(np.squeeze(test_labels), np.squeeze(test_predictions)).numpy())
+
+    # calculate shap values for the presence of edges for sample instance
+    test_graph = x_test[2]
+    #visualize_instance(test_graph, y_test[2])
+    test_graph = dgl.add_self_loop(test_graph)
+    test_features = test_graph.ndata['features']
+    test_features = test_features.numpy()
+    test_features.shape
+
+    # define prediction function
+    def f(edge_selection):
+
+        all_preds = []
+
+        for i in edge_selection:
+            idx = np.concatenate([i, np.array([1, 1, 1, 1])], axis = 0).astype('bool')
+            edges = test_graph.edges()
+            selected_from = edges[0].numpy()[idx]
+            selected_to = edges[1].numpy()[idx]
+            new_graph = dgl.graph(
+                data = (selected_from, selected_to)
+            )
+            new_graph.ndata['features'] = test_graph.ndata['features']
+            new_graph.ndata['remaining_time'] = test_graph.ndata['remaining_time']
+            new_graph.ndata['event_indices'] = test_graph.ndata['event_indices']
+
+            with tf.device('CPU:0'):
+                pred = model(new_graph, new_graph.ndata['features']).numpy().squeeze()
+
+            all_preds.append(pred)
+        all_preds = np.array(all_preds)
+
+        return all_preds
+
+    # explain instance
+    explainer = shap.KernelExplainer(f, np.zeros((1, 4)))
+    shap_values = explainer.shap_values(np.ones((1, 4)), nsamples = 1000)
+    shap_values
+
+    # visualize instance
+    nx_G = x_test[2].cpu().to_networkx(node_attrs = ['remaining_time', 'event_indices'])
+    pos = nx.kamada_kawai_layout(nx_G)
+    edges = [i for i in nx_G.edges() if (i[0] != i[1])]
+    edge_labels = {k: v for k, v in zip(edges, np.round(shap_values[0], 2))}
+    nx.draw(nx_G, pos, with_labels = True, node_color=[[.7, .7, .7]], font_size = 10)
+    nx.draw_networkx_edge_labels(nx_G, pos, edge_labels = edge_labels)
