@@ -1,3 +1,5 @@
+import ocpa.objects.log.converter.factory as convert_factory
+import math
 from typing import List, Dict, Set, Any, Optional, Union, Tuple
 from dataclasses import dataclass, field
 from ocpa.util.vis_util import human_readable_stat
@@ -13,7 +15,7 @@ from pm4py.objects.petri.petrinet import PetriNet
 from pm4py.algo.filtering.log.attributes import attributes_filter
 from pm4py.statistics.variants.log import get as variants_module
 from pm4py.visualization.petrinet.util import performance_map
-from ocpa.algo.enhancement.token_replay_based_performance.util import run_timed_replay
+from ocpa.algo.enhancement.token_replay_based_performance.util import run_timed_replay, apply_trace, single_element_statistics
 from ocpa.objects.log.importer.mdl.util import succint_mdl_to_exploded_mdl, clean_frequency, clean_arc_frequency
 from ocpa.algo.discovery.mvp.projection import algorithm as projection_factory
 run_timed_replay
@@ -49,7 +51,18 @@ class PerformanceAnalysis:
     def correspond(self, eo: EventOccurrence, V: Set[TokenVisit]):
         input_places = [
             in_arc.source for in_arc in eo.transition.in_arcs]
-        return [v for v in V if v.end == eo.event[ocpa_constants.DEFAULT_OCEL_START_TIMESTAMP_KEY] and v.token[0].name in [p.name for p in input_places]]
+        R = []
+        # print(f'Event: {eo.event}')
+        for v in V:
+            # print(f'Token Visit: {v}')
+            if v.end == eo.event.vmap[ocpa_constants.DEFAULT_OCEL_START_TIMESTAMP_KEY]:
+                if v.token[1] in eo.event.omap:
+                    if v.token[0].name in [p.name for p in input_places]:
+                        R.append(v)
+        # print(f'Corresponding: {R}')
+
+        # return [v for v in V if v.end == eo.event[ocpa_constants.DEFAULT_OCEL_START_TIMESTAMP_KEY] and v.token[0].name in [p.name for p in input_places]]
+        return R
 
     def analyze(self, eos: Set[EventOccurrence], tvs: Set[TokenVisit], ots: Set[str], parameters):
         # compute measures
@@ -197,38 +210,38 @@ class PerformanceAnalysis:
         perf_diag = {}
         if p_waiting:
             perf_diag['agg_waiting_time'] = aggregate_perf_records(
-                self.perf_records, measure_name='waiting', aggregation_measure='all')
+                self.perf_records['waiting'], aggregation_measure='all')
         if p_service:
             perf_diag['agg_service_time'] = aggregate_perf_records(
-                self.perf_records, measure_name='service', aggregation_measure='all')
+                self.perf_records['service'], aggregation_measure='all')
         if p_sojourn:
             perf_diag['agg_sojourn_time'] = aggregate_perf_records(
-                self.perf_records, measure_name='sojourn', aggregation_measure='all')
+                self.perf_records['sojourn'], aggregation_measure='all')
         if p_sync:
             perf_diag['agg_synchronization_time'] = aggregate_perf_records(
-                self.perf_records, measure_name='synchronization', aggregation_measure='all')
+                self.perf_records['synchronization'], aggregation_measure='all')
 
         if p_pooling:
             perf_diag['agg_pooling_time'] = {}
             for persp in ots:
                 perf_diag['agg_pooling_time'][persp] = aggregate_perf_records(
-                    self.perf_records, measure_name='pooling', aggregation_measure='all', ot=persp)
+                    self.perf_records['pooling'], aggregation_measure='all', ot=persp)
 
         if p_lagging:
             perf_diag['agg_lagging_time'] = {}
             for persp in ots:
                 perf_diag['agg_lagging_time'][persp] = aggregate_perf_records(
-                    self.perf_records, measure_name='lagging', aggregation_measure='all', ot=persp)
+                    self.perf_records['lagging'], aggregation_measure='all', ot=persp)
         if p_flow:
             perf_diag['agg_flow_time'] = aggregate_perf_records(
-                self.perf_records, measure_name='flow', aggregation_measure='all')
+                self.perf_records['flow'], aggregation_measure='all')
         return perf_diag
 
     def measure_waiting(self, eo: EventOccurrence, R: Set[TokenVisit]):
         if len(R) > 0:
             start_times = [r.start for r in R]
             waiting = (
-                eo.event[ocpa_constants.DEFAULT_OCEL_START_TIMESTAMP_KEY] - min(start_times)).total_seconds()
+                eo.event.vmap[ocpa_constants.DEFAULT_OCEL_START_TIMESTAMP_KEY] - min(start_times)).total_seconds()
             if waiting < 0:
                 return 0
             return waiting
@@ -237,7 +250,7 @@ class PerformanceAnalysis:
 
     def measure_service(self, eo: EventOccurrence, R: Set[TokenVisit]):
         service = (
-            eo.event[ocpa_constants.DEFAULT_OCEL_TIMESTAMP_KEY] - eo.event[ocpa_constants.DEFAULT_OCEL_START_TIMESTAMP_KEY]).total_seconds()
+            eo.event.time - eo.event.vmap[ocpa_constants.DEFAULT_OCEL_START_TIMESTAMP_KEY]).total_seconds()
         if service < 0:
             return 0
         return service
@@ -246,7 +259,7 @@ class PerformanceAnalysis:
         if len(R) > 0:
             start_times = [r.start for r in R]
             sojourn = (
-                eo.event[ocpa_constants.DEFAULT_OCEL_TIMESTAMP_KEY] - min(start_times)).total_seconds()
+                eo.event.time - min(start_times)).total_seconds()
             if sojourn < 0:
                 return 0
             return sojourn
@@ -270,6 +283,8 @@ class PerformanceAnalysis:
                 r.start for r in ot_R]
             pooling = (max(ot_start_times) -
                        min(ot_start_times)).total_seconds()
+            # print(f'Corresponding of {ot}: {ot_R}')
+            # print(pooling)
             if pooling < 0:
                 return 0
             return pooling
@@ -290,7 +305,7 @@ class PerformanceAnalysis:
             return 0
 
 
-def aggregate_stats(perf_records, measure_name, elem, aggregation_measure):
+def aggregate_stats(perf_records, elem, aggregation_measure):
     """
     Aggregate the perf_records
 
@@ -310,25 +325,25 @@ def aggregate_stats(perf_records, measure_name, elem, aggregation_measure):
     """
     aggr_stat = 0
     if aggregation_measure == "mean" or aggregation_measure is None:
-        aggr_stat = mean(perf_records[measure_name][elem])
+        aggr_stat = mean(perf_records[elem])
     elif aggregation_measure == "median":
-        aggr_stat = median(perf_records[measure_name][elem])
+        aggr_stat = median(perf_records[elem])
     elif aggregation_measure == "stdev":
-        if len(perf_records[measure_name][elem]) > 1:
-            aggr_stat = stdev(perf_records[measure_name][elem])
+        if len(perf_records[elem]) > 1:
+            aggr_stat = stdev(perf_records[elem])
         else:
             aggr_stat = 0
     elif aggregation_measure == "sum":
-        aggr_stat = sum(perf_records[measure_name][elem])
+        aggr_stat = sum(perf_records[elem])
     elif aggregation_measure == "min":
-        aggr_stat = min(perf_records[measure_name][elem])
+        aggr_stat = min(perf_records[elem])
     elif aggregation_measure == "max":
-        aggr_stat = max(perf_records[measure_name][elem])
-    aggr_stat = human_readable_stat(aggr_stat)
+        aggr_stat = max(perf_records[elem])
+    # aggr_stat = human_readable_stat(aggr_stat)
     return aggr_stat
 
 
-def aggregate_ot_stats(perf_records, measure_name, ot, elem, aggregation_measure):
+def aggregate_ot_stats(perf_records, ot, elem, aggregation_measure):
     """
     Aggregate the perf_records
 
@@ -348,31 +363,31 @@ def aggregate_ot_stats(perf_records, measure_name, ot, elem, aggregation_measure
     """
     aggr_stat = 0
     if aggregation_measure == "mean" or aggregation_measure is None:
-        if ot in perf_records[measure_name]:
-            aggr_stat = mean(perf_records[measure_name][ot][elem])
+        if ot in perf_records:
+            aggr_stat = mean(perf_records[ot][elem])
     elif aggregation_measure == "median":
-        if ot in perf_records[measure_name]:
-            aggr_stat = median(perf_records[measure_name][ot][elem])
+        if ot in perf_records:
+            aggr_stat = median(perf_records[ot][elem])
     elif aggregation_measure == "stdev":
-        if ot in perf_records[measure_name]:
-            if len(perf_records[measure_name][ot][elem]) > 1:
-                aggr_stat = stdev(perf_records[measure_name][ot][elem])
+        if ot in perf_records:
+            if len(perf_records[ot][elem]) > 1:
+                aggr_stat = stdev(perf_records[ot][elem])
         else:
             aggr_stat = 0
     elif aggregation_measure == "sum":
-        if ot in perf_records[measure_name]:
-            aggr_stat = sum(perf_records[measure_name][ot][elem])
+        if ot in perf_records:
+            aggr_stat = sum(perf_records[ot][elem])
     elif aggregation_measure == "min":
-        if ot in perf_records[measure_name]:
-            aggr_stat = min(perf_records[measure_name][ot][elem])
+        if ot in perf_records:
+            aggr_stat = min(perf_records[ot][elem])
     elif aggregation_measure == "max":
-        if ot in perf_records[measure_name]:
-            aggr_stat = max(perf_records[measure_name][ot][elem])
-    aggr_stat = human_readable_stat(aggr_stat)
+        if ot in perf_records:
+            aggr_stat = max(perf_records[ot][elem])
+    # aggr_stat = human_readable_stat(aggr_stat)
     return aggr_stat
 
 
-def aggregate_perf_records(perf_records, measure_name="waiting", aggregation_measure='all', ot=None):
+def aggregate_perf_records(perf_records, aggregation_measure='all', ot=None):
     """
     Gets aggregated perf_records
 
@@ -392,34 +407,34 @@ def aggregate_perf_records(perf_records, measure_name="waiting", aggregation_mea
     """
     aggregated_perf_records = {}
     if ot is not None:
-        if ot in perf_records[measure_name]:
-            for elem in perf_records[measure_name][ot].keys():
+        if ot in perf_records:
+            for elem in perf_records[ot].keys():
                 if aggregation_measure == 'all':
                     for agg in ['mean', 'median', 'min', 'max', 'stdev']:
                         aggr_stat = aggregate_ot_stats(
-                            perf_records, measure_name, ot, elem, agg)
+                            perf_records, ot, elem, agg)
                         if elem not in aggregated_perf_records:
                             aggregated_perf_records[elem] = {}
                         aggregated_perf_records[elem][agg] = aggr_stat
                 else:
                     aggr_stat = aggregate_ot_stats(
-                        perf_records, measure_name, ot, elem, agg)
+                        perf_records, ot, elem, agg)
                     if elem not in aggregated_perf_records:
                         aggregated_perf_records[elem] = {}
                     aggregated_perf_records[elem][agg] = aggr_stat
     else:
 
-        for elem in perf_records[measure_name].keys():
+        for elem in perf_records.keys():
             if aggregation_measure == 'all':
                 for agg in ['mean', 'median', 'min', 'max', 'stdev']:
                     aggr_stat = aggregate_stats(
-                        perf_records, measure_name, elem, agg)
+                        perf_records, elem, agg)
                     if elem not in aggregated_perf_records:
                         aggregated_perf_records[elem] = {}
                     aggregated_perf_records[elem][agg] = aggr_stat
             else:
                 aggr_stat = aggregate_stats(
-                    perf_records, measure_name, elem, aggregation_measure)
+                    perf_records, elem, aggregation_measure)
                 if elem not in aggregated_perf_records:
                     aggregated_perf_records[elem] = {}
                 aggregated_perf_records[elem][aggregation_measure] = aggr_stat
@@ -455,7 +470,7 @@ def aggregate_frequencies(statistics):
     return aggregated_statistics
 
 
-def apply(ocpn, df, parameters=None):
+def apply(ocpn, ocel, parameters=None):
     if parameters is None:
         parameters = {}
 
@@ -465,20 +480,51 @@ def apply(ocpn, df, parameters=None):
     if 'agg' not in parameters:
         parameters['agg'] = ['mean']
 
+    persps = ocpn.object_types
+
+    replay_diag = dict()
+    replay_diag["act_freq"] = {}
+    replay_diag["arc_freq_persps"] = {}
+    replay_diag["object_count"] = {}
+    replay_diag["place_fitness_per_trace"] = {}
+
     allowed_activities = parameters["allowed_activities"] if "allowed_activities" in parameters else None
     debug = parameters["debug"] if "debug" in parameters else False
 
     eos = []
 
-    for i, row in df.iterrows():
-        act = row['event_activity']
-        start_timestamp = row['event_start_timestamp']
-        timestamp = row['event_timestamp']
-        event = {'event_activity': act,
-                 'event_start_timestamp': start_timestamp, 'event_timestamp': timestamp}
-        trans = ocpn.find_transition(act)
+    df, _ = convert_factory.apply(ocel, variant='json_to_mdl')
+
+    for ei in ocel.raw.events:
+        event = ocel.raw.events[ei]
+        # act = row['event_activity']
+        # start_timestamp = row['event_start_timestamp']
+        # timestamp = row['event_timestamp']
+        # event = {'event_activity': act,
+        #          'event_start_timestamp': start_timestamp, 'event_timestamp': timestamp}
+        trans = ocpn.find_transition(event.act)
         eo = EventOccurrence(trans, event)
         eos.append(eo)
+
+    for persp in persps:
+        replay_diag["object_count"][persp] = dict()
+
+    act_names = set(df['event_activity'])
+    acts = list(df['event_activity'])
+    for act_name in act_names:
+        replay_diag["act_freq"][act_name] = acts.count(act_name)
+
+    for i, row in df.iterrows():
+        act = row['event_activity']
+
+        for persp in persps:
+            if row[persp] is not float and len(row[persp]) > 0:
+                if act in replay_diag["object_count"][persp]:
+                    replay_diag["object_count"][persp][act].append(
+                        len(row[persp]))
+                else:
+                    replay_diag["object_count"][persp][act] = [
+                        len(row[persp])]
 
     df = succint_mdl_to_exploded_mdl(df)
 
@@ -501,15 +547,7 @@ def apply(ocpn, df, parameters=None):
     diff_token_replay = 0
     diff_performance_annotation = 0
     diff_basic_stats = 0
-
-    persps = ocpn.object_types
     object_map = {}
-
-    replay_diag = dict()
-    replay_diag["act_freq"] = {}
-    replay_diag["arc_freq_persps"] = {}
-    replay_diag["group_size_hist"] = {}
-    replay_diag["place_fitness_per_trace"] = {}
 
     for persp in persps:
         net, im, fm = ocpn.nets[persp]
@@ -526,57 +564,37 @@ def apply(ocpn, df, parameters=None):
         else:
             filtered_log = log
 
-        # Diagonstics - Activity Counting
-        activ_count = projection_factory.apply(
-            df, persp, variant="activity_occurrence", parameters=parameters)
-        replay_diag["act_freq"][persp] = activ_count
+        # # Diagonstics - Activity Counting
+        # activ_count = projection_factory.apply(
+        #     df, persp, variant="activity_occurrence", parameters=parameters)
+        # replay_diag["act_freq"][persp] = activ_count
 
-        variants_idx = variants_module.get_variants_from_log_trace_idx(log)
+        replay_results = run_timed_replay(log, net, im, fm)
 
-        aligned_traces, place_fitness_per_trace, transition_fitness_per_trace, notexisting_activities_in_model = run_timed_replay(
-            log, net, im, fm, parameters={"enable_pltr_fitness": True, "disable_variants": True})
-        replay_diag["place_fitness_per_trace"][persp] = place_fitness_per_trace
-
-        token_visits = [y for x in aligned_traces for y in x['token_visits']]
-        event_occurrences = [
-            y for trace in aligned_traces for y in trace['event_occurrences']]
+        token_visits = [y for x in replay_results for y in x['token_visits']]
 
         for tv in token_visits:
             tvs.append(TokenVisit(tv[0], tv[1], tv[2]))
         # for eo in event_occurrences:
         #     eos.append(EventOccurrence(eo[0], eo[1]))
-
-        element_statistics = performance_map.single_element_statistics(
-            log, net, im, aligned_traces, variants_idx)
+        # variants_idx = variants_module.get_variants_from_log_trace_idx(log)
+        element_statistics = single_element_statistics(
+            log, net, im, replay_results)
 
         agg_statistics = aggregate_frequencies(element_statistics)
         replay_diag["arc_freq_persps"][persp] = agg_statistics
 
-        if 'group_size' in parameters['measures']:
-            group_size_hist = projection_factory.apply(
-                df, persp, variant="group_size_hist", parameters=parameters)
-            replay_diag["group_size_hist"][persp] = group_size_hist
-
-        occurrences = {}
-        for trans in transition_fitness_per_trace:
-            occurrences[trans.label] = set()
-            for trace in transition_fitness_per_trace[trans]["fit_traces"]:
-                if not trace in transition_fitness_per_trace[trans]["underfed_traces"]:
-                    case_id = trace.attributes["concept:name"]
-                    for event in trace:
-                        if event["concept:name"] == trans.label:
-                            occurrences[trans.label].add(
-                                (case_id, event["event_id"]))
-
-    replay_diag["act_freq"] = merge_act_freq(replay_diag["act_freq"])
+    # replay_diag["act_freq"] = merge_act_freq(replay_diag["act_freq"])
     replay_diag["arc_freq"] = merge_replay(ocpn,
                                            replay_diag["arc_freq_persps"])
-    merged_group_size_hist = merge_group_size_hist(
-        replay_diag["group_size_hist"])
-    replay_diag["group_size_hist"] = agg_merged_group_size_hist(
-        merged_group_size_hist)
+    replay_diag['agg_object_freq'] = {}
+    for persp in persps:
+        replay_diag['agg_object_freq'][persp] = aggregate_perf_records(
+            replay_diag['object_count'], aggregation_measure='all', ot=persp)
+    # replay_diag['agg_object_freq'] = replay_diag['object_count']
     replay_diag["place_fitness_per_trace"] = merge_place_fitness(
         replay_diag["place_fitness_per_trace"])
+    replay_diag["object_count"] = replay_diag['agg_object_freq']
 
     tvs = list(set(tvs))
     # eos = list(set(eos))
@@ -586,6 +604,7 @@ def apply(ocpn, df, parameters=None):
     # merge replay diagnostics and performance diagnostics
     diag = {**perf_diag, **replay_diag}
     transformed_diag = transform_diagnostics(ocpn, diag, parameters)
+    print(transformed_diag)
 
     return transformed_diag
 
@@ -616,10 +635,10 @@ def transform_diagnostics(ocpn, diag, parameters):
         p_lagging = True
     else:
         p_lagging = False
-    if 'group_size' in parameters['measures']:
-        p_group_size = True
+    if 'object_count' in parameters['measures']:
+        p_object_count = True
     else:
-        p_group_size = False
+        p_object_count = False
     if 'act_freq' in parameters['measures']:
         p_act_freq = True
     else:
@@ -638,13 +657,11 @@ def transform_diagnostics(ocpn, diag, parameters):
     for tr in ocpn.transitions:
         if tr.silent == False:
             transformed_diag[tr.name] = {}
-            # transformed_diag[tr.name]["act_freq"] = textualize_act_freq(
-            #     tr.name, diag['act_freq'])
             transformed_diag[tr.name]["act_freq"] = diag['act_freq'][tr.name]
 
-            if p_group_size:
-                transformed_diag[tr.name]["group_size_hist"] = textualize_group_size(
-                    tr.name, parameters['agg'], diag["group_size_hist"])
+            if p_object_count:
+                transformed_diag[tr.name]["object_count"] = textualize_object_count(
+                    tr.name, ocpn.object_types, parameters['agg'], diag["object_count"])
 
             if p_waiting:
                 transformed_diag[tr.name]['waiting_time'] = textualize_waiting_time(
@@ -739,45 +756,57 @@ def merge_act_freq(act_freq):
     return merged_act_freq
 
 
-def merge_group_size_hist(group_size_hist):
-    merged_group_size_hist = dict()
-    for persp in group_size_hist.keys():
-        for act in group_size_hist[persp].keys():
-            persp_group_size_hist = {persp: group_size_hist[persp][act]}
-            if act not in merged_group_size_hist.keys():
-                merged_group_size_hist[act] = persp_group_size_hist
+def new_merge_object_count(object_count):
+    merged_object_count = dict()
+    for persp in object_count.keys():
+        for act in object_count[persp].keys():
+            persp_object_count = {act: object_count[persp][act]}
+            if act not in merged_object_count.keys():
+                merged_object_count[persp] = persp_object_count
             else:
-                merged_group_size_hist[act].update(persp_group_size_hist)
-    return merged_group_size_hist
+                merged_object_count[persp].update(persp_object_count)
+    return merged_object_count
 
 
-def agg_merged_group_size_hist(merged_group_size_hist):
-    agg_merged_group_size_hist = dict()
-    for act in merged_group_size_hist.keys():
-        agg_merged_group_size_hist[act] = dict()
+def merge_object_count(object_count):
+    merged_object_count = dict()
+    for persp in object_count.keys():
+        for act in object_count[persp].keys():
+            persp_object_count = {persp: object_count[persp][act]}
+            if act not in merged_object_count.keys():
+                merged_object_count[act] = persp_object_count
+            else:
+                merged_object_count[act].update(persp_object_count)
+    return merged_object_count
+
+
+def agg_merged_object_count(merged_object_count):
+    agg_merged_object_count = dict()
+    for act in merged_object_count.keys():
+        agg_merged_object_count[act] = dict()
         # median
-        agg_merged_group_size_hist[act]["median"] = dict()
-        for persp in merged_group_size_hist[act].keys():
-            agg_merged_group_size_hist[act]["median"][persp] = median(
-                merged_group_size_hist[act][persp])
+        agg_merged_object_count[act]["median"] = dict()
+        for persp in merged_object_count[act].keys():
+            agg_merged_object_count[act]["median"][persp] = median(
+                merged_object_count[act][persp])
         # mean
-        agg_merged_group_size_hist[act]["mean"] = dict()
-        for persp in merged_group_size_hist[act].keys():
-            agg_merged_group_size_hist[act]["mean"][persp] = mean(
-                merged_group_size_hist[act][persp])
+        agg_merged_object_count[act]["mean"] = dict()
+        for persp in merged_object_count[act].keys():
+            agg_merged_object_count[act]["mean"][persp] = mean(
+                merged_object_count[act][persp])
         # max
-        agg_merged_group_size_hist[act]["max"] = dict()
-        for persp in merged_group_size_hist[act].keys():
-            agg_merged_group_size_hist[act]["max"][persp] = mean(
-                merged_group_size_hist[act][persp])
+        agg_merged_object_count[act]["max"] = dict()
+        for persp in merged_object_count[act].keys():
+            agg_merged_object_count[act]["max"][persp] = mean(
+                merged_object_count[act][persp])
 
         # min
-        agg_merged_group_size_hist[act]["min"] = dict()
-        for persp in merged_group_size_hist[act].keys():
-            agg_merged_group_size_hist[act]["min"][persp] = mean(
-                merged_group_size_hist[act][persp])
+        agg_merged_object_count[act]["min"] = dict()
+        for persp in merged_object_count[act].keys():
+            agg_merged_object_count[act]["min"][persp] = mean(
+                merged_object_count[act][persp])
 
-    return agg_merged_group_size_hist
+    return agg_merged_object_count
 
 
 def textualize_act_freq(tr_name, act_freq):
@@ -834,17 +863,20 @@ def textualize_synchronization_time(tr_name, aggs, synchronization_time):
     return record
 
 
-def textualize_group_size(tr_name, aggs, group_size):
+def textualize_object_count(tr_name, obj_types, aggs, object_count):
     record = {}
     text = "Number of objects: { "
-    for agg in aggs:
-        text += f'{agg}: {{'
-        record[agg] = {}
-        if agg in group_size[tr_name]:
-            for obj_type in group_size[tr_name][agg].keys():
-                record[agg][obj_type] = group_size[tr_name][agg][obj_type]
-                text += f" {obj_type}={group_size[tr_name][agg][obj_type]} "
-        text += '} '
+    for obj_type in obj_types:
+        record[obj_type] = {}
+        if tr_name in object_count[obj_type]:
+            text += f'{obj_type}: {{'
+            for agg in aggs:
+                if agg in object_count[obj_type][tr_name]:
+                    record[obj_type][agg] = object_count[obj_type][tr_name][agg]
+                    text += f'{agg}: {{'
+                    text += f" {obj_type}={object_count[obj_type][tr_name][agg]} "
+                    text += '} '
+            text += '} '
     text += '}'
     return record
 

@@ -25,42 +25,42 @@ def apply(ocpn, diagnostics, parameters=None):
     all_objs = {}
     trans_names = {}
 
-    if 'waiting_time' in parameters['measures']:
-        p_waiting = True
-    else:
-        p_waiting = False
-    if 'service_time' in parameters['measures']:
-        p_service = True
-    else:
-        p_service = False
-    if 'sojourn_time' in parameters['measures']:
-        p_sojourn = True
-    else:
-        p_sojourn = False
-    if 'synchronization_time' in parameters['measures']:
-        p_sync = True
-    else:
-        p_sync = False
-    if 'pooling_time' in parameters['measures']:
-        p_pooling = True
-    else:
-        p_pooling = False
-    if 'lagging_time' in parameters['measures']:
-        p_lagging = True
-    else:
-        p_lagging = False
-    if 'group_size' in parameters['measures']:
-        p_group_size = True
-    else:
-        p_group_size = False
-    if 'act_freq' in parameters['measures']:
-        p_act_freq = True
-    else:
-        p_act_freq = False
-    if 'arc_freq' in parameters['measures']:
-        p_arc_freq = True
-    else:
-        p_arc_freq = False
+    # if 'waiting_time' in parameters['measures']:
+    #     p_waiting = True
+    # else:
+    #     p_waiting = False
+    # if 'service_time' in parameters['measures']:
+    #     p_service = True
+    # else:
+    #     p_service = False
+    # if 'sojourn_time' in parameters['measures']:
+    #     p_sojourn = True
+    # else:
+    #     p_sojourn = False
+    # if 'synchronization_time' in parameters['measures']:
+    #     p_sync = True
+    # else:
+    #     p_sync = False
+    # if 'pooling_time' in parameters['measures']:
+    #     p_pooling = True
+    # else:
+    #     p_pooling = False
+    # if 'lagging_time' in parameters['measures']:
+    #     p_lagging = True
+    # else:
+    #     p_lagging = False
+    # if 'object_count' in parameters['measures']:
+    #     p_object_count = True
+    # else:
+    #     p_object_count = False
+    # if 'act_freq' in parameters['measures']:
+    #     p_act_freq = True
+    # else:
+    #     p_act_freq = False
+    # if 'arc_freq' in parameters['measures']:
+    #     p_arc_freq = True
+    # else:
+    #     p_arc_freq = False
 
     pl_count = 1
     tr_count = 1
@@ -111,8 +111,8 @@ def apply(ocpn, diagnostics, parameters=None):
             # tr_xlabel = "Performance of %s" % (tr.name)
             tr_label += f"\n {diagnostics[tr.name]['act_freq']}"
 
-            # if p_group_size:
-            #     tr_xlabel += f'\n {diagnostics[tr.name]["group_size_hist"]}'
+            # if p_object_count:
+            #     tr_xlabel += f'\n {diagnostics[tr.name]["object_count"]}'
 
             # if p_waiting:
             #     tr_xlabel += '<br/>'
@@ -183,12 +183,12 @@ def apply(ocpn, diagnostics, parameters=None):
     return g
 
 
-def add_group_size(tr_name, agg, group_size):
+def add_object_count(tr_name, agg, object_count):
     added_tr_xlabel = f"<br/> {agg} number of objects: "
-    if agg in group_size[tr_name]:
-        for obj_type in group_size[tr_name][agg].keys():
+    if agg in object_count[tr_name]:
+        for obj_type in object_count[tr_name][agg].keys():
             added_tr_xlabel += "%s=%d " % (obj_type,
-                                           group_size[tr_name][agg][obj_type])
+                                           object_count[tr_name][agg][obj_type])
     return added_tr_xlabel
 
 

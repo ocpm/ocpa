@@ -19,7 +19,7 @@ ocpa/algo/discovery/mvp/projection/algorithm.py
 ocpa/algo/discovery/mvp/projection/versions/__init__.py
 ocpa/algo/discovery/mvp/projection/versions/activity_occurrence.py
 ocpa/algo/discovery/mvp/projection/versions/classic.py
-ocpa/algo/discovery/mvp/projection/versions/group_size_hist.py
+ocpa/algo/discovery/mvp/projection/versions/object_count_hist.py
 ocpa/algo/discovery/ocpn/__init__.py
 ocpa/algo/discovery/ocpn/algorithm.py
 ocpa/algo/discovery/ocpn/versions/__init__.py

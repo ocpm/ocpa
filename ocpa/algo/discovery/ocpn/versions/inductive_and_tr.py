@@ -101,7 +101,7 @@ def discover_nets(df, discovery_algorithm=discover_inductive, parameters=None):
 
     ret = {}
     ret["nets"] = {}
-    ret["group_size_hist"] = {}
+    ret["object_count"] = {}
 
     diff_log = 0
     diff_model = 0
@@ -145,11 +145,11 @@ def discover_nets(df, discovery_algorithm=discover_inductive, parameters=None):
             print(len(log))
             print(persp, "discovered net")
 
-        group_size_hist = algorithm.apply(
-            df, persp, variant="group_size_hist", parameters=parameters)
+        object_count = algorithm.apply(
+            df, persp, variant="object_count", parameters=parameters)
 
         ret["nets"][persp] = [net, im, fm]
-        ret["group_size_hist"][persp] = group_size_hist
+        ret["object_count"][persp] = object_count
 
     return ret
 
@@ -157,7 +157,7 @@ def discover_nets(df, discovery_algorithm=discover_inductive, parameters=None):
 def apply(df, discovery_algorithm=discover_inductive, parameters=None):
     ret = discover_nets(df, discovery_algorithm, parameters)
     nets = ret["nets"]
-    group_size_hist_persp = ret["group_size_hist"]
+    object_count_persp = ret["object_count"]
     transitions = {}
     transition_list = []
     places = []
@@ -170,7 +170,7 @@ def apply(df, discovery_algorithm=discover_inductive, parameters=None):
         pl_count = 1
         tr_count = 1
         arc_count = 1
-        group_size_hist = group_size_hist_persp[persp]
+        object_count = object_count_persp[persp]
         for pl in net.places:
             p = None
             p_name = "%s%d" % (persp, pl_count)
@@ -209,8 +209,8 @@ def apply(df, discovery_algorithm=discover_inductive, parameters=None):
                         t = transitions[arc.source.name]
 
                 # add arc
-                if arc.source.label in group_size_hist and sum(group_size_hist[arc.source.label]) != len(
-                        group_size_hist[arc.source.label]):
+                if arc.source.label in object_count and sum(object_count[arc.source.label]) != len(
+                        object_count[arc.source.label]):
                     a = ObjectCentricPetriNet.Arc(t, p, variable=True)
                 else:
                     a = ObjectCentricPetriNet.Arc(t, p)
@@ -237,7 +237,7 @@ def apply(df, discovery_algorithm=discover_inductive, parameters=None):
                         t = transitions[arc.target.name]
 
                 # add arc
-                if arc.target.label in group_size_hist and sum(group_size_hist[arc.target.label]) != len(group_size_hist[arc.target.label]):
+                if arc.target.label in object_count and sum(object_count[arc.target.label]) != len(object_count[arc.target.label]):
                     a = ObjectCentricPetriNet.Arc(p, t, variable=True)
                 else:
                     a = ObjectCentricPetriNet.Arc(p, t)

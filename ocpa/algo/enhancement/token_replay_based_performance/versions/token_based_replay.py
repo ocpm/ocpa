@@ -43,9 +43,9 @@ def apply(ocpn, df, parameters=None):
 
     diag["act_freq"] = {}
     diag["arc_freq"] = {}
-    diag["group_size_hist"] = {}
+    diag["object_count"] = {}
     diag["act_freq_replay"] = {}
-    diag["group_size_hist_replay"] = {}
+    diag["object_count_replay"] = {}
     diag["aligned_traces"] = {}
     diag["place_fitness_per_trace"] = {}
     diag["agg_statistics_frequency"] = {}
@@ -155,11 +155,11 @@ def apply(ocpn, df, parameters=None):
         if debug:
             print(persp, "done agg_statistics_performance")
 
-        group_size_hist = projection_factory.apply(
-            df, persp, variant="group_size_hist", parameters=parameters)
+        object_count = projection_factory.apply(
+            df, persp, variant="object_count", parameters=parameters)
 
         if debug:
-            print(persp, "done group_size_hist")
+            print(persp, "done object_count")
 
         occurrences = {}
         for trans in transition_fitness_per_trace:
@@ -201,9 +201,9 @@ def apply(ocpn, df, parameters=None):
         diag["agg_performance_mean"][persp] = agg_performance_mean
 
         diag["arc_freq"][persp] = agg_statistics
-        diag["group_size_hist"][persp] = group_size_hist
+        diag["object_count"][persp] = object_count
         # diag["act_freq_replay"][persp] = len_different_ids
-        # diag["group_size_hist_replay"][persp] = eid_acti_count
+        # diag["object_count_replay"][persp] = eid_acti_count
 
     # diag["computation_statistics"] = {"diff_log": diff_log, "diff_model": diff_model,
     #                                   "diff_token_replay": diff_token_replay,
@@ -212,9 +212,10 @@ def apply(ocpn, df, parameters=None):
 
     # Transitions
     diag["replayed_act_freq"] = merge_act_freq(diag["act_freq"])
-    merged_group_size_hist = merge_group_size_hist(diag["group_size_hist"])
-    diag["agg_merged_group_size_hist"] = agg_merged_group_size_hist(
-        merged_group_size_hist)
+    merged_object_count = merge_object_count(
+        diag["object_count"])
+    diag["agg_merged_object_count"] = agg_merged_object_count(
+        merged_object_count)
     diag["replayed_place_fitness"] = merge_place_fitness(
         diag["place_fitness_per_trace"])
     diag["replayed_performance_median"] = merge_agg_performance(
@@ -315,42 +316,42 @@ def merge_act_freq(act_freq):
     return merged_act_freq
 
 
-def merge_group_size_hist(group_size_hist):
-    merged_group_size_hist = dict()
-    for persp in group_size_hist.keys():
-        for act in group_size_hist[persp].keys():
-            persp_group_size_hist = {persp: group_size_hist[persp][act]}
-            if act not in merged_group_size_hist.keys():
-                merged_group_size_hist[act] = persp_group_size_hist
+def merge_object_count(object_count):
+    merged_object_count = dict()
+    for persp in object_count.keys():
+        for act in object_count[persp].keys():
+            persp_object_count = {persp: object_count[persp][act]}
+            if act not in merged_object_count.keys():
+                merged_object_count[act] = persp_object_count
             else:
-                merged_group_size_hist[act].update(persp_group_size_hist)
-    return merged_group_size_hist
+                merged_object_count[act].update(persp_object_count)
+    return merged_object_count
 
 
-def agg_merged_group_size_hist(merged_group_size_hist):
-    agg_merged_group_size_hist = dict()
-    for act in merged_group_size_hist.keys():
-        agg_merged_group_size_hist[act] = dict()
+def agg_merged_object_count(merged_object_count):
+    agg_merged_object_count = dict()
+    for act in merged_object_count.keys():
+        agg_merged_object_count[act] = dict()
         # median
-        agg_merged_group_size_hist[act]["median"] = dict()
-        for persp in merged_group_size_hist[act].keys():
-            agg_merged_group_size_hist[act]["median"][persp] = median(
-                merged_group_size_hist[act][persp])
+        agg_merged_object_count[act]["median"] = dict()
+        for persp in merged_object_count[act].keys():
+            agg_merged_object_count[act]["median"][persp] = median(
+                merged_object_count[act][persp])
         # mean
-        agg_merged_group_size_hist[act]["mean"] = dict()
-        for persp in merged_group_size_hist[act].keys():
-            agg_merged_group_size_hist[act]["mean"][persp] = mean(
-                merged_group_size_hist[act][persp])
+        agg_merged_object_count[act]["mean"] = dict()
+        for persp in merged_object_count[act].keys():
+            agg_merged_object_count[act]["mean"][persp] = mean(
+                merged_object_count[act][persp])
         # max
-        agg_merged_group_size_hist[act]["max"] = dict()
-        for persp in merged_group_size_hist[act].keys():
-            agg_merged_group_size_hist[act]["max"][persp] = mean(
-                merged_group_size_hist[act][persp])
+        agg_merged_object_count[act]["max"] = dict()
+        for persp in merged_object_count[act].keys():
+            agg_merged_object_count[act]["max"][persp] = mean(
+                merged_object_count[act][persp])
 
         # min
-        agg_merged_group_size_hist[act]["min"] = dict()
-        for persp in merged_group_size_hist[act].keys():
-            agg_merged_group_size_hist[act]["min"][persp] = mean(
-                merged_group_size_hist[act][persp])
+        agg_merged_object_count[act]["min"] = dict()
+        for persp in merged_object_count[act].keys():
+            agg_merged_object_count[act]["min"][persp] = mean(
+                merged_object_count[act][persp])
 
-    return agg_merged_group_size_hist
+    return agg_merged_object_count

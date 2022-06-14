@@ -38,6 +38,18 @@ class CorrelatedEventGraph():
     def ovmap(self, ovmap):
         self._ovmap = ovmap
 
+    def get_sequence(self):
+        events = [e for e in self._graph.nodes]
+        event_timestamps = [e.time for e in events]
+        import operator
+        sequence = sorted(events, key=operator.attrgetter('time'))
+        sequence = [e.act for e in sequence]
+        # event_timestamps = [e.time for e in events]
+        # min_index = event_timestamps.index(min(event_timestamps))
+        # first_event = events[min_index]
+        # return first_event
+        return sequence
+
     def get_event_context_per_object(self, event, ot):
         return set([e for e in self._graph.nodes if (e, event) in self._graph.edges and ot in [self._ovmap[oi].type for oi in event.omap]])
 

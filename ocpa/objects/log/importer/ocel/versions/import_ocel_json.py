@@ -12,12 +12,10 @@ from ocpa.objects.log.obj import Event, Obj, ObjectCentricEventLog, MetaObjectCe
 def apply(file_path, parameters=None):
     if parameters is None:
         parameters = {}
-
     if 'return_df' in parameters:
         return_df = parameters['return_df']
     else:
         return_df = False
-
     if 'return_obj_df' in parameters:
         return_obj_df = parameters['return_obj_df']
     else:
@@ -63,13 +61,15 @@ def apply(file_path, parameters=None):
             el["event_timestamp"] = datetime.fromisoformat(
                 el[prefix + "timestamp"])
             del el[prefix + "activity"]
-            del el[prefix + "timestamp"]
             for k2 in el[prefix + "vmap"]:
                 if k2 == start_time_col:
-                    el["event_" + start_time_col] = el[prefix + start_time_col]
+                    el["event_start_timestamp"] = el[prefix + start_time_col]
                 else:
                     el["event_" + k2] = el[prefix + "vmap"][k2]
-            # el["event_" + start_time_col] = el[prefix + start_time_col]
+            if start_time_col is None:
+                el["event_start_timestamp"] = datetime.fromisoformat(
+                    el[prefix + "timestamp"])
+            del el[prefix + "timestamp"]
             del el[prefix + "vmap"]
             for k2 in el[prefix + "omap"]:
                 el[k2] = el[prefix + "omap"][k2]
@@ -147,7 +147,8 @@ def parse_events(data: Dict[str, Any], cfg: JsonParseParameters) -> Dict[str, Ev
                                 vmap=item[1][vmap_name],
                                 time=datetime.fromisoformat(item[1][time_name]))
         if "start_timestamp" not in item[1][vmap_name]:
-            events[item[0]].vmap["start_timestamp"] = None
+            events[item[0]].vmap["start_timestamp"] = datetime.fromisoformat(
+                item[1][time_name])
         else:
             events[item[0]].vmap["start_timestamp"] = datetime.fromisoformat(
                 events[item[0]].vmap["start_timestamp"])

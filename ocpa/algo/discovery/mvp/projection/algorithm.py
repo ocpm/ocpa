@@ -1,10 +1,11 @@
-from ocpa.algo.discovery.mvp.projection.versions import classic, activity_occurrence,group_size_hist
+from ocpa.algo.discovery.mvp.projection.versions import classic, activity_occurrence, object_count
 
 CLASSIC = "classic"
 ACTIVITY_OCCURRENCE = "activity_occurrence"
-GROUP_SIZE_HIST = "group_size_hist"
+OBJECT_COUNT = "object_count"
 
-VERSIONS = {CLASSIC: classic.apply, ACTIVITY_OCCURRENCE: activity_occurrence.apply, GROUP_SIZE_HIST: group_size_hist.apply}
+VERSIONS = {CLASSIC: classic.apply, ACTIVITY_OCCURRENCE: activity_occurrence.apply,
+            OBJECT_COUNT: object_count.apply}
 
 
 def apply(df, persp, variant=CLASSIC, parameters=None):

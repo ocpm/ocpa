@@ -33,7 +33,7 @@ def apply(ocpn, diagnostics, parameters=None):
     replayed_performance_mean = diagnostics["replayed_performance_mean"]
     replayed_performance_max = diagnostics["replayed_performance_max"]
 
-    agg_merged_group_size_hist = diagnostics["agg_merged_group_size_hist"]
+    agg_merged_object_count_hist = diagnostics["agg_merged_object_count_hist"]
 
     replayed_place_fitness = diagnostics["replayed_place_fitness"]
 
@@ -44,25 +44,25 @@ def apply(ocpn, diagnostics, parameters=None):
     else:
         d_act_freq = False
 
-    if 'max_group_size' in parameters:
-        d_max_group_size = parameters['max_group_size']
+    if 'max_object_count' in parameters:
+        d_max_object_count = parameters['max_object_count']
     else:
-        d_max_group_size = False
+        d_max_object_count = False
 
-    if 'min_group_size' in parameters:
-        d_min_group_size = parameters['min_group_size']
+    if 'min_object_count' in parameters:
+        d_min_object_count = parameters['min_object_count']
     else:
-        d_min_group_size = False
+        d_min_object_count = False
 
-    if 'mean_group_size' in parameters:
-        d_mean_group_size = parameters['mean_group_size']
+    if 'mean_object_count' in parameters:
+        d_mean_object_count = parameters['mean_object_count']
     else:
-        d_mean_group_size = False
+        d_mean_object_count = False
 
-    if 'median_group_size' in parameters:
-        d_median_group_size = parameters['median_group_size']
+    if 'median_object_count' in parameters:
+        d_median_object_count = parameters['median_object_count']
     else:
-        d_median_group_size = False
+        d_median_object_count = False
 
     if 'produced_token' in parameters:
         d_produced_token = parameters['produced_token']
@@ -158,29 +158,29 @@ def apply(ocpn, diagnostics, parameters=None):
             if d_act_freq == True:
                 tr_label += "\n (%d)" % (act_count[tr.name])
 
-            if d_max_group_size == True:
+            if d_max_object_count == True:
                 tr_xlabel += "\n max: "
-                for obj_type in agg_merged_group_size_hist[tr.name]["max"].keys():
+                for obj_type in agg_merged_object_count_hist[tr.name]["max"].keys():
                     tr_xlabel += "%s=%d " % (obj_type,
-                                             agg_merged_group_size_hist[tr.name]["max"][obj_type])
+                                             agg_merged_object_count_hist[tr.name]["max"][obj_type])
 
-            if d_min_group_size == True:
+            if d_min_object_count == True:
                 tr_xlabel += "\n min: "
-                for obj_type in agg_merged_group_size_hist[tr.name]["min"].keys():
+                for obj_type in agg_merged_object_count_hist[tr.name]["min"].keys():
                     tr_xlabel += "%s=%d " % (obj_type,
-                                             agg_merged_group_size_hist[tr.name]["min"][obj_type])
+                                             agg_merged_object_count_hist[tr.name]["min"][obj_type])
 
-            if d_mean_group_size == True:
+            if d_mean_object_count == True:
                 tr_xlabel += "\n mean: "
-                for obj_type in agg_merged_group_size_hist[tr.name]["mean"].keys():
+                for obj_type in agg_merged_object_count_hist[tr.name]["mean"].keys():
                     tr_xlabel += "%s=%d " % (
-                        obj_type, agg_merged_group_size_hist[tr.name]["mean"][obj_type])
+                        obj_type, agg_merged_object_count_hist[tr.name]["mean"][obj_type])
 
-            if d_median_group_size == True:
+            if d_median_object_count == True:
                 tr_xlabel += "\n median: "
-                for obj_type in agg_merged_group_size_hist[tr.name]["median"].keys():
+                for obj_type in agg_merged_object_count_hist[tr.name]["median"].keys():
                     tr_xlabel += "%s=%d " % (
-                        obj_type, agg_merged_group_size_hist[tr.name]["median"][obj_type])
+                        obj_type, agg_merged_object_count_hist[tr.name]["median"][obj_type])
             g.node("(t)%s" % (tr.name), "%s" % (tr_label), shape="box", fontsize="36.0",
                    labelfontsize="36.0", xlabel='''<<FONT POINT-SIZE="11">%s</FONT>>''' % (tr_xlabel))
             trans_names[tr.name] = tr.name

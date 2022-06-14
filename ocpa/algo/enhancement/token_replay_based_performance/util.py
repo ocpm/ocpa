@@ -32,6 +32,7 @@ from pm4py.objects.log.obj import EventLog, EventStream
 import pandas as pd
 from pm4py.objects.petri_net.obj import PetriNet, Marking
 from pm4py.util import typing
+from pm4py.visualization.petrinet.util import performance_map
 
 
 class Parameters(Enum):
@@ -1044,180 +1045,6 @@ def get_variants_from_log(log, activity_key, disable_variants=False):
     return variants
 
 
-def apply_log(log, net, initial_marking, final_marking, enable_pltr_fitness=False, consider_remaining_in_fitness=False,
-              activity_key="concept:name", reach_mark_through_hidden=True, stop_immediately_unfit=False,
-              walk_through_hidden_trans=True, places_shortest_path_by_hidden=None,
-              variants=None, is_reduction=False, thread_maximum_ex_time=TechnicalParameters.MAX_DEF_THR_EX_TIME.value,
-              cleaning_token_flood=False, disable_variants=False, return_object_names=False, show_progress_bar=True,
-              consider_activities_not_in_model_in_fitness=False):
-    """
-    Apply token-based replay to a log
-
-    Parameters
-    ----------
-    log
-        Trace log
-    net
-        Petri net
-    initial_marking
-        Initial marking
-    final_marking
-        Final marking
-    enable_pltr_fitness
-        Enable fitness retrieval at place level
-    consider_remaining_in_fitness
-        Boolean value telling if the remaining tokens should be considered in fitness evaluation
-    activity_key
-        Name of the attribute that contains the activity
-    reach_mark_through_hidden
-        Boolean value that decides if we shall try to reach the final marking through hidden transitions
-    stop_immediately_unfit
-        Boolean value that decides if we shall stop immediately when a non-conformance is detected
-    walk_through_hidden_trans
-        Boolean value that decides if we shall walk through hidden transitions in order to enable visible transitions
-    places_shortest_path_by_hidden
-        Shortest paths between places by hidden transitions
-    variants
-        List of variants contained in the event log
-    is_reduction
-        Expresses if the token-based replay is called in a reduction attempt
-    thread_maximum_ex_time
-        Alignment threads maximum allowed execution time
-    cleaning_token_flood
-        Decides if a cleaning of the token flood shall be operated
-    disable_variants
-        Disable variants grouping
-    return_object_names
-        Decides whether names instead of object pointers shall be returned
-    """
-    post_fix_cache = PostFixCaching()
-    marking_to_activity_cache = MarkingToActivityCaching()
-    if places_shortest_path_by_hidden is None:
-        places_shortest_path_by_hidden = get_places_shortest_path_by_hidden(net,
-                                                                            TechnicalParameters.MAX_REC_DEPTH.value)
-
-    place_fitness_per_trace = {}
-    transition_fitness_per_trace = {}
-
-    aligned_traces = []
-
-    if enable_pltr_fitness:
-        for place in net.places:
-            place_fitness_per_trace[place] = {"underfed_traces": set(), "overfed_traces": set(), "m": 0, "r": 0, "c": 0,
-                                              "p": 0}
-        for transition in net.transitions:
-            if transition.label:
-                transition_fitness_per_trace[transition] = {
-                    "underfed_traces": {}, "fit_traces": {}}
-
-    s_components = []
-
-    if cleaning_token_flood:
-        s_components = get_s_components_from_petri(
-            net, initial_marking, final_marking)
-
-    notexisting_activities_in_model = {}
-
-    trans_map = {}
-    for t in net.transitions:
-        trans_map[t.label] = t
-    if len(log) > 0:
-        if len(log[0]) > 0:
-            if activity_key in log[0][0]:
-                if variants is None:
-                    variants = get_variants_from_log(
-                        log, activity_key, disable_variants=disable_variants)
-
-                progress = None
-                if pkgutil.find_loader("tqdm") and show_progress_bar and len(variants) > 1:
-                    from tqdm.auto import tqdm
-                    progress = tqdm(
-                        total=len(variants), desc="replaying log with TBR, completed variants :: ")
-
-                vc = variants_module.get_variants_sorted_by_count(variants)
-                threads = {}
-                threads_results = {}
-                all_activated_transitions = set()
-
-                for i in range(len(vc)):
-                    variant = vc[i][0]
-                    threads[variant] = ApplyTraceTokenReplay(variants[variant][0], net, initial_marking, final_marking,
-                                                             trans_map, enable_pltr_fitness, place_fitness_per_trace,
-                                                             transition_fitness_per_trace,
-                                                             notexisting_activities_in_model,
-                                                             places_shortest_path_by_hidden,
-                                                             consider_remaining_in_fitness,
-                                                             activity_key=activity_key,
-                                                             reach_mark_through_hidden=reach_mark_through_hidden,
-                                                             stop_immediately_when_unfit=stop_immediately_unfit,
-                                                             walk_through_hidden_trans=walk_through_hidden_trans,
-                                                             post_fix_caching=post_fix_cache,
-                                                             marking_to_activity_caching=marking_to_activity_cache,
-                                                             is_reduction=is_reduction,
-                                                             thread_maximum_ex_time=thread_maximum_ex_time,
-                                                             cleaning_token_flood=cleaning_token_flood,
-                                                             s_components=s_components, trace_occurrences=vc[i][1],
-                                                             consider_activities_not_in_model_in_fitness=consider_activities_not_in_model_in_fitness)
-                    threads[variant].run()
-                    if progress is not None:
-                        progress.update()
-
-                    t = threads[variant]
-                    threads_results[variant] = {"trace_is_fit": copy(t.t_fit),
-                                                "trace_fitness": float(copy(t.t_value)),
-                                                "activated_transitions": copy(t.act_trans),
-                                                "reached_marking": copy(t.reached_marking),
-                                                "enabled_transitions_in_marking": copy(
-                                                    t.enabled_trans_in_mark),
-                                                "transitions_with_problems": copy(
-                                                    t.trans_probl),
-                                                "missing_tokens": int(t.missing),
-                                                "consumed_tokens": int(t.consumed),
-                                                "remaining_tokens": int(t.remaining),
-                                                "produced_tokens": int(t.produced),
-                                                "token_visits": copy(t.tvs),
-                                                "event_occurrences": copy(t.ocs)}
-
-                    if return_object_names:
-                        threads_results[variant]["activated_transitions_labels"] = [x.label for x in
-                                                                                    threads_results[variant][
-                                                                                        "activated_transitions"]]
-                        threads_results[variant]["activated_transitions"] = [x.name for x in threads_results[variant][
-                            "activated_transitions"]]
-                        threads_results[variant]["enabled_transitions_in_marking_labels"] = [x.label for x in
-                                                                                             threads_results[variant][
-                                                                                                 "enabled_transitions_in_marking"]]
-                        threads_results[variant]["enabled_transitions_in_marking"] = [x.name for x in
-                                                                                      threads_results[variant][
-                                                                                          "enabled_transitions_in_marking"]]
-                        threads_results[variant]["transitions_with_problems"] = [x.name for x in
-                                                                                 threads_results[variant][
-                                                                                     "transitions_with_problems"]]
-                        threads_results[variant]["reached_marking"] = {x.name: y for x, y in
-                                                                       threads_results[variant][
-                                                                           "reached_marking"].items()}
-                    del threads[variant]
-                for trace in log:
-                    trace_variant = get_variant_from_trace(
-                        trace, activity_key, disable_variants=disable_variants)
-                    if trace_variant in threads_results:
-                        t = threads_results[trace_variant]
-                        aligned_traces.append(t)
-
-                # gracefully close progress bar
-                if progress is not None:
-                    progress.close()
-                del progress
-            else:
-                raise NoConceptNameException(
-                    "at least an event is without " + activity_key)
-
-    if enable_pltr_fitness:
-        return aligned_traces, place_fitness_per_trace, transition_fitness_per_trace, notexisting_activities_in_model
-    else:
-        return aligned_traces
-
-
 def run_timed_replay(log: EventLog, net: PetriNet, initial_marking: Marking, final_marking: Marking, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> typing.ListAlignments:
     """
     Method to apply token-based replay
@@ -1271,16 +1098,16 @@ def run_timed_replay(log: EventLog, net: PetriNet, initial_marking: Marking, fin
     show_progress_bar = exec_utils.get_param_value(
         Parameters.SHOW_PROGRESS_BAR, parameters, True)
 
-    return apply_log(log, net, initial_marking, final_marking, enable_pltr_fitness=enable_pltr_fitness,
-                     consider_remaining_in_fitness=consider_remaining_in_fitness,
-                     reach_mark_through_hidden=try_to_reach_final_marking_through_hidden,
-                     stop_immediately_unfit=stop_immediately_unfit,
-                     walk_through_hidden_trans=walk_through_hidden_trans,
-                     places_shortest_path_by_hidden=places_shortest_path_by_hidden, activity_key=activity_key,
-                     variants=variants, is_reduction=is_reduction, thread_maximum_ex_time=thread_maximum_ex_time,
-                     cleaning_token_flood=cleaning_token_flood, disable_variants=disable_variants,
-                     return_object_names=return_names, show_progress_bar=show_progress_bar,
-                     consider_activities_not_in_model_in_fitness=consider_activities_not_in_model_in_fitness)
+    return apply_traces(log, net, initial_marking, final_marking, enable_pltr_fitness=enable_pltr_fitness,
+                        consider_remaining_in_fitness=consider_remaining_in_fitness,
+                        reach_mark_through_hidden=try_to_reach_final_marking_through_hidden,
+                        stop_immediately_unfit=stop_immediately_unfit,
+                        walk_through_hidden_trans=walk_through_hidden_trans,
+                        places_shortest_path_by_hidden=places_shortest_path_by_hidden, activity_key=activity_key,
+                        is_reduction=is_reduction, thread_maximum_ex_time=thread_maximum_ex_time,
+                        cleaning_token_flood=cleaning_token_flood,
+                        show_progress_bar=show_progress_bar,
+                        consider_activities_not_in_model_in_fitness=consider_activities_not_in_model_in_fitness)
 
 
 def apply_variants_list(variants_list, net, initial_marking, final_marking, parameters=None):
@@ -1367,3 +1194,195 @@ def get_diagnostics_dataframe(log: EventLog, tbr_output: typing.ListAlignments, 
                             "missing": missing, "remaining": remaining, "produced": produced, "consumed": consumed})
 
     return pd.DataFrame(diagn_stream)
+
+
+def apply_traces(log, net, initial_marking, final_marking, enable_pltr_fitness=False, consider_remaining_in_fitness=False,
+                 activity_key="concept:name", reach_mark_through_hidden=True, stop_immediately_unfit=False,
+                 walk_through_hidden_trans=True, places_shortest_path_by_hidden=None,
+                 is_reduction=False, thread_maximum_ex_time=TechnicalParameters.MAX_DEF_THR_EX_TIME.value,
+                 cleaning_token_flood=False, show_progress_bar=True,
+                 consider_activities_not_in_model_in_fitness=False):
+    """
+    Apply token-based replay to a log
+
+    Parameters
+    ----------
+    log
+        Trace log
+    net
+        Petri net
+    initial_marking
+        Initial marking
+    final_marking
+        Final marking
+    enable_pltr_fitness
+        Enable fitness retrieval at place level
+    consider_remaining_in_fitness
+        Boolean value telling if the remaining tokens should be considered in fitness evaluation
+    activity_key
+        Name of the attribute that contains the activity
+    reach_mark_through_hidden
+        Boolean value that decides if we shall try to reach the final marking through hidden transitions
+    stop_immediately_unfit
+        Boolean value that decides if we shall stop immediately when a non-conformance is detected
+    walk_through_hidden_trans
+        Boolean value that decides if we shall walk through hidden transitions in order to enable visible transitions
+    places_shortest_path_by_hidden
+        Shortest paths between places by hidden transitions
+    variants
+        List of variants contained in the event log
+    is_reduction
+        Expresses if the token-based replay is called in a reduction attempt
+    thread_maximum_ex_time
+        Alignment threads maximum allowed execution time
+    cleaning_token_flood
+        Decides if a cleaning of the token flood shall be operated
+    disable_variants
+        Disable variants grouping
+    return_object_names
+        Decides whether names instead of object pointers shall be returned
+    """
+    post_fix_cache = PostFixCaching()
+    marking_to_activity_cache = MarkingToActivityCaching()
+    if places_shortest_path_by_hidden is None:
+        places_shortest_path_by_hidden = get_places_shortest_path_by_hidden(net,
+                                                                            TechnicalParameters.MAX_REC_DEPTH.value)
+
+    place_fitness_per_trace = {}
+    transition_fitness_per_trace = {}
+
+    replay_results = []
+
+    if enable_pltr_fitness:
+        for place in net.places:
+            place_fitness_per_trace[place] = {"underfed_traces": set(), "overfed_traces": set(), "m": 0, "r": 0, "c": 0,
+                                              "p": 0}
+        for transition in net.transitions:
+            if transition.label:
+                transition_fitness_per_trace[transition] = {
+                    "underfed_traces": {}, "fit_traces": {}}
+
+    s_components = []
+
+    if cleaning_token_flood:
+        s_components = get_s_components_from_petri(
+            net, initial_marking, final_marking)
+
+    notexisting_activities_in_model = {}
+
+    trans_map = {}
+    for t in net.transitions:
+        trans_map[t.label] = t
+    if len(log) > 0:
+        if len(log[0]) > 0:
+            if activity_key in log[0][0]:
+                progress = None
+                if pkgutil.find_loader("tqdm") and show_progress_bar and len(log) > 1:
+                    from tqdm.auto import tqdm
+                    progress = tqdm(
+                        total=len(log), desc="replaying log with TBR, completed variants :: ")
+                threads = {}
+                threads_results = {}
+
+                for idx, trace in enumerate(log):
+                    threads[idx] = ApplyTraceTokenReplay(trace, net, initial_marking, final_marking,
+                                                         trans_map, enable_pltr_fitness, place_fitness_per_trace,
+                                                         transition_fitness_per_trace,
+                                                         notexisting_activities_in_model,
+                                                         places_shortest_path_by_hidden,
+                                                         consider_remaining_in_fitness,
+                                                         activity_key=activity_key,
+                                                         reach_mark_through_hidden=reach_mark_through_hidden,
+                                                         stop_immediately_when_unfit=stop_immediately_unfit,
+                                                         walk_through_hidden_trans=walk_through_hidden_trans,
+                                                         post_fix_caching=post_fix_cache,
+                                                         marking_to_activity_caching=marking_to_activity_cache,
+                                                         is_reduction=is_reduction,
+                                                         thread_maximum_ex_time=thread_maximum_ex_time,
+                                                         cleaning_token_flood=cleaning_token_flood,
+                                                         s_components=s_components,
+                                                         consider_activities_not_in_model_in_fitness=consider_activities_not_in_model_in_fitness)
+                    threads[idx].run()
+                    if progress is not None:
+                        progress.update()
+                    t = threads[idx]
+                    threads_results[idx] = {"trace_is_fit": copy(t.t_fit),
+                                            "activated_transitions": copy(t.act_trans),
+                                            "reached_marking": copy(t.reached_marking),
+                                            "enabled_transitions_in_marking": copy(
+                        t.enabled_trans_in_mark),
+                        "transitions_with_problems": copy(
+                        t.trans_probl),
+                        "token_visits": copy(t.tvs),
+                        "event_occurrences": copy(t.ocs)}
+
+                    del threads[idx]
+                    replay_results.append(threads_results[idx])
+
+                # gracefully close progress bar
+                if progress is not None:
+                    progress.close()
+                del progress
+            else:
+                raise NoConceptNameException(
+                    "at least an event is without " + activity_key)
+        return replay_results
+
+
+def single_element_statistics(log, net, initial_marking, replay_results, activity_key="concept:name", ht_perf_method="last", parameters=None):
+    """
+    Get single Petrinet element statistics
+
+    Parameters
+    ------------
+    log
+        Log
+    net
+        Petri net
+    initial_marking
+        Initial marking
+    aligned_traces
+        Result of the token-based replay
+    variants_idx
+        Variants along with indexes of belonging traces
+    activity_key
+        Activity key (must be specified if different from concept:name)
+    timestamp_key
+        Timestamp key (must be specified if different from time:timestamp)
+    ht_perf_method
+        Method to use in order to annotate hidden transitions (performance value could be put on the last possible
+        point (last) or in the first possible point (first)
+    parameters
+        Possible parameters of the algorithm
+
+    Returns
+    ------------
+    statistics
+        Petri net element statistics (frequency, unaggregated performance)
+    """
+    if parameters is None:
+        parameters = {}
+
+    statistics = {}
+
+    for idx, trace in enumerate(log):
+        # first_trace = log[variants_idx[variant][0]]
+        act_trans = replay_results[idx]["activated_transitions"]
+        annotations_places_trans, annotations_arcs = performance_map.calculate_annotation_for_trace(
+            trace, net, initial_marking, act_trans, activity_key, ht_perf_method=ht_perf_method)
+
+        for el in annotations_places_trans:
+            if el not in statistics:
+                statistics[el] = {"count": 0, "performance": [], "log_idx": [], "no_of_times_enabled": 0,
+                                  "no_of_times_activated": 0}
+            statistics[el]["count"] += annotations_places_trans[el]["count"]
+            if "no_of_times_enabled" in annotations_places_trans[el]:
+                statistics[el]["no_of_times_enabled"] += annotations_places_trans[el]["no_of_times_enabled"]
+                statistics[el]["no_of_times_activated"] += annotations_places_trans[el]["no_of_times_activated"]
+
+        for el in annotations_arcs:
+            if el not in statistics:
+                statistics[el] = {"count": 0, "performance": []}
+            statistics[el]["count"] += annotations_arcs[el]["count"]
+
+    return statistics

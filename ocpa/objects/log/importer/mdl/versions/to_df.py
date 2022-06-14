@@ -38,7 +38,6 @@ def apply(df, parameters=None):
     df.rename(columns=rename_dict, inplace=True)
 
     df['event_timestamp'] = pd.to_datetime(df['event_timestamp'])
-    print(df)
     if "start_timestamp" in parameters:
         df["event_start_timestamp"] = pd.to_datetime(
             df['event_start_timestamp'])
