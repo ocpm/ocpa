@@ -51,14 +51,20 @@ class PerformanceAnalysis:
     def correspond(self, eo: EventOccurrence, V: Set[TokenVisit]):
         input_places = [
             in_arc.source for in_arc in eo.transition.in_arcs]
-        R = []
+        temp_R = []
         # print(f'Event: {eo.event}')
         for v in V:
             # print(f'Token Visit: {v}')
-            if v.end == eo.event.vmap[ocpa_constants.DEFAULT_OCEL_START_TIMESTAMP_KEY]:
-                if v.token[1] in eo.event.omap:
-                    if v.token[0].name in [p.name for p in input_places]:
-                        R.append(v)
+            if v.token[1] in eo.event.omap:
+                if v.token[0].name in [p.name for p in input_places]:
+                    temp_R.append(v)
+        from operator import attrgetter
+        objs = set([v.token[1] for v in temp_R])
+        R = []
+        for obj in objs:
+            oi_tokens = [v for v in temp_R if v.token[1] == obj]
+            selected_token = max(oi_tokens, key=attrgetter('start'))
+            R.append(selected_token)
         # print(f'Corresponding: {R}')
 
         # return [v for v in V if v.end == eo.event[ocpa_constants.DEFAULT_OCEL_START_TIMESTAMP_KEY] and v.token[0].name in [p.name for p in input_places]]
@@ -293,11 +299,13 @@ class PerformanceAnalysis:
 
     def measure_lagging(self, eo: EventOccurrence, R: Set[TokenVisit], ot: str):
         ot_R = [r for r in R if r.token[1] in self.object_map[ot]]
-        if len(ot_R) > 0:
-            start_times = [r.start for r in R]
+        non_ot_R = [r for r in R if r.token[1] not in self.object_map[ot]]
+        if len(ot_R) > 0 and len(non_ot_R) > 0:
+            non_ot_start_times = [r.start for r in non_ot_R]
             ot_start_times = [
                 r.start for r in ot_R]
-            lagging = (max(ot_start_times) - min(start_times)).total_seconds()
+            lagging = (max(ot_start_times) -
+                       min(non_ot_start_times)).total_seconds()
             if lagging < 0:
                 return 0
             return lagging

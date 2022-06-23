@@ -38,9 +38,6 @@ def apply(df, parameters=None):
     df.rename(columns=rename_dict, inplace=True)
 
     df['event_timestamp'] = pd.to_datetime(df['event_timestamp'])
-    if "start_timestamp" in parameters:
-        df["event_start_timestamp"] = pd.to_datetime(
-            df['event_start_timestamp'])
     df = df.dropna(subset=["event_id"])
     df["event_id"] = df["event_id"].astype(str)
     df.type = "succint"

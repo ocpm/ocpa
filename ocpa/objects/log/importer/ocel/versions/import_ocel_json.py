@@ -63,11 +63,11 @@ def apply(file_path, parameters=None):
             del el[prefix + "activity"]
             for k2 in el[prefix + "vmap"]:
                 if k2 == start_time_col:
-                    el["event_start_timestamp"] = el[prefix + start_time_col]
+                    el["start_timestamp"] = el[prefix + start_time_col]
                 else:
                     el["event_" + k2] = el[prefix + "vmap"][k2]
             if start_time_col is None:
-                el["event_start_timestamp"] = datetime.fromisoformat(
+                el["start_timestamp"] = datetime.fromisoformat(
                     el[prefix + "timestamp"])
             del el[prefix + "timestamp"]
             del el[prefix + "vmap"]

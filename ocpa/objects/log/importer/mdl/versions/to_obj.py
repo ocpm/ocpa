@@ -22,10 +22,10 @@ def add_event(events: Dict[str, Event], index, row, cfg) -> None:
 
     # add start time if exists, otherwise None for performance analysis
     if "start_timestamp" in cfg:
-        events[str(index)].vmap["event_start_timestamp"] = to_datetime(
+        events[str(index)].vmap["start_timestamp"] = to_datetime(
             row[cfg["start_timestamp"]])
     else:
-        events[str(index)].vmap["event_start_timestamp"] = None
+        events[str(index)].vmap["start_timestamp"] = None
 
 
 def safe_split(row_obj):
