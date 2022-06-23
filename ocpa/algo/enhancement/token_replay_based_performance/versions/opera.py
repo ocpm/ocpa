@@ -1,3 +1,4 @@
+from operator import attrgetter
 import ocpa.objects.log.converter.factory as convert_factory
 import math
 from typing import List, Dict, Set, Any, Optional, Union, Tuple
@@ -58,7 +59,6 @@ class PerformanceAnalysis:
             if v.token[1] in eo.event.omap:
                 if v.token[0].name in [p.name for p in input_places]:
                     temp_R.append(v)
-        from operator import attrgetter
         objs = set([v.token[1] for v in temp_R])
         R = []
         for obj in objs:
