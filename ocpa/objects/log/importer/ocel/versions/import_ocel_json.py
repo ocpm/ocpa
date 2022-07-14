@@ -12,19 +12,17 @@ from ocpa.objects.log.obj import Event, Obj, ObjectCentricEventLog, MetaObjectCe
 def apply(file_path, parameters=None):
     if parameters is None:
         parameters = {}
-
     if 'return_df' in parameters:
         return_df = parameters['return_df']
     else:
         return_df = False
-
     if 'return_obj_df' in parameters:
         return_obj_df = parameters['return_obj_df']
     else:
         return_obj_df = None
 
-    if 'start_time' in parameters:
-        start_time_col = parameters['start_time']
+    if 'start_timestamp' in parameters:
+        start_time_col = parameters['start_timestamp']
     else:
         start_time_col = None
 
@@ -63,18 +61,27 @@ def apply(file_path, parameters=None):
             el["event_timestamp"] = datetime.fromisoformat(
                 el[prefix + "timestamp"])
             del el[prefix + "activity"]
-            del el[prefix + "timestamp"]
             for k2 in el[prefix + "vmap"]:
                 if k2 == start_time_col:
-                    continue
-                el["event_" + k2] = el[prefix + "vmap"][k2]
-            el["event_" + start_time_col] = el[prefix + start_time_col]
+                    el["start_timestamp"] = el[prefix + start_time_col]
+                else:
+                    el["event_" + k2] = el[prefix + "vmap"][k2]
+            if start_time_col is None:
+                el["start_timestamp"] = datetime.fromisoformat(
+                    el[prefix + "timestamp"])
+            del el[prefix + "timestamp"]
             del el[prefix + "vmap"]
             for k2 in el[prefix + "omap"]:
                 el[k2] = el[prefix + "omap"][k2]
             del el[prefix + "omap"]
 
         eve_df = pd.DataFrame(eve_stream)
+        # if an object is empty for an event, replace them with empty list []
+        for col in eve_df.columns:
+            if 'event' not in col:
+                eve_df[col] = eve_df[col].apply(
+                    lambda d: d if isinstance(d, list) else [])
+
         obj_df = pd.DataFrame(obj_stream)
 
         eve_df.type = "succint"
@@ -139,10 +146,12 @@ def parse_events(data: Dict[str, Any], cfg: JsonParseParameters) -> Dict[str, Ev
                                 omap=item[1][omap_name],
                                 vmap=item[1][vmap_name],
                                 time=datetime.fromisoformat(item[1][time_name]))
-        if "start_time" not in item[1][vmap_name]:
-            events[item[0]].vmap["start_time"] = None
+        if "start_timestamp" not in item[1][vmap_name]:
+            events[item[0]].vmap["start_timestamp"] = datetime.fromisoformat(
+                item[1][time_name])
         else:
-            events[item[0]].vmap["start_time"] = datetime.fromisoformat(events[item[0]].vmap["start_time"])
+            events[item[0]].vmap["start_timestamp"] = datetime.fromisoformat(
+                events[item[0]].vmap["start_timestamp"])
     sorted_events = sorted(events.items(), key=lambda kv: kv[1].time)
     return OrderedDict(sorted_events)
 

@@ -42,6 +42,14 @@ class ObjectCentricPetriNet(object):
         def __set_in_arcs(self, in_arcs):
             self.__in_arcs = in_arcs
 
+        @property
+        def preset(self):
+            return set([in_arc.source for in_arc in self.__in_arcs])
+
+        @property
+        def postset(self):
+            return set([out_arc.target for out_arc in self.__out_arcs])
+
         def __repr__(self):
             return str(self.name)
 
@@ -109,6 +117,22 @@ class ObjectCentricPetriNet(object):
 
         def __set_silent(self, silent):
             self.__silent = silent
+
+        @property
+        def preset(self):
+            return set([in_arc.source for in_arc in self.__in_arcs])
+
+        @property
+        def preset_object_type(self):
+            return set([in_arc.source.object_type for in_arc in self.__in_arcs])
+
+        @property
+        def postset(self):
+            return set([out_arc.target for out_arc in self.__out_arcs])
+
+        @property
+        def postset_object_type(self):
+            return set([out_arc.target.object_type for out_arc in self.__out_arcs])
 
         def __repr__(self):
             if self.label is None:

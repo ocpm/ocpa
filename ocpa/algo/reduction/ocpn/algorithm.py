@@ -5,5 +5,5 @@ MURATA = "murata"
 VERSIONS = {MURATA: murata.apply}
 
 
-def apply(df, variant=MURATA, parameters=None):
-    return VERSIONS[variant](df, parameters=parameters)
+def apply(ocpn, variant=MURATA, parameters=None):
+    return VERSIONS[variant](ocpn, parameters=parameters)

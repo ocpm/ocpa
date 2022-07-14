@@ -1,29 +1,43 @@
 import pandas as pd
 from ast import literal_eval
+import math
 
 
-def apply(all_df, parameters=None):
+def apply(df, parameters=None):
     if parameters is None:
-        parameters = {}
+        raise ValueError("Specify parsing parameters")
 
-    eve_cols = [x for x in all_df.columns if x.startswith("event_")]
-    obj_cols = [x for x in all_df.columns if not x.startswith("event_")]
-    df = all_df
+    # eve_cols = [x for x in df.columns if x.startswith("event_")]
+    # obj_cols = [x for x in df.columns if not x.startswith("event_")]
+    obj_cols = parameters['obj_names']
 
     def _eval(x):
-        try:
-            return literal_eval(x.replace('set()', '{}'))
-        except:
-            return None
+        if x == 'set()':
+            x = '{}'
+        if type(x) == float and math.isnan(x):
+            return '[]'
+        else:
+            return literal_eval(x)
 
     if obj_cols:
         for c in obj_cols:
             df[c] = df[c].apply(_eval)
 
-    df["event_timestamp"] = pd.to_datetime(df["event_timestamp"])
-    if "event_start_timestamp" in df.columns:
-        df["event_start_timestamp"] = pd.to_datetime(
-            df["event_start_timestamp"])
+    df['activity'] = df[parameters['act_name']]
+    del df[parameters['act_name']]
+    df['timestamp'] = df[parameters['time_name']]
+    del df[parameters['time_name']]
+    if "start_timestamp" in parameters:
+        df['start_timestamp'] = df[parameters['start_timestamp']]
+        del df[parameters['start_timestamp']]
+
+    rename_dict = {}
+    for col in [x for x in df.columns if not x.startswith("event_")]:
+        if col not in obj_cols:
+            rename_dict[col] = 'event_' + col
+    df.rename(columns=rename_dict, inplace=True)
+
+    df['event_timestamp'] = pd.to_datetime(df['event_timestamp'])
     df = df.dropna(subset=["event_id"])
     df["event_id"] = df["event_id"].astype(str)
     df.type = "succint"
