@@ -151,8 +151,10 @@ def calculate_next_states_on_bindings(ocpn, state, binding, object_types):
 
 def update_binding(binding, update):
     if update:
+        return binding[1:]
         return [(elem[0], {k: v for k, v in elem[1].items()}) for elem in binding[1:]]
     else:
+        return binding
         return [(elem[0], {k: v for k, v in elem[1].items()}) for elem in binding]
 
 

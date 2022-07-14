@@ -84,8 +84,10 @@ def apply(file_path, return_obj_df=None, parameters=None):
 
         eve_df = pd.DataFrame(eve_stream)
         obj_df = pd.DataFrame(obj_stream)
+        eve_df["event_id"] = eve_df["event_id"].astype(float).astype(int)
+        # eve_df.type = "succint"
 
-        eve_df.type = "succint"
+        #eve_df.type = "succint"
 
         if return_obj_df or (return_obj_df is None and len(obj_df.columns) > 1):
             return eve_df, obj_df
