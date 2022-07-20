@@ -1,4 +1,4 @@
-from ocpa.objects.log.obj import OCEL
+from ocpa.objects.log.ocel import OCEL
 
 
 def filter_cases(ocel, cases):

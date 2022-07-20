@@ -1,6 +1,6 @@
 from json import dumps, loads, JSONEncoder, JSONDecoder
 import pickle
-from ocpa.objects.log.obj import Event, Obj, ObjectCentricEventLog
+from ocpa.objects.log.variants.obj import Event, Obj, ObjectCentricEventLog
 from ocpa.objects.log.util.param import JsonParseParameters
 import json
 

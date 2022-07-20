@@ -1,5 +1,5 @@
 from ocpa.objects.graph.pattern_graph.obj import PatternGraph
-from ocpa.objects.log.obj import ObjectCentricEventLog
+from ocpa.objects.log.variants.obj import ObjectCentricEventLog
 from ocpa.objects.enhanced_oc_petri_net.obj import EnhancedObjectCentricPetriNet
 from typing import List
 

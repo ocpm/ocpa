@@ -1,6 +1,7 @@
 import pandas as pd
 from lxml import etree, objectify
 from datetime import datetime
+from ocpa.objects.log.ocel import OCEL
 
 
 def parse_xml(value, tag_str_lower):
@@ -11,7 +12,7 @@ def parse_xml(value, tag_str_lower):
     return str(value)
 
 
-def apply(file_path, return_obj_df=None, parameters=None):
+def apply(file_path, return_obj_df=None, parameters=None) -> OCEL:
     if parameters is None:
         parameters = {}
 

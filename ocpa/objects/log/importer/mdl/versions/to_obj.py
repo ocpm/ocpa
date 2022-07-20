@@ -5,7 +5,7 @@ from datetime import datetime
 import itertools
 from collections import OrderedDict
 
-from ocpa.objects.log.obj import Event, Obj, ObjectCentricEventLog, MetaObjectCentricData, RawObjectCentricData
+from ocpa.objects.log.variants.obj import Event, Obj, ObjectCentricEventLog, MetaObjectCentricData, RawObjectCentricData
 
 
 def add_event(events: Dict[str, Event], index, row, cfg) -> None:

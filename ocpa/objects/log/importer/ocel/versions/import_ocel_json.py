@@ -6,10 +6,11 @@ from datetime import datetime
 from collections import OrderedDict
 
 from ocpa.objects.log.importer.ocel.parameters import JsonParseParameters
-from ocpa.objects.log.obj import Event, Obj, ObjectCentricEventLog, MetaObjectCentricData, RawObjectCentricData
+from ocpa.objects.log.variants.obj import Event, Obj, ObjectCentricEventLog, MetaObjectCentricData, RawObjectCentricData
+from ocpa.objects.log.ocel import OCEL
 
 
-def apply(file_path, parameters=None):
+def apply(file_path, parameters=None) -> OCEL:
     if parameters is None:
         parameters = {}
     if 'return_df' in parameters:

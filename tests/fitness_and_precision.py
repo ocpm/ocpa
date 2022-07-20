@@ -1,7 +1,7 @@
 import ocpa.objects.log.importer.ocel.factory as ocel_import_factory
 import ocpa.algo.discovery.ocpn.algorithm as discovery_factory
 import ocpa.algo.evaluation.precision_and_fitness.evaluator as evaluation_factory
-from ocpa.objects.log.obj import OCEL
+from ocpa.objects.log.ocel import OCEL
 from ocpa.visualization.oc_petri_net import factory as pn_vis_factory
 import ocpa.algo.reduction.ocpn.algorithm as reduction_factory
 import ocpa.objects.log.converter.factory as convert_factory

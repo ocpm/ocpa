@@ -1,6 +1,6 @@
 from ocpa.algo.discovery.ocpn.versions import inductive_and_tr
-from ocpa.objects.log.obj import OCEL
-from ocpa.objects.log.obj import ObjectCentricEventLog
+from ocpa.objects.log.ocel import OCEL
+from ocpa.objects.log.variants.obj import ObjectCentricEventLog
 import ocpa.objects.log.converter.factory as convert_factory
 
 INDUCTIVE_AND_TR = "inductive_and_tr"

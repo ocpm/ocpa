@@ -5,7 +5,7 @@ from datetime import datetime
 import itertools
 
 from ocpa.objects.log.util.param import JsonParseParameters
-from ocpa.objects.log.obj import Event, Obj, ObjectCentricEventLog, MetaObjectCentricData, RawObjectCentricData
+from ocpa.objects.log.variants.obj import Event, Obj, ObjectCentricEventLog, MetaObjectCentricData, RawObjectCentricData
 
 import math
 

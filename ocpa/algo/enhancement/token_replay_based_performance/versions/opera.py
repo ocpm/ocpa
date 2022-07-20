@@ -53,9 +53,7 @@ class PerformanceAnalysis:
         input_places = [
             in_arc.source for in_arc in eo.transition.in_arcs]
         temp_R = []
-        # print(f'Event: {eo.event}')
         for v in V:
-            # print(f'Token Visit: {v}')
             if v.token[1] in eo.event.omap:
                 if v.token[0].name in [p.name for p in input_places]:
                     temp_R.append(v)
@@ -65,7 +63,6 @@ class PerformanceAnalysis:
             oi_tokens = [v for v in temp_R if v.token[1] == obj]
             selected_token = max(oi_tokens, key=attrgetter('start'))
             R.append(selected_token)
-        # print(f'Corresponding: {R}')
 
         # return [v for v in V if v.end == eo.event[ocpa_constants.DEFAULT_OCEL_START_TIMESTAMP_KEY] and v.token[0].name in [p.name for p in input_places]]
         return R
