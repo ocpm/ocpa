@@ -1,7 +1,10 @@
 from dataclasses import dataclass
+from typing import Dict
+
 from ocpa.objects.log.variants.obj import ObjectCentricEventLog
 from ocpa.objects.log.variants.graph import EventGraph
 from ocpa.objects.log.variants.table import Table
+from ocpa.algo.util.process_executions import factory as process_execution_factory
 
 
 @dataclass
@@ -9,21 +12,34 @@ class OCEL:
     log: Table
     obj: ObjectCentricEventLog
     graph: EventGraph
+    parameters: Dict
 
-    # _get_case_objects
+    def __post_init__(self):
+        self._process_executions = None
+        self._process_execution_objects = None
+        self._process_execution_mappings = None
+        self._object_types = self.log.object_types
+        self._execution_extraction = self.parameters["execution_extraction"] if self.parameters["execution_extraction"] else process_execution_factory.CONN_COMP
+    # _get_process_execution_objects
     @property
-    def case_objects(self):
-        pass
+    def process_execution_objects(self):
+        if not self._process_executions:
+            self._calculate_process_execution_objects()
+        return self._process_execution_objects
 
-    # _get_cases
+    # _get_process_executions
     @property
-    def cases(self):
-        pass
+    def process_executions(self):
+        if not self._process_executions:
+            self._calculate_process_execution_objects()
+        return self._process_executions
 
-    # _get_case_mappings
+    # _get_process_execution_mappings
     @property
-    def case_mappings(self):
-        pass
+    def process_execution_mappings(self):
+        if not self._process_executions:
+            self._calculate_process_execution_objects()
+        return self._process_execution_mappings
 
     # _get_variants
     @property
@@ -43,12 +59,15 @@ class OCEL:
     # _get_object_types
     @property
     def object_types(self):
-        pass
+        return self._object_types
 
     # _get_variants_dict
     @property
     def variants_dict(self):
         pass
+
+    def _calculate_process_execution_objects(self):
+        self._process_executions, self._process_execution_objects, self._process_execution_mappings = process_execution_factory.apply(self,self._execution_extraction,parameters=self.parameters)
 
 
 class old_OCEL():

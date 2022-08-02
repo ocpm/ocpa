@@ -4,10 +4,31 @@ import networkx as nx
 import itertools
 import random
 import pandas as pd
-
+from typing import Dict
 
 @dataclass
-class Table(pd.DataFrame):
+class Table:
+    def __init__(self, log, parameters):
+        self._log = log
+        self._log["event_index"] = self._log["event_id"]
+        self._log = self._log.set_index("event_index")
+        self._object_types = parameters["obj_names"]
+        #self._event_mapping =  dict(zip(ocel["event_id"], ocel["event_objects"]))
+        # clean empty events
+        # self.clean_empty_events()
+        self.create_efficiency_objects()
+        #self._log = self._log[self._log.apply(lambda x: any([len(x[ot]) > 0 for ot in self._object_types]))]
+
+
+    def _get_log(self):
+        return self._log
+    def _get_object_types(self):
+        return self._object_types
+
+    log = property(_get_log)
+    object_types = property(_get_object_types)
+
+
     def create_efficiency_objects(self):
         self._numpy_log = self._log.to_numpy()
         self._column_mapping = {k: v for v, k in enumerate(
@@ -18,27 +39,6 @@ class Table(pd.DataFrame):
     def get_value(self, e_id, attribute):
         return self._mapping[attribute][e_id]
 
-    def eog_from_log(self):
-        ocel = self.log.copy()
-        EOG = nx.DiGraph()
-        EOG.add_nodes_from(ocel["event_id"].to_list())
-        edge_list = []
-
-        ot_index = {ot: list(ocel.columns.values).index(ot)
-                    for ot in self.object_types}
-        event_index = list(ocel.columns.values).index("event_id")
-        arr = ocel.to_numpy()
-        last_ev = {}
-        for i in range(0, len(arr)):
-            for ot in self.object_types:
-                for o in arr[i][ot_index[ot]]:
-                    if (ot, o) in last_ev.keys():
-                        edge_source = arr[last_ev[(ot, o)]][event_index]
-                        edge_target = arr[i][event_index]
-                        edge_list += [(edge_source, edge_target)]
-                    last_ev[(ot, o)] = i
-        EOG.add_edges_from(edge_list)
-        return EOG
 
     def calculate_cases(self):
         cases = []

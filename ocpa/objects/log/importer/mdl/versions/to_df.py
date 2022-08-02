@@ -3,19 +3,19 @@ from ast import literal_eval
 import math
 
 
-def apply(df, parameters=None):
+def apply(filepath, parameters=None):
     if parameters is None:
         raise ValueError("Specify parsing parameters")
-
+    df = pd.read_csv(filepath, parameters["sep"])
     # eve_cols = [x for x in df.columns if x.startswith("event_")]
     # obj_cols = [x for x in df.columns if not x.startswith("event_")]
     obj_cols = parameters['obj_names']
 
     def _eval(x):
         if x == 'set()':
-            x = '{}'
+            x = {}
         if type(x) == float and math.isnan(x):
-            return '[]'
+            return []
         else:
             return literal_eval(x)
 
@@ -40,5 +40,5 @@ def apply(df, parameters=None):
     df['event_timestamp'] = pd.to_datetime(df['event_timestamp'])
     df = df.dropna(subset=["event_id"])
     df["event_id"] = df["event_id"].astype(str)
-    df.type = "succint"
+    #df.type = "succint"
     return df

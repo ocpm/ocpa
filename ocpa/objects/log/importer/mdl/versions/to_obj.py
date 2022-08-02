@@ -9,13 +9,13 @@ from ocpa.objects.log.variants.obj import Event, Obj, ObjectCentricEventLog, Met
 
 
 def add_event(events: Dict[str, Event], index, row, cfg) -> None:
-    print(cfg["val_names"])
+    #print(cfg["val_names"])
     events[str(index)] = Event(
         id=str(index),
         act=row[cfg["act_name"]],
         time=to_datetime(row[cfg["time_name"]]),
         omap=list(itertools.chain.from_iterable(
-            [safe_split(row[obj])
+            [row[obj]
              for obj in cfg["obj_names"] if (row[obj] != '{}' and row[obj] != [] and row[obj] != '[]' and row[obj] != '' and str(row[obj]).lower() != "nan")]
         )),
         vmap={attr: row[attr] for attr in cfg["val_names"]})
@@ -58,7 +58,7 @@ def apply(df: pd.DataFrame, parameters: Dict) -> ObjectCentricEventLog:
         add_obj(objects,
                 # Only nonempty sets of objects ids per object type
                 list(itertools.chain.from_iterable(
-                    [[obj_id + '/' + str(obj) for i, obj_id in enumerate(safe_split(row[obj]))]
+                    [[obj_id + '/' + str(obj) for i, obj_id in enumerate(row[obj])]
                      for obj in parameters["obj_names"] if row[obj] != '{}' and row[obj] != [] and row[obj] != '[]' and row[obj] != '' and str(row[obj]).lower() != "nan"]
                 ))
                 )
