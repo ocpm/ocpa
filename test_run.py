@@ -35,5 +35,6 @@ event_df = event_df.sort_values(by='event_timestamp')
 # event_df["event_fake_feat"] = 1
 #event_df.drop(columns = "Unnamed: 0", inplace=True)
 #event_df.drop(columns = "Unnamed: 1", inplace=True)
-ocel = ocel_import_factory.apply(file_path= filename,parameters = {"obj_names":ots,"val_names":[],"act_name":"event_activity","time_name":"event_timestamp","sep":",","execution_extraction":ocpa.algo.util.process_executions.factory.CONN_COMP,"leading_type":ots[0]})
+ocel = ocel_import_factory.apply(file_path= filename,parameters = {"obj_names":ots,"val_names":[],"act_name":"event_activity","time_name":"event_timestamp","sep":",","execution_extraction":ocpa.algo.util.process_executions.factory.CONN_COMP,"leading_type":ots[0],"variant_calculation":ocpa.algo.util.variants.factory.ONE_PHASE})
 print(len(ocel.process_executions))
+print(len(ocel.variants))

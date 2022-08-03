@@ -5,6 +5,7 @@ from ocpa.objects.log.variants.obj import ObjectCentricEventLog
 from ocpa.objects.log.variants.graph import EventGraph
 from ocpa.objects.log.variants.table import Table
 from ocpa.algo.util.process_executions import factory as process_execution_factory
+from ocpa.algo.util.variants import factory as variant_factory
 
 
 @dataclass
@@ -18,8 +19,13 @@ class OCEL:
         self._process_executions = None
         self._process_execution_objects = None
         self._process_execution_mappings = None
+        self._variants = None
+        self._variant_frequency = None
+        self._variant_graphs= None
+        self._variants_dict = None
         self._object_types = self.log.object_types
-        self._execution_extraction = self.parameters["execution_extraction"] if self.parameters["execution_extraction"] else process_execution_factory.CONN_COMP
+        self._execution_extraction = self.parameters["execution_extraction"] if "execution_extraction" in self.parameters.keys() else process_execution_factory.CONN_COMP
+        self._variant_calculation = self.parameters["variant_calculation"] if "variant_calculation" in self.parameters.keys() else variant_factory.TWO_PHASE
     # _get_process_execution_objects
     @property
     def process_execution_objects(self):
@@ -44,17 +50,31 @@ class OCEL:
     # _get_variants
     @property
     def variants(self):
-        pass
+        if not self._variants:
+            self._calculate_variants()
+        return self._variants
+
 
     # _get_variant_frequency
     @property
     def variant_frequencies(self):
-        pass
+        if not self._variant:
+            self._calculate_variants()
+        return self._variant_frequency
 
     # _get_variant_graphs
     @property
     def variant_graphs(self):
-        pass
+        if not self._variants:
+            self._calculate_variants()
+        return self._variant_graphs
+
+    # _get_variants_dict
+    @property
+    def variants_dict(self):
+        if not self._variants:
+            self._calculate_variants()
+        return self._variants_dict
 
     # _get_object_types
     @property
@@ -68,6 +88,9 @@ class OCEL:
 
     def _calculate_process_execution_objects(self):
         self._process_executions, self._process_execution_objects, self._process_execution_mappings = process_execution_factory.apply(self,self._execution_extraction,parameters=self.parameters)
+
+    def _calculate_variants(self):
+        self._variants, self._variant_frequency, self._variant_graphs, self._variants_dict = variant_factory.apply(self,self._variant_calculation,parameters=self.parameters)
 
 
 class old_OCEL():
