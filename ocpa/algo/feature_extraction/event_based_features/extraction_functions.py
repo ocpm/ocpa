@@ -1,7 +1,7 @@
 import datetime
 #helper functions:
 def get_recent_events(event, case_index, ocel):
-    case = ocel.cases[case_index]
+    case = ocel.process_executions[case_index]
     subset_events = []
     for e in case:
         if ocel.get_value(e, "event_timestamp") <= ocel.get_value(event, "event_timestamp"):
@@ -13,12 +13,12 @@ def current_activities(node, ocel, params):
     #other current end activities (without finished events)
     act = params[0]
     e_id = node.event_id
-    cases = ocel.case_mappings[e_id]
+    cases = ocel.process_execution_mappings[e_id]
     value_array = []
     for case in cases:
         c_res = 0
         recent_events = get_recent_events(e_id, case, ocel)
-        subgraph = ocel.eog.subgraph(recent_events)
+        subgraph = ocel.graph.eog.subgraph(recent_events)
         end_nodes = [n for n in subgraph.nodes if len(list(subgraph.out_edges(n)))==0 ]
         for e in end_nodes:
             if ocel.get_value(e,"event_activity") == act:
@@ -30,7 +30,7 @@ def current_activities(node, ocel, params):
 def preceding_activities(node, ocel, params):
     act = params[0]
     e_id = node.event_id
-    in_edges = ocel.eog.in_edges(e_id)
+    in_edges = ocel.graph.eog.in_edges(e_id)
     count = 0
     for (source,target) in in_edges:
         if ocel.get_value(source,"event_activity") == act:
@@ -40,11 +40,11 @@ def preceding_activities(node, ocel, params):
 def previous_activity_count(node,ocel,params):
     act = params[0]
     e_id = node.event_id
-    cases = ocel.case_mappings[e_id]
+    cases = ocel.process_execution_mappings[e_id]
     value_array = []
     for c in cases:
         c_count = 0
-        case = ocel.cases[c]
+        case = ocel.process_executions[c]
         for e in case:
             if ocel.get_value(e,"event_timestamp") > ocel.get_value(e_id,"event_timestamp"):
                 continue
@@ -67,7 +67,7 @@ def agg_previous_char_values(node, ocel, params):
     attribute = params[0]
     aggregation = params[1]
     e_id = node.event_id
-    cases = ocel.case_mappings[e_id]
+    cases = ocel.process_execution_mappings[e_id]
     value_array = []
     for c in cases:
         c_vals = []
@@ -83,7 +83,7 @@ def preceding_char_values(node,ocel,params):
     attribute = params[0]
     aggregation = params[1]
     e_id = node.event_id
-    in_edges = ocel.eog.in_edges(e_id)
+    in_edges = ocel.graph.eog.in_edges(e_id)
     value_array = []
     for (source, target) in in_edges:
         v = ocel.get_value(source,attribute)
@@ -135,11 +135,11 @@ def event_resource(node, ocel, params):
 #performance
 def execution_duration(node, ocel, params):
     e_id = node.event_id
-    cases = ocel.case_mappings[e_id]
+    cases = ocel.process_execution_mappings[e_id]
     value_array = []
     for case in cases:
         c_res = 0
-        timestamps = [ocel.get_value(e,"event_timestamp") for e in ocel.cases[case]]
+        timestamps = [ocel.get_value(e,"event_timestamp") for e in ocel.process_executions[case]]
         duration = (max(timestamps) - min(timestamps)).total_seconds()
         value_array.append(duration)
 
@@ -147,7 +147,7 @@ def execution_duration(node, ocel, params):
 
 def elapsed_time(node, ocel, params):
     e_id = node.event_id
-    cases = ocel.case_mappings[e_id]
+    cases = ocel.process_execution_mappings[e_id]
     value_array = []
     for case in cases:
         c_res = 0
@@ -160,12 +160,12 @@ def elapsed_time(node, ocel, params):
 
 def remaining_time(node, ocel, params):
     e_id = node.event_id
-    cases = ocel.case_mappings[e_id]
+    cases = ocel.process_execution_mappings[e_id]
     value_array = []
     for case in cases:
         c_res = 0
         prev_events = get_recent_events(e_id, case, ocel)
-        following_events = [e for e in ocel.cases[case] if e not in prev_events]
+        following_events = [e for e in ocel.process_executions[case] if e not in prev_events]
         following_events.append(e_id)
 
         timestamps = [ocel.get_value(e, "event_timestamp") for e in following_events]
@@ -181,10 +181,10 @@ def flow_time(node, ocel, params):
     #start_column = params[1]
     #get true preset
     model_preset = [source for (source, target) in model_following_pairs if target == ocel.get_value(node.event_id,"event_activity")]
-    cases = ocel.case_mappings[node.event_id]
+    cases = ocel.process_execution_mappings[node.event_id]
     res = []
     for case in cases:
-        in_edges = ocel.eog.subgraph(ocel.cases[case]).in_edges(node.event_id)
+        in_edges = ocel.graph.eog.subgraph(ocel.process_executions[case]).in_edges(node.event_id)
         preset = [source for (source, target) in in_edges]
         true_preset = [source for source in preset if ocel.get_value(source,"event_activity") in model_preset]
         #calculate measure
@@ -203,10 +203,10 @@ def synchronization_time(node, ocel, params):
     # get true preset
     model_preset = [source for (source, target) in model_following_pairs if
                     target == ocel.get_value(node.event_id, "event_activity")]
-    cases = ocel.case_mappings[node.event_id]
+    cases = ocel.process_execution_mappings[node.event_id]
     res = []
     for case in cases:
-        in_edges = ocel.eog.subgraph(ocel.cases[case]).in_edges(node.event_id)
+        in_edges = ocel.graph.eog.subgraph(ocel.process_executions[case]).in_edges(node.event_id)
         preset = [source for (source, target) in in_edges]
         true_preset = [source for source in preset if ocel.get_value(source, "event_activity") in model_preset]
         # calculate measure
@@ -226,10 +226,10 @@ def sojourn_time(node, ocel, params):
     # get true preset
     model_preset = [source for (source, target) in model_following_pairs if
                     target == ocel.get_value(node.event_id, "event_activity")]
-    cases = ocel.case_mappings[node.event_id]
+    cases = ocel.process_execution_mappings[node.event_id]
     res = []
     for case in cases:
-        in_edges = ocel.eog.subgraph(ocel.cases[case]).in_edges(node.event_id)
+        in_edges = ocel.graph.eog.subgraph(ocel.process_executions[case]).in_edges(node.event_id)
         preset = [source for (source, target) in in_edges]
         true_preset = [source for source in preset if ocel.get_value(source, "event_activity") in model_preset]
         # calculate measure
@@ -248,10 +248,10 @@ def waiting_time(node,ocel, params):
     # get true preset
     model_preset = [source for (source, target) in model_following_pairs if
                     target == ocel.get_value(node.event_id, "event_activity")]
-    cases = ocel.case_mappings[node.event_id]
+    cases = ocel.process_execution_mappings[node.event_id]
     res = []
     for case in cases:
-        in_edges = ocel.eog.subgraph(ocel.cases[case]).in_edges(node.event_id)
+        in_edges = ocel.graph.eog.subgraph(ocel.process_executions[case]).in_edges(node.event_id)
         preset = [source for (source, target) in in_edges]
         true_preset = [source for source in preset if ocel.get_value(source, "event_activity") in model_preset]
         # calculate measure
@@ -271,10 +271,10 @@ def pooling_time(node, ocel, params):
     # get true preset
     model_preset = [source for (source, target) in model_following_pairs if
                     target == ocel.get_value(node.event_id, "event_activity")]
-    cases = ocel.case_mappings[node.event_id]
+    cases = ocel.process_execution_mappings[node.event_id]
     res = []
     for case in cases:
-        in_edges = ocel.eog.subgraph(ocel.cases[case]).in_edges(node.event_id)
+        in_edges = ocel.graph.eog.subgraph(ocel.process_executions[case]).in_edges(node.event_id)
         preset = [source for (source, target) in in_edges]
         true_preset = [source for source in preset if ocel.get_value(source, "event_activity") in model_preset]
         # calculate measure
@@ -294,10 +294,10 @@ def lagging_time(node, ocel, params):
     # get true preset
     model_preset = [source for (source, target) in model_following_pairs if
                     target == ocel.get_value(node.event_id, "event_activity")]
-    cases = ocel.case_mappings[node.event_id]
+    cases = ocel.process_execution_mappings[node.event_id]
     res = []
     for case in cases:
-        in_edges = ocel.eog.subgraph(ocel.cases[case]).in_edges(node.event_id)
+        in_edges = ocel.graph.eog.subgraph(ocel.process_executions[case]).in_edges(node.event_id)
         preset = [source for (source, target) in in_edges]
         true_preset = [source for source in preset if ocel.get_value(source, "event_activity") in model_preset]
         # calculate measure
@@ -343,7 +343,7 @@ def current_total_object_count(node, ocel, params):
 
 def previous_object_count(node, ocel, params):
     e_id = node.event_id
-    cases = ocel.case_mappings[e_id]
+    cases = ocel.process_execution_mappings[e_id]
     value_array = []
     for c in cases:
         all_obs = set()
@@ -357,7 +357,7 @@ def previous_object_count(node, ocel, params):
 def previous_type_count(node, ocel, params):
     t = params[0]
     e_id = node.event_id
-    cases = ocel.case_mappings[e_id]
+    cases = ocel.process_execution_mappings[e_id]
     value_array = []
     for c in cases:
         all_obs = set()

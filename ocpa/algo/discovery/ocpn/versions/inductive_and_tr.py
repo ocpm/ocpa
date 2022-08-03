@@ -84,6 +84,8 @@ def discover_nets(df, discovery_algorithm=discover_inductive, parameters=None):
     # except:
     #     pass
     df = succint_mdl_to_exploded_mdl(df)
+    if "event_variant" in df.columns.values:
+        df = df.drop('event_variant', axis=1)
 
     if len(df) == 0:
         df = pd.DataFrame({"event_id": [], "event_activity": []})
@@ -114,8 +116,9 @@ def discover_nets(df, discovery_algorithm=discover_inductive, parameters=None):
         if debug:
             print(persp, "getting log")
         log = algorithm.apply(df, persp, parameters=parameters)
-        print(log)
+        #print(log)
         if debug:
+            print(log)
             print(len(log))
 
         if allowed_activities is not None:

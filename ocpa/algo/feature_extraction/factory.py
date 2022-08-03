@@ -100,8 +100,8 @@ VERSIONS = {
 
 def apply(ocel, event_based_features =[], execution_based_features = [], event_attributes = [],event_object_attributes = [],execution_object_attributes = []):
     s_time = time.time()
-    ocel.log["event_objects"] = ocel.log.apply(lambda x: [(ot, o) for ot in ocel.object_types for o in x[ot]], axis=1)
-    ocel.create_efficiency_objects()
+    ocel.log.log["event_objects"] = ocel.log.log.apply(lambda x: [(ot, o) for ot in ocel.object_types for o in x[ot]], axis=1)
+    ocel.log.create_efficiency_objects()
     feature_storage = Feature_Storage(event_features=event_based_features,execution_features=execution_based_features,ocel = ocel)
     object_f_time = time.time()-s_time
     id =0
@@ -109,9 +109,9 @@ def apply(ocel, event_based_features =[], execution_based_features = [], event_a
     execution_time = 0
     nodes_time = 0
     adding_time = 0
-    for case in ocel.cases:
+    for case in ocel.process_executions:
         s_time = time.time()
-        case_graph = ocel.eog.subgraph(case)
+        case_graph = ocel.graph.eog.subgraph(case)
         feature_graph = Feature_Storage.Feature_Graph(case_id=id, graph=case_graph, ocel=ocel)
         subgraph_time += time.time() - s_time
         s_time=time.time()
@@ -138,7 +138,7 @@ def apply(ocel, event_based_features =[], execution_based_features = [], event_a
         feature_storage.add_feature_graph(feature_graph)
         adding_time += time.time() - s_time
         id+=1
-    del ocel.log["event_objects"]
+    del ocel.log.log["event_objects"]
     #print("___")
     #print("Execution time "+str(execution_time))
     #print("Node Features " + str(nodes_time))

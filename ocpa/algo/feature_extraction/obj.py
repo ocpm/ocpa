@@ -162,7 +162,7 @@ class Feature_Storage:
         graphs_indices = list(range(0,len(self.feature_graphs)))
         random.Random(state).shuffle(graphs_indices)
         split_index = int((1-test_size)*len(graphs_indices))
-        print(split_index)
+        #print(split_index)
         self._training_indices = graphs_indices[:split_index]
         self._test_indices = graphs_indices[split_index:]
         train_graphs, test_graphs = [self.feature_graphs[i] for i in self._training_indices], [ self.feature_graphs[i] for i in self._test_indices]
