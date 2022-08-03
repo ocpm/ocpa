@@ -16,11 +16,11 @@ def calculate_preset(eog):
 
 
 def calculate_contexts_and_bindings(ocel):
-    log = ocel.log.copy()
+    log = ocel.log.log.copy()
     object_types = ocel.object_types
     contexts = {}
     bindings = {}
-    preset = calculate_preset(ocel.eog)
+    preset = calculate_preset(ocel.graph.eog)
     log["event_objects"] = log.apply(lambda x: [(ot,o) for ot in object_types for o in x[ot]], axis = 1)
     exploded_log = log.explode("event_objects")
     counter_e=0

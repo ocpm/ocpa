@@ -39,6 +39,7 @@ class Table:
     def get_value(self, e_id, attribute):
         return self._mapping[attribute][e_id]
 
+    ####### Not guaranteed to keep everything consistent, only as quick helpers
     def get_objects_of_variants(self, variants):
         obs = {}
         for ot in self.object_types:

@@ -86,6 +86,9 @@ class OCEL:
     def variants_dict(self):
         pass
 
+    def get_value(self, e_id, attribute):
+        return self.log.get_value(e_id, attribute)
+
     def _calculate_process_execution_objects(self):
         self._process_executions, self._process_execution_objects, self._process_execution_mappings = process_execution_factory.apply(self,self._execution_extraction,parameters=self.parameters)
 

@@ -10,7 +10,7 @@ VERSIONS = {INDUCTIVE_AND_TR: inductive_and_tr.apply}
 
 def apply(ocel, variant=INDUCTIVE_AND_TR, parameters=None):
     if type(ocel) == OCEL:
-        return VERSIONS[variant](ocel.log, parameters=parameters)
+        return VERSIONS[variant](ocel.log.log, parameters=parameters)
     if type(ocel) == ObjectCentricEventLog:
         df, _ = convert_factory.apply(ocel, variant='json_to_mdl')
         return VERSIONS[variant](df, parameters=parameters)

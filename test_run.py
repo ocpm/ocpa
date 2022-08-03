@@ -4,7 +4,8 @@ from ast import literal_eval
 import ocpa.algo.util.process_executions.factory
 from ocpa.objects.log.ocel import OCEL
 from ocpa.objects.log.importer.mdl import factory as ocel_import_factory
-from ocpa.objects.log.importer.mdl.versions import to_ocel as ocel_importer
+from ocpa.algo.discovery.ocpn import algorithm as ocpn_discovery_factory
+from ocpa.algo.evaluation.precision_and_fitness import evaluator as quality_measure_factory
 
 filename = "example_logs/mdl/BPI2017-Final.csv"
 ots = ["application", "offer"]
@@ -36,5 +37,9 @@ event_df = event_df.sort_values(by='event_timestamp')
 #event_df.drop(columns = "Unnamed: 0", inplace=True)
 #event_df.drop(columns = "Unnamed: 1", inplace=True)
 ocel = ocel_import_factory.apply(file_path= filename,parameters = {"obj_names":ots,"val_names":[],"act_name":"event_activity","time_name":"event_timestamp","sep":",","execution_extraction":ocpa.algo.util.process_executions.factory.CONN_COMP,"leading_type":ots[0],"variant_calculation":ocpa.algo.util.variants.factory.ONE_PHASE})
-print(len(ocel.process_executions))
-print(len(ocel.variants))
+#print(len(ocel.process_executions))
+#print(len(ocel.variants))
+ocpn = ocpn_discovery_factory.apply(ocel)
+precision, fitness = quality_measure_factory.apply(ocel, ocpn)
+print(precision)
+print(fitness)
