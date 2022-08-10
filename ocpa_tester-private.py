@@ -71,7 +71,7 @@ event_df["event_fake_feat"] = 1
 #event_df.drop(columns = "Unnamed: 1", inplace=True)
 ocel = OCEL(event_df, ots)
 t_start = time.time()
-print("Number of process executions: "+str(len(ocel.cases)))
+print("Number of process executions: " + str(len(ocel.process_executions)))
 print(str(time.time()-t_start))
 print(ocel.log)
 activities = list(set(ocel.log["event_activity"].tolist()))
@@ -225,7 +225,7 @@ if False:
 
         print(sequences[c_id])
         print(len(sequences[c_id]))
-        print(len(ocel.cases[c_id]))
+        print(len(ocel.process_executions[c_id]))
         print(ocel.variant_frequency[v_id])
 
 # CASE Study 4 - Prediction - LSTM

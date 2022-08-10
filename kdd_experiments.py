@@ -112,7 +112,7 @@ if False:
             print(technique + " " + t)
             ocel = OCEL(event_df, ts, execution_extraction=technique,
                         leading_object_type=t)
-            print("Number of cases: "+str(len(ocel.cases)))
+            print("Number of cases: " + str(len(ocel.process_executions)))
             r_full_time = time.time() - s_time
             sum_lengths = 0
             max_length = 0
@@ -120,23 +120,23 @@ if False:
             sum_obs = 0
             max_obs = 0
             min_obs = 10000000
-            for i in range(0, len(ocel.cases)):
-                exec = ocel.cases[i]
+            for i in range(0, len(ocel.process_executions)):
+                exec = ocel.process_executions[i]
                 num_events = len(exec)
                 if num_events > max_length:
                     max_length = num_events
                 if min_length > num_events:
                     min_length = num_events
                 sum_lengths += num_events
-                case_obs = ocel.case_objects[i]
+                case_obs = ocel.process_execution_objects[i]
                 num_obs = len(case_obs)
                 if num_obs > max_obs:
                     max_obs = num_obs
                 if min_obs > num_obs:
                     min_obs = num_obs
                 sum_obs += num_obs
-            avg_length = sum_lengths/len(ocel.cases)
-            avg_obs = sum_obs / len(ocel.cases)
+            avg_length = sum_lengths/len(ocel.process_executions)
+            avg_obs = sum_obs / len(ocel.process_executions)
             print("Max length: "+str(max_length))
             print("Min length: " + str(min_length))
             print("Avg length: " + str(avg_length))
@@ -155,7 +155,7 @@ if False:
                 s_time = time.time()
                 ocel = OCEL(
                     event_df[:log_size], ts, execution_extraction=technique, leading_object_type=t)
-                print("Number of cases: " + str(len(ocel.cases)))
+                print("Number of cases: " + str(len(ocel.process_executions)))
                 print("Took: " + str(time.time() - s_time))
                 r_time = time.time() - s_time
                 running_times[(ds, technique, t)].append((log_size, r_time))
@@ -241,7 +241,7 @@ def results_two_steps_iso(ind, datasets, types):
         else:
             ocel = OCEL(event_df, ts, execution_extraction=technique, leading_object_type=t,
                         variant_extraction="complex")
-        print("Number of cases: " + str(len(ocel.cases)))
+        print("Number of cases: " + str(len(ocel.process_executions)))
         ocel.variant_timeout = 22000
         s_time = time.time()
         r_full_time = 0
@@ -297,7 +297,7 @@ def scalability_iso(ind, datasets, types):
             else:
                 ocel = OCEL(event_df[:50000], ts, execution_extraction=technique, leading_object_type=t,
                             variant_extraction=isomporphism)
-            print("Number of cases: " + str(len(ocel.cases)))
+            print("Number of cases: " + str(len(ocel.process_executions)))
             s_time = time.time()
             r_full_time = 0
             try:
@@ -316,11 +316,11 @@ def scalability_iso(ind, datasets, types):
                 percentage_cases = (j / 10)
                 sub_ocel = ocel.copy()
                 sub_ocel.sample_cases(percentage_cases)
-                num_cases = len(sub_ocel.cases)
+                num_cases = len(sub_ocel.process_executions)
                 # case filtering needed
                 # sub_ocel = execution_filtering.filter_cases(ocel,random.sample(ocel.cases,num_cases))
                 sub_ocel.variant_timeout = 300
-                print("Number of cases: " + str(len(sub_ocel.cases)))
+                print("Number of cases: " + str(len(sub_ocel.process_executions)))
                 s_time = time.time()
                 try:
                     print("Number of equivalence classes: " +
@@ -333,7 +333,7 @@ def scalability_iso(ind, datasets, types):
                 running_times[(ds, technique, t, isomporphism)
                               ].append((num_cases, r_time))
             running_times[(ds, technique, t, isomporphism)].append(
-                (len(ocel.cases), r_full_time))
+                (len(ocel.process_executions), r_full_time))
     # construct lines
     # color_map={"complex":"blue","naive":"red"}
     # #linestyle_map = {datasets[0]:"-",datasets[1]:"--"}#,datasets[2]:"-.",datasets[3]:":"}
@@ -436,7 +436,7 @@ if False:
                 print(isomporphism)
                 ocel = OCEL(event_df[:100000], ts, execution_extraction=technique,
                             leading_object_type=t, variant_extraction=isomporphism)
-                print("Number of cases: "+str(len(ocel.cases)))
+                print("Number of cases: " + str(len(ocel.process_executions)))
                 s_time = time.time()
                 try:
                     print("Number of equivalence classes: " +
@@ -454,11 +454,11 @@ if False:
                     percentage_cases = (j/10)
                     sub_ocel = ocel.copy()
                     sub_ocel.sample_cases(percentage_cases)
-                    num_cases = len(sub_ocel.cases)
+                    num_cases = len(sub_ocel.process_executions)
                     # case filtering needed
                     #sub_ocel = execution_filtering.filter_cases(ocel,random.sample(ocel.cases,num_cases))
                     sub_ocel.variant_timeout = 300
-                    print("Number of cases: " + str(len(sub_ocel.cases)))
+                    print("Number of cases: " + str(len(sub_ocel.process_executions)))
                     s_time = time.time()
                     try:
                         print("Number of equivalence classes: " +
@@ -471,7 +471,7 @@ if False:
                     running_times[(ds, technique, t, isomporphism)
                                   ].append((num_cases, r_time))
                 running_times[(ds, technique, t, isomporphism)].append(
-                    (len(ocel.cases), r_full_time))
+                    (len(ocel.process_executions), r_full_time))
     # construct lines
     # color_map={"complex":"blue","naive":"red"}
     # #linestyle_map = {datasets[0]:"-",datasets[1]:"--"}#,datasets[2]:"-.",datasets[3]:":"}
@@ -739,7 +739,7 @@ def results_variant_layouting(ind, datasets, types):
         else:
             ocel = OCEL(event_df, ts, execution_extraction=technique, leading_object_type=t,
                         variant_extraction="complex")
-        print("Number of cases: " + str(len(ocel.cases)))
+        print("Number of cases: " + str(len(ocel.process_executions)))
         print("Number of variants: " + str(len(ocel.variants)))
         print(str(ind) + "start")
         results += log_viz.apply(ocel, parameters={"measure": True})

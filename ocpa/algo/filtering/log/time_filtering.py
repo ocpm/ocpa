@@ -27,12 +27,12 @@ def extract_sublog(ocel, start, end, strategy):
     #id_index = list(ocel.log.columns.values).index("event_id")
     #id_time = list(ocel.log.columns.values).index("event_timestamp")
     #arr = ocel.log.to_numpy()
-    for i in range(0, len(ocel.cases)):
-        case = ocel.cases[i]
+    for i in range(0, len(ocel.process_executions)):
+        case = ocel.process_executions[i]
         exec_start = min([mapping_time[e] for e in case])
         exec_end = max([mapping_time[e] for e in case])
         if strategy(start, end, exec_start, exec_end):
-            cases += [ocel.cases[i]]
+            cases += [ocel.process_executions[i]]
 
     return case_filtering.filter_cases(ocel, cases)
 
