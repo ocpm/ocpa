@@ -3,6 +3,22 @@ import networkx as nx
 import ocpa.algo.util.variants.versions.utils.helper as helper_functions
 
 def apply(ocel, parameters):
+    '''
+    Determining variants in the naive approach by performing a one-to-one isomorphism comparison between process
+    executions. Calling this method is usually integrated in the :class:`OCEL class <ocpa.objects.log.ocel.OCEL>` and
+    is specified in the parameters usually set when importing the OCEL in
+    :func:`CSV importer <ocpa.objects.log.importer.mdl.factory.apply>`
+    or :func:`JSONOCEL importer <ocpa.objects.log.importer.ocel.factory.apply>`
+    or :func:`JSONXML importer <ocpa.objects.log.importer.ocel.factory.apply>`.
+
+    :param ocel: Object-centric event log
+    :type ocel: :class:`OCEL <ocpa.objects.log.ocel.OCEL>`
+    :param parameters: Parameters for the method. Keys contain:
+        - "timeout" in s for aborting variant calculation
+    :type parameters: : Dict
+    :return: variants, v_freq_list, variant_graphs, variants_dict
+
+    '''
     timeout = parameters["timeout"] if "timeout" in parameters.keys() else 3600
     variants = None
     ocel.log.log["event_objects"] = ocel.log.log.apply(lambda x: [(ot, o) for ot in ocel.object_types for o in x[ot]],

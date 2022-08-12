@@ -1,8 +1,20 @@
 import itertools
 import networkx as nx
 def apply(ocel, parameters):
-    cases = []
-    obs = []
+    '''
+    Extracting process executions through leading type extraction of the object graph. Calling this method is usually
+    integrated in the :class:`OCEL class <ocpa.objects.log.ocel.OCEL>` and is specified in the parameters usually set
+    when importing the OCEL in :func:`CSV importer <ocpa.objects.log.importer.mdl.factory.apply>`
+    or :func:`JSONOCEL importer <ocpa.objects.log.importer.ocel.factory.apply>`
+    or :func:`JSONXML importer <ocpa.objects.log.importer.ocel.factory.apply>`.
+
+    :param ocel: Object-centric event log
+    :type ocel: :class:`OCEL <ocpa.objects.log.ocel.OCEL>`
+    :param parameters: Dictionary containing leading_type (usually already set when importing the event log)
+    :type parameters: Dict
+    :return: cases, object_mapping, case_mapping
+
+    '''
     case_mapping = {}
     log_df = ocel.log.log.copy()
     log_df["event_objects"] = log_df.apply(lambda x: set([(ot, o) for ot in ocel.object_types for o in x[ot]]),

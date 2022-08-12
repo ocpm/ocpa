@@ -3,6 +3,27 @@ import ocpa.algo.feature_extraction.factory as feature_extraction
 import numpy as np
 import time
 def construct_time_series(ocel, w, feat_events, feat_cases, f_in = time_filtering.start):
+    '''
+    Constructs a time series from an object-centric event log.
+    :param ocel: Object-Centric Event Log
+    :type ocel: :class:`OCEL <ocpa.objects.log.ocel.OCEL>`
+
+    :param w: window size
+    :type w: time.timedelta
+
+    :param feat_events: Features to be calculated on an event level. Tuple of a function to aggregate the values for a window and the feature function. For the definition of a function please see :func:`feature extraction <ocpa.algo.feature_extraction.factory.apply>`
+    :type feat_events: Tuple(func, Tuple(func, Tuple()))
+
+    :param feat_cases: Features to be calculated on a process_execution (case) level. Tuple of a function to aggregate the values for a window and the feature function. For the definition of a function please see :func:`feature extraction <ocpa.algo.feature_extraction.factory.apply>`
+    :type feat_events: Tuple(func, Tuple(func, Tuple()))
+
+    :param f_in: Function to assign events to time windows. Possible functions can be found in :obj:`time_filtering <ocpa.algo.filtering.log.time_filtering>`:, e.g., :func:`by start timestamp of the process execution <ocpa.algo.filtering.log.time_filtering.start>`:
+    :type f_in: func
+
+    :return: time series as list of dictionaries of values, list of time stamps for each index
+    :rtype: list(dict))
+
+    '''
     #feat_events and feat_cases are tuples of an aggregation funciton and a feature from feature_extraction....
     time_index = []
     l_start = ocel.log["event_timestamp"].min()

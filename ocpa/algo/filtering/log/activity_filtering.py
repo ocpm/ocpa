@@ -3,6 +3,19 @@ from ocpa.objects.log.ocel import OCEL
 
 
 def filter_infrequent_activities(ocel, threshold):
+    '''
+    Filters infrequent activities from an OCEL
+
+    :param ocel: Object-centric event log
+    :type ocel: :class:`OCEL <ocpa.objects.log.ocel.OCEL>`
+
+    :param threshold: Kumulative frequency of the most frequent activities to be included.
+    :type threshold: float
+
+    :return: Object-centric event log
+    :rtype: :class:`OCEL <ocpa.objects.log.ocel.OCEL>`
+
+    '''
     # how to deal with multiple events?
     activity_distribution = Counter(ocel.log["event_activity"].values.tolist())
     activities, frequencies = map(list, zip(

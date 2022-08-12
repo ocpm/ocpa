@@ -5,7 +5,7 @@ import time
 from ocpa.objects.log.ocel import OCEL
 from ocpa.algo.discovery.ocpn import algorithm as ocpn_discovery_factory
 import pandas as pd
-import ocpa.algo.filtering.log.trace_filtering as trace_filtering
+import ocpa.algo.filtering.log.variant_filtering as trace_filtering
 import ocpa.algo.evaluation.precision_and_fitness.utils as evaluation_utils
 import ocpa.algo.evaluation.precision_and_fitness.evaluator as precision_fitness_evaluator
 import ocpa.visualization.oc_petri_net.factory as vis_factory

@@ -4,6 +4,19 @@ import numpy as np
 import pandas as pd
 import time
 def construct_sequence(feature_storage, index_list = "all"):
+    '''
+    Constructs a sequential respresentation of the feature_graphs of a feature storage.
+
+    :param feature_storage: Feature storage to construct a sequential encoding from.
+    :type feature_storage: :class:`Feature Storage <ocpa.algo.feature_extraction.obj.Feature_Storage>`
+
+    :param index_list: list of indices to be encoded as sequences. Default is "all"
+    :type index_list: "all" or list(int)
+
+    :return: List of sequential encodings: Each sequential encoding is a sequence of feature dicts.
+    :rtype: list(list(dict))
+
+    '''
     if index_list == "all":
         index_list = list(range(0, len(feature_storage.feature_graphs)))
     sequences = []

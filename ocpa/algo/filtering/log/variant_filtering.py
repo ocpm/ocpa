@@ -2,8 +2,21 @@ from ocpa.objects.log.ocel import OCEL
 import pandas as pd
 
 
-def filter_infrequent_traces(ocel, threshold):
-    pd.set_option('display.max_columns', 500)
+def filter_infrequent_variants(ocel, threshold):
+    '''
+    Filters infrequent variants from an OCEL
+
+    :param ocel: Object-centric event log
+    :type ocel: :class:`OCEL <ocpa.objects.log.ocel.OCEL>`
+
+    :param threshold: Kumulative frequency of the most frequent variants to be included.
+    :type threshold: float
+
+    :return: Object-centric event log
+    :rtype: :class:`OCEL <ocpa.objects.log.ocel.OCEL>`
+
+    '''
+    #pd.set_option('display.max_columns', 500)
     ocel = OCEL(ocel.log, object_types=ocel.object_types,
                 execution_extraction=ocel._execution_extraction, leading_object_type=ocel._leading_type)
     if threshold > 0.9999:

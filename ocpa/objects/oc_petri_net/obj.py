@@ -3,6 +3,19 @@ from typing import List, Dict, Set, Tuple, Any
 
 
 class ObjectCentricPetriNet(object):
+    '''
+    Storing an Object-Centric Petri Net.
+
+    ...
+    places: set(Place)
+    transitions: set(Transition)
+    arcs: set(Arcs)
+    properties: dict
+
+
+    Attributes
+    ----------
+    '''
     class Place(object):
         def __init__(self, name, object_type, out_arcs=None, in_arcs=None, initial=False, final=False):
             self.__name = name
@@ -282,11 +295,32 @@ class ObjectCentricPetriNet(object):
         return self.__nets
 
     def add_arc(self, arc):
+        '''
+        Adds an arc to the object-centric Petri net.
+        Parameters
+        ----------
+        arc: Arc
+
+        Returns
+        -------
+        None
+        '''
         self.__arcs.add(arc)
         arc.source.out_arcs.add(arc)
         arc.target.in_arcs.add(arc)
 
     def remove_place(self, pl):
+        '''
+        Removes an already existing place.
+
+        Parameters
+        ----------
+        pl: Place
+
+        Returns
+        -------
+        None
+        '''
         self.__places.remove(pl)
         remove_arcs = set()
         for arc in self.arcs:
@@ -297,19 +331,61 @@ class ObjectCentricPetriNet(object):
         self.remove_arcs(remove_arcs)
 
     def remove_arc(self, arc):
+        '''
+        Removes an already existing arc.
+
+        Parameters
+        ----------
+        arc: Arc
+
+        Returns
+        -------
+        None
+        '''
         self.__arcs.remove(arc)
         arc.source.out_arcs.remove(arc)
         arc.target.in_arcs.remove(arc)
 
     def remove_arcs(self, arcs):
+        '''
+        Removes multiple already existing arcs.
+
+        Parameters
+        ----------
+        arcs: list(Arc)
+
+        Returns
+        -------
+        None
+        '''
         for arc in arcs:
             self.remove_arc(arc)
 
     def add_arcs(self, arcs):
+        '''
+        Adds arcs to the object-centric Petri net.
+        Parameters
+        ----------
+        arcs: list(Arc)
+
+        Returns
+        -------
+
+        '''
         for arc in arcs:
             self.add_arc(arc)
 
     def remove_transition(self, t):
+        '''
+        Removes an already existing transition from the net.
+        Parameters
+        ----------
+        t: Transition
+
+        Returns
+        -------
+        None
+        '''
         self.__transitions.remove(t)
         remove_arcs = set()
         for arc in self.arcs:
@@ -320,12 +396,36 @@ class ObjectCentricPetriNet(object):
         self.remove_arcs(remove_arcs)
 
     def find_arc(self, source, target):
+        '''
+
+        Returns an arc object if source and target are connected.
+        Soruce and target can not both be transition or both be place.
+
+        Parameters
+        ----------
+        source: Place or Transition
+        target: Place or Transition
+
+        Returns
+        -------
+        Arc or None
+        '''
         for arc in self.__arcs:
             if arc.source == source and arc.target == target:
                 return arc
         return None
 
     def find_transition(self, name):
+        '''
+        finds a transition by name of the transition.
+        Parameters
+        ----------
+        name: string
+
+        Returns
+        -------
+        None
+        '''
         for transition in self.__transitions:
             if transition.name == name:
                 return transition
@@ -334,6 +434,19 @@ class ObjectCentricPetriNet(object):
 
 @dataclass
 class Marking(object):
+    '''
+    Representing a Marking of an Object-Centric Petri Net.
+
+    ...
+
+    Attributes
+    tokens: set(Tuple)
+
+    Methods
+    -------
+    add_token(pl, obj):
+        adds an object obj to a place pl
+    '''
     _tokens: Set[Tuple[ObjectCentricPetriNet.Place, str]
                  ] = field(default_factory=set)
 
@@ -342,6 +455,18 @@ class Marking(object):
         return self._tokens
 
     def add_token(self, pl, obj):
+        '''
+        Add a token to a place in a marking.
+        Parameters
+        ----------
+        pl: Place
+        obj: string
+
+        Returns
+        -------
+        None
+
+        '''
         temp_tokens = set([(pl, oi) for (pl, oi) in self._tokens if oi == obj])
         self._tokens -= temp_tokens
         self._tokens.add((pl, obj))

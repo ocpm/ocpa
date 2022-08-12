@@ -3,6 +3,12 @@ import pandas as pd
 from sklearn.preprocessing import StandardScaler
 import random
 class Feature_Storage:
+    '''
+    The Feature Storage class stores features extracted for an obejct-centric event log. It stores it in form of feature
+    graphs: Each feature graph contains the features for a process execution in form of labeled nodes and graph properties.
+    Furthermore, the class provides the possibility to create a training/testing split on the basis of the graphs.
+    '''
+
     class Feature_Graph:
         class Node:
             def __init__(self, event_id, objects):
@@ -159,6 +165,19 @@ class Feature_Storage:
         return mapper
 
     def extract_normalized_train_test_split(self,test_size,state=1):
+        '''
+        Splits and normalizes the feature storage. Each split is normalized according to it's member, i.e., the testing
+        set is not normalized with information of the training set. The splitting information is stored in form of
+        index lists as properties of the feature storage object.
+        :param test_size: Between 0 and 1, indicates the share of the data that should go to the test set.
+        :type test_size: float
+
+        :param state: random state of the splitting. Can be used to reproduce splits
+        :type state: int
+
+
+        '''
+
         graphs_indices = list(range(0,len(self.feature_graphs)))
         random.Random(state).shuffle(graphs_indices)
         split_index = int((1-test_size)*len(graphs_indices))

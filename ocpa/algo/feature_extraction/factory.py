@@ -99,6 +99,36 @@ VERSIONS = {
 
 
 def apply(ocel, event_based_features =[], execution_based_features = [], event_attributes = [],event_object_attributes = [],execution_object_attributes = []):
+    '''
+    Creates a :class:`Feature Storage object <ocpa.algo.feature_extraction.obj.Feature_Storage>` from the object-centric
+    event log considering the desired features. Features are passed as a list of Tuples, containing first the function
+    to calculate the feature and second a tuple of parameter values (can be empty). The feature functions need to have
+    a signature of (event_id (int), :class:`ocel <ocpa.objects.log.ocel.OCEL>`, parameters (Tuple)) for event-based
+    features or (case (int), :class:`ocel <ocpa.objects.log.ocel.OCEL>`, parameters (Tuple)) for execution-based features.
+    A set of predefined feature functions can be found in :mod:`event-based features <ocpa.algo.feature_extraction.event_based_features>`
+    and :mod:`event-based features <ocpa.algo.feature_extraction.execution_based_features>`.
+
+    :param ocel: Object-centric event log
+    :type ocel: :class:`OCEL <ocpa.objects.log.ocel.OCEL>`
+
+    :param event_based_features: list of event-based features. Each feature is a tuple of the function and parameter tuple
+    :type event_based_features: Tuple(function, Tuple())
+
+    :param execution_based_features: list of execution-based features. Each feature is a tuple of the function and parameter tuple
+    :type execution_based_features: Tuple(function, Tuple())
+
+    :param event_attributes: List of event attributes to be added to an event's features.
+    :type event_attributes: str
+
+    :param event_object_attributes: To be added in future
+    :param execution_object_attributes: To be added in future
+
+    :return: Feature Storage
+    :rtype: :class:`Feature Storage <ocpa.algo.feature_extraction.obj.Feature_Storage>`
+
+    '''
+
+
     s_time = time.time()
     ocel.log.log["event_objects"] = ocel.log.log.apply(lambda x: [(ot, o) for ot in ocel.object_types for o in x[ot]], axis=1)
     ocel.log.create_efficiency_objects()
