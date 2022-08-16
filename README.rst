@@ -1,0 +1,342 @@
+Object-Centric Process Analysis
+##########################
+
+.. image:: https://github.com/shunsvineyard/python-sample-code/workflows/Test/badge.svg
+    :target: https://github.com/shunsvineyard/python-sample-code/actions?query=workflow%3ATest
+
+.. image:: https://github.com/shunsvineyard/python-sample-code/workflows/Linting/badge.svg
+    :target: https://github.com/shunsvineyard/python-sample-code/actions?query=workflow%3ALinting
+
+.. image:: https://codecov.io/gh/shunsvineyard/python-sample-code/branch/main/graph/badge.svg?token=zLkKU6p7do
+    :target: https://codecov.io/gh/shunsvineyard/python-sample-code
+
+.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
+    :target: https://github.com/psf/black
+
+
+**OCPA (Object-Centric Process Analysis)** is a Python library to enable object-centric process mining.
+It covers the following functionalities:
+    - Object-centric event log management
+        - Import
+            - From CSV
+            - From JSONOCEL & JSONXML
+        - Export
+        - Process execution extraction (object-centric cases)
+    - Object-centric process discovery
+        - Object-centric Petri nets
+        - Object-centric Variant calculation
+        - Control-flow visualization
+            - Object-centric Petri net
+            - Object-centric variants
+    - Object-centric conformance checking
+        - Fitness & Precision
+        - Constraint checking
+    - Object-centric process enhancement
+        - Performance analysis
+    - Object-centric predictive process monitoring
+        - Feature extraction
+        - Feature encoding
+        - Preprocessing
+
+
+Requirements
+------------
+
+
+
+Installation
+------------
+
+Install from Github
+
+.. code-block:: text
+
+    git clone https://github.com/shunsvineyard/python-sample-code.git
+    cd python-sample-code
+    pip install .
+
+Install from Pip
+
+.. code-block:: text
+
+    pip install ocpa
+
+Event Log Management
+--------------------
+
+OCPA offers several ways to import object-centric event data. Additionally to the two data formats introduced in the
+(`OCEL standard <www.ocel-standard.org>`_) we support the import of CSV files. The importer is the key interface to pass
+parameters and settings to the event log. A full description can be found in the :func:`importer's documentation <ocpa.objects.log.importer.mdl.factory.apply>`.
+
+**Importing CSV Files**
+
+.. code-block:: python
+
+    import ocpa
+    from ocpa.objects.log.importer.mdl import factory as ocel_import_factory
+    object_types = ["application", "offer"]
+    parameters = {"obj_names":object_types,
+                  "val_names":[],
+                  "act_name":"event_activity",
+                  "time_name":"event_timestamp",
+                  "sep":",",
+                  "execution_extraction":ocpa.algo.util.process_executions.factory.LEAD_TYPE,
+                  "leading_type":object_types[0],
+                  "variant_calculation":ocpa.algo.util.variants.factory.TWO_PHASE}
+    ocel = ocel_import_factory.apply(file_path= filename,parameters = parameters)
+
+
+**Process Execution Extraction & Management**
+The technique passed through the parameters determines how process executions will be retrieved for the event log. The
+default technique are connected components.
+The process executions are extracted upon calling the corresponding property the first time.
+
+.. code-block:: python
+
+    from ocpa.objects.log.importer.mdl import factory as ocel_import_factory
+    object_types = ["application", "offer"]
+    parameters = {"obj_names":object_types,
+                  "val_names":[],
+                  "act_name":"event_activity",
+                  "time_name":"event_timestamp",
+                  "sep":",",}
+    ocel = ocel_import_factory.apply(file_path= filename,parameters = parameters)
+    print("Number of process executions: "+str(len(ocel.process_executions)))
+    print("Events of the first process execution: "+str(ocel.process_executions[0]))
+    print("Objects of the first process execution: "+str(ocel.process_execution_objects[0]))
+    print("Process execution of the first event with event id 0: "+str(ocel.process_execution_mappings[0]))
+
+
+Object-Centric Process Discovery
+--------------------
+A process model of the object-centric event log can be discovered by applying the discovery algorithm for object-centric Petri nets.
+The corresponding retrieved object retrieved is of the class :class:`Object-centric Petri net <ocpa.objects.oc_petri_net.obj.ObjectCentricPetriNet>`.
+Objects of this class can be visualized by calling the corresponding visualization function.
+
+**Object-Centric Petri Net Retrieval & Visualization**
+
+.. code-block:: python
+
+    from ocpa.objects.log.importer.mdl import factory as ocel_import_factory
+    from ocpa.algo.discovery.ocpn import algorithm as ocpn_discovery_factory
+    from ocpa.visualization.oc_petri_net import factory as ocpn_vis_factory
+    object_types = ["application", "offer"]
+    parameters = {"obj_names":object_types,
+                  "val_names":[],
+                  "act_name":"event_activity",
+                  "time_name":"event_timestamp",
+                  "sep":",",}
+    ocel = ocel_import_factory.apply(file_path= filename,parameters = parameters)
+    ocpn = ocpn_discovery_factory.apply(ocel, parameters = {"debug":False})
+    ocpn_vis_factory.save(ocpn_vis_factory.apply(ocpn), "oc_petri_net.svg")
+
+**Variant Calculation and Layouting**
+Equivalent control-flow behavior of process executions are called variants. Since a process execution is a graph, we can find equivalent process executions by annotating each graph's nodes with the activity attribute and finding isomorphic graphs.
+OCPA offers two techniques to determine variants: By first calculating lexicographical presentations of the graphs and then refining these (TWO_PHASE), and through one-to-one isomorphism checking (ONE_PHASE). The first is normally faster. One can also choose to
+use the approximation of variants through only the lexicographical presentation. This is the default procedure, but can be switched off by passing the right parameter (see example below).
+The variant layouting just returns a positioning of chevrons as coordinates. The visualizaiton has to be done using another tool (www.ocpi.ai implements this end-to-end)
+
+.. code-block:: python
+
+    import ocpa
+    from ocpa.objects.log.importer.mdl import factory as ocel_import_factory
+    from ocpa.visualization.log.variants import factory as variants_visualization_factory
+    object_types = ["application", "offer"]
+    parameters = {"obj_names":object_types,
+                  "val_names":[],
+                  "act_name":"event_activity",
+                  "time_name":"event_timestamp",
+                  "sep":",",
+                  "execution_extraction":ocpa.algo.util.process_executions.factory.LEAD_TYPE,
+                  "leading_type":object_types[0],
+                  "variant_calculation":ocpa.algo.util.variants.factory.TWO_PHASE
+                  "exact_variant_calculation":True}
+    ocel = ocel_import_factory.apply(file_path= filename,parameters = parameters)
+    print("Number of variants: "+str(len(ocel.variants)))
+    variant_layouting = variants_visualization_factory.apply(ocel)
+
+Object-Centric Conformance Checking
+--------------------
+OCPA offers two main ways of conformance checking: By calculating fitness, i.e., the share of events that can be replayed in the object-centric Petri net, and by constraint checking.
+
+**Precision and Fitness**
+One can calculate precision and fitness by comparing an object-centric Petri net to an object-centric event log.
+
+.. code-block:: python
+
+    import ocpa
+    from ocpa.objects.log.importer.mdl import factory as ocel_import_factory
+    from ocpa.visualization.log.variants import factory as variants_visualization_factory
+    from ocpa.algo.evaluation.precision_and_fitness import evaluator as quality_measure_factory
+    object_types = ["application", "offer"]
+    parameters = {"obj_names":object_types,
+                  "val_names":[],
+                  "act_name":"event_activity",
+                  "time_name":"event_timestamp",
+                  "sep":",",
+                  "execution_extraction":ocpa.algo.util.process_executions.factory.LEAD_TYPE,
+                  "leading_type":object_types[0],
+                  "variant_calculation":ocpa.algo.util.variants.factory.TWO_PHASE
+                  "exact_variant_calculation":True}
+    ocel = ocel_import_factory.apply(file_path= filename,parameters = parameters)
+    ocpn = ocpn_discovery_factory.apply(ocel, parameters = {"debug":False})
+    precision, fitness = quality_measure_factory.apply(ocel, ocpn)
+    variant_layouting = variants_visualization_factory.apply(ocel)
+    print("Precision of IM-discovered net: "+str(precision))
+    print("Fitness of IM-discovered net: "+str(fitness))
+
+**Constraint checking**
+FILL ME PEPE
+
+Object-Centric Process Enhancement
+--------------------
+
+**Performance Analysis**
+FILL ME PEPE
+
+Object-Centric Predictive Process Monitoring
+--------------------
+OCPA offers extensive support for predictive process monitoring. This comes in form of features extraction, encoding and preprocessing functionality.
+Features are extracted based on the true, graph-like structure of object-centric event data. Depending on the use case, users can decide to encode object-centric features in one of three ways:
+Tabluer, Sequential or graph. The extracted features can already be normalized and split into training and testing set.
+
+**Feature extraction**
+
+.. code-block:: python
+
+    import ocpa
+    from ocpa.objects.log.importer.mdl import factory as ocel_import_factory
+    from  ocpa.algo.feature_extraction import factory as feature_extraction
+    object_types = ["application", "offer"]
+    parameters = {"obj_names":object_types,
+                  "val_names":[],
+                  "act_name":"event_activity",
+                  "time_name":"event_timestamp",
+                  "sep":",",
+                  "execution_extraction":ocpa.algo.util.process_executions.factory.LEAD_TYPE,
+                  "leading_type":object_types[0],
+                  "variant_calculation":ocpa.algo.util.variants.factory.TWO_PHASE
+                  "exact_variant_calculation":True}
+    ocel = ocel_import_factory.apply(file_path= filename,parameters = parameters)
+    #Building feature functions
+    activities = list(set(ocel.log.log["event_activity"].tolist()))
+    feature_set = [(feature_extraction.EVENT_REMAINING_TIME, ()),
+         (feature_extraction.EVENT_PREVIOUS_TYPE_COUNT, ("offer",)),
+         (feature_extraction.EVENT_ELAPSED_TIME, ())] + [(feature_extraction.EVENT_AGG_PREVIOUS_CHAR_VALUES, ("event_RequestedAmount", max))] \
+        + [(feature_extraction.EVENT_PRECEDING_ACTIVITES, (act,))
+            for act in activities]
+    feature_storage = feature_extraction.apply(ocel, feature_set, [])
+
+The extracted features come in form of a :class:`Feature Storage <ocpa.algo.feature_extraction.obj.Feature_Storage>`. A feature storage
+contains a list of feature graphs. Each feature graph represents one process execution. Each node represents an event. The feature values extracted for events are stored as a dictionary. The feature values for a process execution are, also, stored as a dictionary associated with the feature graph.
+Feature functions are predefined (can of course be extended). A funciton is identified with the corresponding string. Parameters are passed as a tuple.
+
+**Feature Encoding**
+The feature storage has an underlying graph structure. OCPA allows the user to transform this graph structure to a sequential or a tabular encoding.
+
+.. code-block:: python
+
+    import ocpa
+    from ocpa.objects.log.importer.mdl import factory as ocel_import_factory
+    from  ocpa.algo.feature_extraction import factory as feature_extraction
+    from ocpa.algo.feature_extraction import tabular, sequential
+    object_types = ["application", "offer"]
+    parameters = {"obj_names":object_types,
+                  "val_names":[],
+                  "act_name":"event_activity",
+                  "time_name":"event_timestamp",
+                  "sep":",",
+                  "execution_extraction":ocpa.algo.util.process_executions.factory.LEAD_TYPE,
+                  "leading_type":object_types[0],
+                  "variant_calculation":ocpa.algo.util.variants.factory.TWO_PHASE
+                  "exact_variant_calculation":True}
+    ocel = ocel_import_factory.apply(file_path= filename,parameters = parameters)
+    #Building feature functions
+    activities = list(set(ocel.log.log["event_activity"].tolist()))
+    feature_set = [(feature_extraction.EVENT_REMAINING_TIME, ()),
+         (feature_extraction.EVENT_PREVIOUS_TYPE_COUNT, ("offer",)),
+         (feature_extraction.EVENT_ELAPSED_TIME, ())] + [(feature_extraction.EVENT_AGG_PREVIOUS_CHAR_VALUES, ("event_RequestedAmount", max))] \
+        + [(feature_extraction.EVENT_PRECEDING_ACTIVITES, (act,))
+            for act in activities]
+    feature_storage = feature_extraction.apply(ocel, feature_set, [])
+    table = tabular.construct_table(feature_storage)
+    sequences = sequential.construct_sequence(feature_storage)
+
+**Preprocessing**
+Since predictive process monitoring is the most common use case of feature extraction and encoding, OCPA allow the user to split and normalize the feature storage for training and testing.
+The share of test split is necessary, as well as the state for random splitting.
+
+.. code-block:: python
+
+    import ocpa
+    from ocpa.objects.log.importer.mdl import factory as ocel_import_factory
+    from  ocpa.algo.feature_extraction import factory as feature_extraction
+    from ocpa.algo.feature_extraction import tabular, sequential
+    object_types = ["application", "offer"]
+    parameters = {"obj_names":object_types,
+                  "val_names":[],
+                  "act_name":"event_activity",
+                  "time_name":"event_timestamp",
+                  "sep":",",
+                  "execution_extraction":ocpa.algo.util.process_executions.factory.LEAD_TYPE,
+                  "leading_type":object_types[0],
+                  "variant_calculation":ocpa.algo.util.variants.factory.TWO_PHASE
+                  "exact_variant_calculation":True}
+    ocel = ocel_import_factory.apply(file_path= filename,parameters = parameters)
+    #Building feature functions
+    activities = list(set(ocel.log.log["event_activity"].tolist()))
+    feature_set = [(feature_extraction.EVENT_REMAINING_TIME, ()),
+         (feature_extraction.EVENT_PREVIOUS_TYPE_COUNT, ("offer",)),
+         (feature_extraction.EVENT_ELAPSED_TIME, ())] + [(feature_extraction.EVENT_AGG_PREVIOUS_CHAR_VALUES, ("event_RequestedAmount", max))] \
+        + [(feature_extraction.EVENT_PRECEDING_ACTIVITES, (act,))
+            for act in activities]
+    feature_storage = feature_extraction.apply(ocel, feature_set, [])
+    feature_storage.extract_normalized_train_test_split(0.3, state = 3395)
+    train_table = tabular.construct_table(
+            feature_storage, index_list=feature_storage.training_indices)
+    test_table = tabular.construct_table(
+            feature_storage, index_list=feature_storage.test_indices)
+
+**Full Example**
+
+.. code-block:: python
+
+    import ocpa
+    from ocpa.objects.log.importer.mdl import factory as ocel_import_factory
+    from  ocpa.algo.feature_extraction import factory as feature_extraction
+    from ocpa.algo.feature_extraction import tabular, sequential
+    object_types = ["application", "offer"]
+    parameters = {"obj_names":object_types,
+                  "val_names":[],
+                  "act_name":"event_activity",
+                  "time_name":"event_timestamp",
+                  "sep":",",
+                  "execution_extraction":ocpa.algo.util.process_executions.factory.LEAD_TYPE,
+                  "leading_type":object_types[0],
+                  "variant_calculation":ocpa.algo.util.variants.factory.TWO_PHASE
+                  "exact_variant_calculation":True}
+    ocel = ocel_import_factory.apply(file_path= filename,parameters = parameters)
+    #Building feature functions
+    activities = list(set(ocel.log.log["event_activity"].tolist()))
+    feature_set = [(feature_extraction.EVENT_REMAINING_TIME, ()),
+         (feature_extraction.EVENT_PREVIOUS_TYPE_COUNT, ("offer",)),
+         (feature_extraction.EVENT_ELAPSED_TIME, ())] + [(feature_extraction.EVENT_AGG_PREVIOUS_CHAR_VALUES, ("event_RequestedAmount", max))] \
+        + [(feature_extraction.EVENT_PRECEDING_ACTIVITES, (act,))
+            for act in activities]
+    feature_storage = feature_extraction.apply(ocel, feature_set, [])
+    feature_storage.extract_normalized_train_test_split(0.3, state = 3395)
+    train_table = tabular.construct_table(
+            feature_storage, index_list=feature_storage.training_indices)
+    test_table = tabular.construct_table(
+            feature_storage, index_list=feature_storage.test_indices)
+    y_train, y_test = train_table[F[0]], test_table[F[0]]
+    x_train, x_test = train_table.drop(
+            F[0], axis=1), test_table.drop(F[0], axis=1)
+    model = LinearRegression()
+    model.fit(x_train, y_train)
+    y_pred = model.predict(x_test)
+    avg_rem = sum(y_train)/len(y_train)
+    print('MAE baseline: ', mean_absolute_error(
+        y_test, [avg_rem for elem in y_test]))
+    print('MAE: ', mean_absolute_error(y_test, y_pred))
+
