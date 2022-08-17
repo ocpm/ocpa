@@ -85,6 +85,16 @@ parameters and settings to the event log. A full description can be found in the
                   "variant_calculation":ocpa.algo.util.variants.factory.TWO_PHASE}
     ocel = ocel_import_factory.apply(file_path= filename,parameters = parameters)
 
+**Importing JSON OCEL/XML OCEL Files**
+
+.. code-block:: python
+
+    import ocpa
+    from ocpa.objects.log.importer.ocel import factory as ocel_import_factory
+    filename = "<path-to-your-file>"
+    parameters = {}
+    ocel = ocel_import_factory.apply(filename,parameters)
+
 
 **Process Execution Extraction & Management**
 The technique passed through the parameters determines how process executions will be retrieved for the event log. The
@@ -219,26 +229,16 @@ OCPA offers object-centric performance analysis. The performance analysis consid
 
 .. code-block:: python
 
-    import ocpa
-    from ocpa.objects.log.importer.mdl import factory as ocel_import_factory
-    from ocpa.visualization.log.variants import factory as variants_visualization_factory
-    from ocpa.algo.evaluation.precision_and_fitness import evaluator as quality_measure_factory
-    object_types = ["application", "offer"]
-    parameters = {"obj_names":object_types,
-                  "val_names":[],
-                  "act_name":"event_activity",
-                  "time_name":"event_timestamp",
-                  "sep":",",
-                  "execution_extraction":ocpa.algo.util.process_executions.factory.LEAD_TYPE,
-                  "leading_type":object_types[0],
-                  "variant_calculation":ocpa.algo.util.variants.factory.TWO_PHASE
-                  "exact_variant_calculation":True}
-    ocel = ocel_import_factory.apply(file_path= filename,parameters = parameters)
-    ocpn = ocpn_discovery_factory.apply(ocel, parameters = {"debug":False})
-    precision, fitness = quality_measure_factory.apply(ocel, ocpn)
-    variant_layouting = variants_visualization_factory.apply(ocel)
-    print("Precision of IM-discovered net: "+str(precision))
-    print("Fitness of IM-discovered net: "+str(fitness))
+    filename = "/Users/gyunam/Documents/sample_logs/jsonocel/p2p-normal.jsonocel"
+    ocel = ocel_import_factory.apply(filename)
+    ocpn = ocpn_discovery_factory.apply(ocel)
+    diag_params = {'measures': ['act_freq', 'arc_freq', 'object_count', 'waiting_time', 'service_time', 'sojourn_time', 'synchronization_time', 'pooling_time', 'lagging_time', 'flow_time'], 'agg': [
+        'mean', 'min', 'max'], 'format': 'svg'}
+    diag = performance_factory.apply(ocpn, ocel, parameters=diag_params)
+    print(f'Diagnostics: {diag}')
+    gviz = ocpn_vis_factory.apply(
+        ocpn, diagnostics=diag, variant="annotated_with_opera", parameters=diag_params)
+    ocpn_vis_factory.view(gviz)
 
 Object-Centric Predictive Process Monitoring
 --------------------

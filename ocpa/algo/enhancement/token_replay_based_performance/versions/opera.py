@@ -1,25 +1,147 @@
 from operator import attrgetter
 import ocpa.objects.log.converter.factory as convert_factory
-import math
 from typing import List, Dict, Set, Any, Optional, Union, Tuple
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from ocpa.util.vis_util import human_readable_stat
 from statistics import median, mean
 from ocpa.util import constants as ocpa_constants
-import time
 import pandas as pd
 from statistics import stdev
-import uuid
-from copy import deepcopy
 from ocpa.objects.oc_petri_net.obj import ObjectCentricPetriNet
 from pm4py.objects.petri.petrinet import PetriNet
-from pm4py.algo.filtering.log.attributes import attributes_filter
-from pm4py.statistics.variants.log import get as variants_module
-from pm4py.visualization.petrinet.util import performance_map
 from ocpa.algo.enhancement.token_replay_based_performance.util import run_timed_replay, apply_trace, single_element_statistics
 from ocpa.objects.log.importer.mdl.util import succint_mdl_to_exploded_mdl, clean_frequency, clean_arc_frequency
 from ocpa.algo.discovery.mvp.projection import algorithm as projection_factory
 run_timed_replay
+
+
+def apply(ocpn, ocel, parameters=None):
+    if parameters is None:
+        parameters = {}
+
+    if 'measures' not in parameters:
+        parameters['measures'] = ['sojourn time']
+
+    if 'agg' not in parameters:
+        parameters['agg'] = ['mean']
+
+    persps = ocpn.object_types
+
+    replay_diag = dict()
+    replay_diag["act_freq"] = {}
+    replay_diag["arc_freq_persps"] = {}
+    replay_diag["object_count"] = {}
+    replay_diag["place_fitness_per_trace"] = {}
+
+    debug = parameters["debug"] if "debug" in parameters else False
+
+    eos = []
+    df = ocel.log.log
+    # df, _ = convert_factory.apply(ocel, variant='json_to_mdl')
+
+    for ei in ocel.obj.raw.events:
+        event = ocel.obj.raw.events[ei]
+        # act = row['event_activity']
+        # start_timestamp = row['event_start_timestamp']
+        # timestamp = row['event_timestamp']
+        # event = {'event_activity': act,
+        #          'event_start_timestamp': start_timestamp, 'event_timestamp': timestamp}
+        trans = ocpn.find_transition(event.act)
+        eo = EventOccurrence(trans, event)
+        eos.append(eo)
+
+    for persp in persps:
+        replay_diag["object_count"][persp] = dict()
+
+    act_names = set(df['event_activity'])
+    acts = list(df['event_activity'])
+    for act_name in act_names:
+        replay_diag["act_freq"][act_name] = acts.count(act_name)
+
+    for i, row in df.iterrows():
+        act = row['event_activity']
+
+        for persp in persps:
+            if row[persp] is not float and len(row[persp]) > 0:
+                if act in replay_diag["object_count"][persp]:
+                    replay_diag["object_count"][persp][act].append(
+                        len(row[persp]))
+                else:
+                    replay_diag["object_count"][persp][act] = [
+                        len(row[persp])]
+
+    df = succint_mdl_to_exploded_mdl(df)
+
+    if len(df) == 0:
+        df = pd.DataFrame({"event_id": [], "event_activity": []})
+
+    min_node_freq = parameters["min_node_freq"] if "min_node_freq" in parameters else 0
+    min_edge_freq = parameters["min_edge_freq"] if "min_edge_freq" in parameters else 0
+
+    df = clean_frequency(df, min_node_freq)
+    df = clean_arc_frequency(df, min_edge_freq)
+
+    if len(df) == 0:
+        df = pd.DataFrame({"event_id": [], "event_activity": []})
+
+    tvs = []
+
+    diff_log = 0
+    diff_model = 0
+    diff_token_replay = 0
+    diff_performance_annotation = 0
+    diff_basic_stats = 0
+    object_map = {}
+
+    for persp in persps:
+        net, im, fm = ocpn.nets[persp]
+        object_map[persp] = set(df[persp])
+        # remove nan
+        object_map[persp] = {x for x in object_map[persp] if x == x}
+        log = projection_factory.apply(df, persp, parameters=parameters)
+
+        # # Diagonstics - Activity Counting
+        # activ_count = projection_factory.apply(
+        #     df, persp, variant="activity_occurrence", parameters=parameters)
+        # replay_diag["act_freq"][persp] = activ_count
+
+        replay_results = run_timed_replay(log, net, im, fm)
+
+        token_visits = [y for x in replay_results for y in x['token_visits']]
+
+        for tv in token_visits:
+            tvs.append(TokenVisit(tv[0], tv[1], tv[2]))
+        # for eo in event_occurrences:
+        #     eos.append(EventOccurrence(eo[0], eo[1]))
+        # variants_idx = variants_module.get_variants_from_log_trace_idx(log)
+        element_statistics = single_element_statistics(
+            log, net, im, replay_results)
+
+        agg_statistics = aggregate_frequencies(element_statistics)
+        replay_diag["arc_freq_persps"][persp] = agg_statistics
+
+    # replay_diag["act_freq"] = merge_act_freq(replay_diag["act_freq"])
+    replay_diag["arc_freq"] = merge_replay(ocpn,
+                                           replay_diag["arc_freq_persps"])
+    replay_diag['agg_object_freq'] = {}
+    for persp in persps:
+        replay_diag['agg_object_freq'][persp] = aggregate_perf_records(
+            replay_diag['object_count'], aggregation_measure='all', ot=persp)
+    # replay_diag['agg_object_freq'] = replay_diag['object_count']
+    replay_diag["place_fitness_per_trace"] = merge_place_fitness(
+        replay_diag["place_fitness_per_trace"])
+    replay_diag["object_count"] = replay_diag['agg_object_freq']
+
+    tvs = list(set(tvs))
+    # eos = list(set(eos))
+    pa = PerformanceAnalysis(object_map)
+    perf_diag = pa.analyze(eos, tvs, persps, parameters)
+
+    # merge replay diagnostics and performance diagnostics
+    diag = {**perf_diag, **replay_diag}
+    transformed_diag = transform_diagnostics(ocpn, diag, parameters)
+
+    return transformed_diag
 
 
 @dataclass
@@ -124,10 +246,6 @@ class PerformanceAnalysis:
             if i % 1000 == 0:
                 print(f'{i}/{eos_len}')
             R = self.correspond(eo, tvs)
-            # if len(R) > 1:
-            #     print(f'Event occurence: {eo}')
-            #     print(f'Token visits: {tvs}')
-            #     print(f'Corresponding: {R}')
             if p_waiting:
                 waiting = self.measure_waiting(eo, R)
                 if eo.transition.name in self.perf_records['waiting']:
@@ -286,8 +404,6 @@ class PerformanceAnalysis:
                 r.start for r in ot_R]
             pooling = (max(ot_start_times) -
                        min(ot_start_times)).total_seconds()
-            # print(f'Corresponding of {ot}: {ot_R}')
-            # print(pooling)
             if pooling < 0:
                 return 0
             return pooling
@@ -473,145 +589,6 @@ def aggregate_frequencies(statistics):
         elif type(elem) is PetriNet.Place:
             pass
     return aggregated_statistics
-
-
-def apply(ocpn, ocel, parameters=None):
-    if parameters is None:
-        parameters = {}
-
-    if 'measures' not in parameters:
-        parameters['measures'] = ['sojourn time']
-
-    if 'agg' not in parameters:
-        parameters['agg'] = ['mean']
-
-    persps = ocpn.object_types
-
-    replay_diag = dict()
-    replay_diag["act_freq"] = {}
-    replay_diag["arc_freq_persps"] = {}
-    replay_diag["object_count"] = {}
-    replay_diag["place_fitness_per_trace"] = {}
-
-    allowed_activities = parameters["allowed_activities"] if "allowed_activities" in parameters else None
-    debug = parameters["debug"] if "debug" in parameters else False
-
-    eos = []
-
-    df, _ = convert_factory.apply(ocel, variant='json_to_mdl')
-
-    for ei in ocel.raw.events:
-        event = ocel.raw.events[ei]
-        # act = row['event_activity']
-        # start_timestamp = row['event_start_timestamp']
-        # timestamp = row['event_timestamp']
-        # event = {'event_activity': act,
-        #          'event_start_timestamp': start_timestamp, 'event_timestamp': timestamp}
-        trans = ocpn.find_transition(event.act)
-        eo = EventOccurrence(trans, event)
-        eos.append(eo)
-
-    for persp in persps:
-        replay_diag["object_count"][persp] = dict()
-
-    act_names = set(df['event_activity'])
-    acts = list(df['event_activity'])
-    for act_name in act_names:
-        replay_diag["act_freq"][act_name] = acts.count(act_name)
-
-    for i, row in df.iterrows():
-        act = row['event_activity']
-
-        for persp in persps:
-            if row[persp] is not float and len(row[persp]) > 0:
-                if act in replay_diag["object_count"][persp]:
-                    replay_diag["object_count"][persp][act].append(
-                        len(row[persp]))
-                else:
-                    replay_diag["object_count"][persp][act] = [
-                        len(row[persp])]
-
-    df = succint_mdl_to_exploded_mdl(df)
-
-    if len(df) == 0:
-        df = pd.DataFrame({"event_id": [], "event_activity": []})
-
-    min_node_freq = parameters["min_node_freq"] if "min_node_freq" in parameters else 0
-    min_edge_freq = parameters["min_edge_freq"] if "min_edge_freq" in parameters else 0
-
-    df = clean_frequency(df, min_node_freq)
-    df = clean_arc_frequency(df, min_edge_freq)
-
-    if len(df) == 0:
-        df = pd.DataFrame({"event_id": [], "event_activity": []})
-
-    tvs = []
-
-    diff_log = 0
-    diff_model = 0
-    diff_token_replay = 0
-    diff_performance_annotation = 0
-    diff_basic_stats = 0
-    object_map = {}
-
-    for persp in persps:
-        net, im, fm = ocpn.nets[persp]
-        object_map[persp] = set(df[persp])
-        # remove nan
-        object_map[persp] = {x for x in object_map[persp] if x == x}
-        log = projection_factory.apply(df, persp, parameters=parameters)
-
-        if allowed_activities is not None:
-            if persp not in allowed_activities:
-                continue
-            filtered_log = attributes_filter.apply_events(
-                log, allowed_activities[persp])
-        else:
-            filtered_log = log
-
-        # # Diagonstics - Activity Counting
-        # activ_count = projection_factory.apply(
-        #     df, persp, variant="activity_occurrence", parameters=parameters)
-        # replay_diag["act_freq"][persp] = activ_count
-
-        replay_results = run_timed_replay(log, net, im, fm)
-
-        token_visits = [y for x in replay_results for y in x['token_visits']]
-
-        for tv in token_visits:
-            tvs.append(TokenVisit(tv[0], tv[1], tv[2]))
-        # for eo in event_occurrences:
-        #     eos.append(EventOccurrence(eo[0], eo[1]))
-        # variants_idx = variants_module.get_variants_from_log_trace_idx(log)
-        element_statistics = single_element_statistics(
-            log, net, im, replay_results)
-
-        agg_statistics = aggregate_frequencies(element_statistics)
-        replay_diag["arc_freq_persps"][persp] = agg_statistics
-
-    # replay_diag["act_freq"] = merge_act_freq(replay_diag["act_freq"])
-    replay_diag["arc_freq"] = merge_replay(ocpn,
-                                           replay_diag["arc_freq_persps"])
-    replay_diag['agg_object_freq'] = {}
-    for persp in persps:
-        replay_diag['agg_object_freq'][persp] = aggregate_perf_records(
-            replay_diag['object_count'], aggregation_measure='all', ot=persp)
-    # replay_diag['agg_object_freq'] = replay_diag['object_count']
-    replay_diag["place_fitness_per_trace"] = merge_place_fitness(
-        replay_diag["place_fitness_per_trace"])
-    replay_diag["object_count"] = replay_diag['agg_object_freq']
-
-    tvs = list(set(tvs))
-    # eos = list(set(eos))
-    pa = PerformanceAnalysis(object_map)
-    perf_diag = pa.analyze(eos, tvs, persps, parameters)
-
-    # merge replay diagnostics and performance diagnostics
-    diag = {**perf_diag, **replay_diag}
-    transformed_diag = transform_diagnostics(ocpn, diag, parameters)
-    print(transformed_diag)
-
-    return transformed_diag
 
 
 def transform_diagnostics(ocpn, diag, parameters):

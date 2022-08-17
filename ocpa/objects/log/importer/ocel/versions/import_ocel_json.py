@@ -1,5 +1,5 @@
 import json
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Union
 
 import pandas as pd
 from datetime import datetime
@@ -8,93 +8,118 @@ from collections import OrderedDict
 from ocpa.objects.log.importer.ocel.parameters import JsonParseParameters
 from ocpa.objects.log.variants.obj import Event, Obj, ObjectCentricEventLog, MetaObjectCentricData, RawObjectCentricData
 from ocpa.objects.log.ocel import OCEL
+import ocpa.objects.log.converter.factory as convert_factory
+from ocpa.objects.log.variants.table import Table
+from ocpa.objects.log.variants.graph import EventGraph
+import ocpa.objects.log.variants.util.table as table_utils
 
 
-def apply(file_path, parameters=None) -> OCEL:
+def apply(filepath, parameters: Dict) -> OCEL:
     if parameters is None:
         parameters = {}
-    if 'return_df' in parameters:
-        return_df = parameters['return_df']
-    else:
-        return_df = False
-    if 'return_obj_df' in parameters:
-        return_obj_df = parameters['return_obj_df']
-    else:
-        return_obj_df = None
+    obj = import_jsonocel(filepath, parameters)
+    df, _ = convert_factory.apply(obj, variant='json_to_mdl')
+    table_parameters = {"obj_names": obj.meta.obj_types,
+                        "val_names": obj.meta.attr_types,
+                        "act_name": "event_activity",
+                        "time_name": "event_timestamp",
+                        "sep": ","}
+    table_parameters.update(parameters)
+    log = Table(df, parameters=table_parameters)
+    graph = EventGraph(table_utils.eog_from_log(log))
+    ocel = OCEL(log, obj, graph, parameters)
+    return ocel
 
-    if 'start_timestamp' in parameters:
-        start_time_col = parameters['start_timestamp']
-    else:
-        start_time_col = None
 
-    if return_df:
-        prefix = "ocel:"
-        F = open(file_path, "rb")
-        obj = json.load(F)
-        F.close()
-        eve_stream = obj[prefix + "events"]
-        for el in eve_stream:
-            eve_stream[el]["event_id"] = el
-        obj_stream = obj[prefix + "objects"]
-        for el in obj_stream:
-            obj_stream[el]["object_id"] = el
-        obj_stream = list(obj_stream.values())
-        obj_type = {}
-        for el in obj_stream:
-            obj_type[el["object_id"]] = el[prefix + "type"]
-            el["object_type"] = el[prefix + "type"]
-            del el[prefix + "type"]
-            for k2 in el[prefix + "ovmap"]:
-                el["object_" + k2] = el[prefix + "ovmap"][k2]
-            del el[prefix + "ovmap"]
-        eve_stream = list(eve_stream.values())
-        for el in eve_stream:
-            new_omap = {}
-            for obj in el[prefix + "omap"]:
-                typ = obj_type[obj]
-                if not typ in new_omap:
-                    new_omap[typ] = set()
-                new_omap[typ].add(obj)
-            for typ in new_omap:
-                new_omap[typ] = list(new_omap[typ])
-            el[prefix + "omap"] = new_omap
-            el["event_activity"] = el[prefix + "activity"]
-            el["event_timestamp"] = datetime.fromisoformat(
-                el[prefix + "timestamp"])
-            del el[prefix + "activity"]
-            for k2 in el[prefix + "vmap"]:
-                if k2 == start_time_col:
-                    el["start_timestamp"] = el[prefix + start_time_col]
-                else:
-                    el["event_" + k2] = el[prefix + "vmap"][k2]
-            if start_time_col is None:
-                el["start_timestamp"] = datetime.fromisoformat(
-                    el[prefix + "timestamp"])
-            del el[prefix + "timestamp"]
-            del el[prefix + "vmap"]
-            for k2 in el[prefix + "omap"]:
-                el[k2] = el[prefix + "omap"][k2]
-            del el[prefix + "omap"]
+def import_jsonocel(file_path, parameters=None) -> ObjectCentricEventLog:
+    if parameters is None:
+        parameters = {}
+    # if 'return_df' in parameters:
+    #     return_df = parameters['return_df']
+    # else:
+    #     return_df = False
+    # if 'return_obj_df' in parameters:
+    #     return_obj_df = parameters['return_obj_df']
+    # else:
+    #     return_obj_df = None
 
-        eve_df = pd.DataFrame(eve_stream)
-        # if an object is empty for an event, replace them with empty list []
-        for col in eve_df.columns:
-            if 'event' not in col:
-                eve_df[col] = eve_df[col].apply(
-                    lambda d: d if isinstance(d, list) else [])
+    # if 'start_timestamp' in parameters:
+    #     start_time_col = parameters['start_timestamp']
+    # else:
+    #     start_time_col = None
 
-        obj_df = pd.DataFrame(obj_stream)
+    # if return_df:
+    #     prefix = "ocel:"
+    #     F = open(file_path, "rb")
+    #     obj = json.load(F)
+    #     F.close()
+    #     eve_stream = obj[prefix + "events"]
+    #     for el in eve_stream:
+    #         eve_stream[el]["event_id"] = el
+    #     obj_stream = obj[prefix + "objects"]
+    #     for el in obj_stream:
+    #         obj_stream[el]["object_id"] = el
+    #     obj_stream = list(obj_stream.values())
+    #     obj_type = {}
+    #     for el in obj_stream:
+    #         obj_type[el["object_id"]] = el[prefix + "type"]
+    #         el["object_type"] = el[prefix + "type"]
+    #         del el[prefix + "type"]
+    #         for k2 in el[prefix + "ovmap"]:
+    #             el["object_" + k2] = el[prefix + "ovmap"][k2]
+    #         del el[prefix + "ovmap"]
+    #     eve_stream = list(eve_stream.values())
+    #     for el in eve_stream:
+    #         new_omap = {}
+    #         for obj in el[prefix + "omap"]:
+    #             typ = obj_type[obj]
+    #             if not typ in new_omap:
+    #                 new_omap[typ] = set()
+    #             new_omap[typ].add(obj)
+    #         for typ in new_omap:
+    #             new_omap[typ] = list(new_omap[typ])
+    #         el[prefix + "omap"] = new_omap
+    #         el["event_activity"] = el[prefix + "activity"]
+    #         el["event_timestamp"] = datetime.fromisoformat(
+    #             el[prefix + "timestamp"])
+    #         del el[prefix + "activity"]
+    #         for k2 in el[prefix + "vmap"]:
+    #             if k2 == start_time_col:
+    #                 el["start_timestamp"] = el[prefix + start_time_col]
+    #             else:
+    #                 el["event_" + k2] = el[prefix + "vmap"][k2]
+    #         if start_time_col is None:
+    #             el["start_timestamp"] = datetime.fromisoformat(
+    #                 el[prefix + "timestamp"])
+    #         del el[prefix + "timestamp"]
+    #         del el[prefix + "vmap"]
+    #         for k2 in el[prefix + "omap"]:
+    #             el[k2] = el[prefix + "omap"][k2]
+    #         del el[prefix + "omap"]
 
-        eve_df.type = "succint"
+    #     eve_df = pd.DataFrame(eve_stream)
+    #     # if an object is empty for an event, replace them with empty list []
+    #     for col in eve_df.columns:
+    #         if 'event' not in col:
+    #             eve_df[col] = eve_df[col].apply(
+    #                 lambda d: d if isinstance(d, list) else [])
 
-        if return_obj_df or (return_obj_df is None and len(obj_df.columns) > 1):
-            return eve_df, obj_df
-        return eve_df
-    else:
-        F = open(file_path, "rb")
-        obj = json.load(F)
-        F.close()
-        return parse_json(obj)
+    #     obj_df = pd.DataFrame(obj_stream)
+
+    #     eve_df.type = "succint"
+
+    #     if return_obj_df or (return_obj_df is None and len(obj_df.columns) > 1):
+    #         return eve_df, obj_df
+    #     return eve_df
+    # else:
+        # F = open(file_path, "rb")
+        # obj = json.load(F)
+        # F.close()
+        # return parse_json(obj)
+    F = open(file_path, "rb")
+    obj = json.load(F)
+    F.close()
+    return parse_json(obj)
 
 
 def parse_json(data: Dict[str, Any]) -> ObjectCentricEventLog:

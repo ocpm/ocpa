@@ -1,4 +1,6 @@
 import networkx as nx
+
+
 def eog_from_log(table_log):
     ocel = table_log.log.copy()
     EOG = nx.DiGraph()
