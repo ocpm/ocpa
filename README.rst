@@ -186,13 +186,59 @@ One can calculate precision and fitness by comparing an object-centric Petri net
     print("Fitness of IM-discovered net: "+str(fitness))
 
 **Constraint checking**
-FILL ME PEPE
+As well as the conformance of event logs to process models, OCPA also offers the conformance (compliance) of event logs to user-defined constraints. Such constraints describe control-flow, object-involvement, and performance constraints. 
+
+.. code-block:: python
+
+    import ocpa
+    from ocpa.objects.log.importer.mdl import factory as ocel_import_factory
+    from ocpa.visualization.log.variants import factory as variants_visualization_factory
+    from ocpa.algo.evaluation.precision_and_fitness import evaluator as quality_measure_factory
+    object_types = ["application", "offer"]
+    parameters = {"obj_names":object_types,
+                  "val_names":[],
+                  "act_name":"event_activity",
+                  "time_name":"event_timestamp",
+                  "sep":",",
+                  "execution_extraction":ocpa.algo.util.process_executions.factory.LEAD_TYPE,
+                  "leading_type":object_types[0],
+                  "variant_calculation":ocpa.algo.util.variants.factory.TWO_PHASE
+                  "exact_variant_calculation":True}
+    ocel = ocel_import_factory.apply(file_path= filename,parameters = parameters)
+    ocpn = ocpn_discovery_factory.apply(ocel, parameters = {"debug":False})
+    precision, fitness = quality_measure_factory.apply(ocel, ocpn)
+    variant_layouting = variants_visualization_factory.apply(ocel)
+    print("Precision of IM-discovered net: "+str(precision))
+    print("Fitness of IM-discovered net: "+str(fitness))
 
 Object-Centric Process Enhancement
 --------------------
 
 **Performance Analysis**
-FILL ME PEPE
+OCPA offers object-centric performance analysis. The performance analysis considers the interaction of objects in business processes, producing accurate waiting, service, and sojourn times. Moreover, it provides insightful object-centric performance metrics such as lagging, pooling, synchronization, and flow times.
+
+.. code-block:: python
+
+    import ocpa
+    from ocpa.objects.log.importer.mdl import factory as ocel_import_factory
+    from ocpa.visualization.log.variants import factory as variants_visualization_factory
+    from ocpa.algo.evaluation.precision_and_fitness import evaluator as quality_measure_factory
+    object_types = ["application", "offer"]
+    parameters = {"obj_names":object_types,
+                  "val_names":[],
+                  "act_name":"event_activity",
+                  "time_name":"event_timestamp",
+                  "sep":",",
+                  "execution_extraction":ocpa.algo.util.process_executions.factory.LEAD_TYPE,
+                  "leading_type":object_types[0],
+                  "variant_calculation":ocpa.algo.util.variants.factory.TWO_PHASE
+                  "exact_variant_calculation":True}
+    ocel = ocel_import_factory.apply(file_path= filename,parameters = parameters)
+    ocpn = ocpn_discovery_factory.apply(ocel, parameters = {"debug":False})
+    precision, fitness = quality_measure_factory.apply(ocel, ocpn)
+    variant_layouting = variants_visualization_factory.apply(ocel)
+    print("Precision of IM-discovered net: "+str(precision))
+    print("Fitness of IM-discovered net: "+str(fitness))
 
 Object-Centric Predictive Process Monitoring
 --------------------
