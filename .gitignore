@@ -28,7 +28,7 @@ venv.bak/
 *.zip
 *.png
 *.json
-*.jsonocel
+# *.jsonocel
 
 ## Vue.js frontend
 /src/.idea
