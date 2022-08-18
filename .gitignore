@@ -71,4 +71,4 @@ venv.bak/
 /test.py
 /BPI2017.csv
 
-/docs/
+/docs/build
