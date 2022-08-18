@@ -7,7 +7,7 @@ def event_to_x(graph, event, cache_map):
     if len(pre) == 0:
         return 0
     else:
-        return max([event_to_x(graph, pre_e) if pre_e not in cache_map.keys() else cache_map[pre_e] for pre_e in pre]) + 1
+        return max([event_to_x(graph, pre_e, cache_map) if pre_e not in cache_map.keys() else cache_map[pre_e] for pre_e in pre]) + 1
 
 def event_to_x_end(graph, event, coords):
     suc = list(graph.successors(event))
@@ -36,7 +36,7 @@ def event_to_y(graph, event, y_mappings, ocel):
             objects += [o]
     for ot_ in ocel.object_types:
         ot = "'" + ot_ + "'"
-        for o in ocel.log.loc[event][ot_]:
+        for o in ocel.log.log.loc[event][ot_]:
             o = "(" + ot + ", '" + o + "')"
             objects += [o]
     return [y_mappings[o] for o in set(objects) if o in y_mappings.keys()]
@@ -68,7 +68,7 @@ def graph_to_2d(ocel,graph_obj,mapping_activity):
 
         for ot_ in ocel.object_types:
             ot = "'" + ot_ + "'"
-            for o in ocel.log.loc[event][ot_]:
+            for o in ocel.log.log.loc[event][ot_]:
                 o = "("+ot+", '"+o+"')"
                 if ot not in all_obs.keys():
                     all_obs[ot] = [o]
@@ -137,7 +137,7 @@ def apply(obj, parameters=None):
         return apply_measuring(obj,parameters)
     else:
         variant_layouting = {}
-        mapping_activity = dict(zip(obj.log["event_id"], obj.log["event_activity"]))
+        mapping_activity = dict(zip(obj.log.log["event_id"], obj.log.log["event_activity"]))
         c= 0
         for v,v_graph in obj.variant_graphs.items():
             #print("Next "+str(c))

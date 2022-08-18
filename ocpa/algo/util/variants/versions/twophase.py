@@ -10,7 +10,7 @@ def apply(ocel,parameters):
     refinement can be enforced through setting the parameters. Calling this method is usually integrated in the
     :class:`OCEL class <ocpa.objects.log.ocel.OCEL>` and
     is specified in the parameters usually set when importing the OCEL in
-    :func:`CSV importer <ocpa.objects.log.importer.mdl.factory.apply>`
+    :func:`CSV importer <ocpa.objects.log.importer.csv.factory.apply>`
     or :func:`JSONOCEL importer <ocpa.objects.log.importer.ocel.factory.apply>`
     or :func:`JSONXML importer <ocpa.objects.log.importer.ocel.factory.apply>`.
 

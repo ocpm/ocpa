@@ -3,7 +3,7 @@ from ocpa.objects.graph.correlated_event_graph.obj import CorrelatedEventGraph
 from ocpa.objects.log.variants.obj import Event
 from ocpa.algo.util.util import AGG_MAP
 from ocpa.util.vis_util import human_readable_stat
-from ocpa.util.filtering.graph.event_graph import algorithm as event_graph_filtering_factory
+from ocpa.algo.util.filtering.graph.event_graph import algorithm as event_graph_filtering_factory
 
 from typing import List, Set
 

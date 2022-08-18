@@ -15,7 +15,7 @@ class OCEL:
     Storing and processing an object-centric event log.
     -------------------
     Can be imported through the:
-    1) :func:`CSV importer <ocpa.objects.log.importer.mdl.factory.apply>`
+    1) :func:`CSV importer <ocpa.objects.log.importer.csv.factory.apply>`
     2) :func:`JSONOCEL importer <ocpa.objects.log.importer.ocel.factory.apply>`
     3) :func:`JSONXML importer <ocpa.objects.log.importer.ocel.factory.apply>`
 
@@ -69,7 +69,7 @@ class OCEL:
         execution are stored.
 
         Process executions are extracted through the extraction technique in the parameters dict. These are probably
-        already set in the import in one of the the importers: :func:`CSV importer <ocpa.objects.log.importer.mdl.factory.apply>`
+        already set in the import in one of the the importers: :func:`CSV importer <ocpa.objects.log.importer.csv.factory.apply>`
         or :func:`JSONOCEL importer <ocpa.objects.log.importer.ocel.factory.apply>`
         or :func:`JSONXML importer <ocpa.objects.log.importer.ocel.factory.apply>`.
         Possible values for the parameter execution_extraction are:
@@ -106,7 +106,7 @@ class OCEL:
     def variants(self):
         '''
         Variants are calcuated through the variant calculation technique in the parameters dict. These are probably
-        already set in the import in one of the the importers: :func:`CSV importer <ocpa.objects.log.importer.mdl.factory.apply>`
+        already set in the import in one of the the importers: :func:`CSV importer <ocpa.objects.log.importer.csv.factory.apply>`
         or :func:`JSONOCEL importer <ocpa.objects.log.importer.ocel.factory.apply>`
         or :func:`JSONXML importer <ocpa.objects.log.importer.ocel.factory.apply>`.
         Possible values for the parameter variant_calculation are:
@@ -136,7 +136,7 @@ class OCEL:
         -------
 
         '''
-        if not self._variant:
+        if not self._variants:
             self._calculate_variants()
         return self._variant_frequency
 

@@ -15,8 +15,8 @@ sns.despine()
 
 
 # Datasets
-datasets = ["example_logs/mdl/BPI2017.csv", "example_logs/jsonxml/running-example.jsonocel",
-            "example_logs/mdl/incident.csv", "example_logs/mdl/BPI_2018_2017.csv"]
+datasets = ["example_logs/csv/BPI2017.csv", "example_logs/jsonxml/running-example.jsonocel",
+            "example_logs/csv/incident.csv", "example_logs/csv/BPI_2018_2017.csv"]
 types = [["application", "offer"], ["items", "orders", "packages"], ["incident", "customer"], ["Payment application",
                                                                                                "Control summary", "Entitlement application", "Geo parcel document", "Inspection", "Reference alignment"]]
 

@@ -10,7 +10,7 @@ from statistics import stdev
 from ocpa.objects.oc_petri_net.obj import ObjectCentricPetriNet
 from pm4py.objects.petri.petrinet import PetriNet
 from ocpa.algo.enhancement.token_replay_based_performance.util import run_timed_replay, apply_trace, single_element_statistics
-from ocpa.objects.log.importer.mdl.util import succint_mdl_to_exploded_mdl, clean_frequency, clean_arc_frequency
+from ocpa.objects.log.importer.csv.util import succint_mdl_to_exploded_mdl, clean_frequency, clean_arc_frequency
 from ocpa.algo.util.util import project_log
 
 

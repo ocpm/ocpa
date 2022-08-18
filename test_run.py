@@ -1,13 +1,13 @@
 import pandas as pd
 
 import ocpa.algo.util.process_executions.factory
-from ocpa.objects.log.importer.mdl import factory as ocel_import_factory
+from ocpa.objects.log.importer.csv import factory as ocel_import_factory
 import ocpa.algo.feature_extraction.factory as feature_extraction
 from ocpa.algo.feature_extraction import tabular
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import  mean_absolute_error
 
-filename = "example_logs/mdl/BPI2017-Final.csv"
+filename = "sample_logs/csv/BPI2017-Final.csv"
 ots = ["application", "offer"]
 event_df = pd.read_csv(filename, sep=',')[:2000]
 event_df["event_timestamp"] = pd.to_datetime(event_df["event_timestamp"])

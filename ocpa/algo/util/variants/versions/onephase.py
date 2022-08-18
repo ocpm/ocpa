@@ -7,7 +7,7 @@ def apply(ocel, parameters):
     Determining variants in the naive approach by performing a one-to-one isomorphism comparison between process
     executions. Calling this method is usually integrated in the :class:`OCEL class <ocpa.objects.log.ocel.OCEL>` and
     is specified in the parameters usually set when importing the OCEL in
-    :func:`CSV importer <ocpa.objects.log.importer.mdl.factory.apply>`
+    :func:`CSV importer <ocpa.objects.log.importer.csv.factory.apply>`
     or :func:`JSONOCEL importer <ocpa.objects.log.importer.ocel.factory.apply>`
     or :func:`JSONXML importer <ocpa.objects.log.importer.ocel.factory.apply>`.
 

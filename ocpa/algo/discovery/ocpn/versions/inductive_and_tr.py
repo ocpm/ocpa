@@ -15,10 +15,10 @@ from pm4py.algo.filtering.log.attributes import attributes_filter
 from pm4py.objects.petri.petrinet import PetriNet, Marking
 from pm4py.objects.petri.utils import add_arc_from_to
 from pm4py.objects.petri.utils import remove_place, remove_transition
-from ocpa.objects.log.importer.mdl import factory as mdl_import_factory
+from ocpa.objects.log.importer.csv import factory as mdl_import_factory
 from ocpa.algo.util.util import project_log, project_log_with_object_count
 from ocpa.objects.oc_petri_net.obj import ObjectCentricPetriNet
-from ocpa.objects.log.importer.mdl.util import succint_mdl_to_exploded_mdl, clean_frequency, clean_arc_frequency
+from ocpa.objects.log.importer.csv.util import succint_mdl_to_exploded_mdl, clean_frequency, clean_arc_frequency
 from copy import deepcopy
 import uuid
 import pandas as pd
