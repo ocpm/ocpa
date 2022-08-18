@@ -16,4 +16,19 @@ VERSIONS = {OCEL_JSON: export_ocel_json.apply}
 
 
 def apply(ocel, file_path, variant=OCEL_JSON, parameters=None):
+    '''
+        Export an OCEL to JSONOCEL a file.
+
+        Parameters
+        ----------
+        :param ocel: Object-centric event log
+        :type ocel: :class:`OCEL <ocpa.objects.log.ocel.OCEL>`
+
+        :param file_path: Path to save the jsonocel file.
+        :type file_path: string
+
+
+        :return: None
+        :rtype: None
+    '''
     return VERSIONS[variant](ocel, file_path, parameters=parameters)

@@ -520,3 +520,10 @@ class Subprocess(object):
             self._transitions = list(set(
                 [tr for tr in self._ocpn.transitions for p in tpl[tr] if p.object_type in self._object_types]))
             self._sound = True
+
+
+@dataclass
+class EnhancedObjectCentricPetriNet(object):
+    ocpn: ObjectCentricPetriNet
+    behavior: List[str]
+    diagnostics: Dict[str, Any]

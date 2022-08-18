@@ -11,8 +11,7 @@ from ocpa.objects.oc_petri_net.obj import ObjectCentricPetriNet
 from pm4py.objects.petri.petrinet import PetriNet
 from ocpa.algo.enhancement.token_replay_based_performance.util import run_timed_replay, apply_trace, single_element_statistics
 from ocpa.objects.log.importer.mdl.util import succint_mdl_to_exploded_mdl, clean_frequency, clean_arc_frequency
-from ocpa.algo.discovery.mvp.projection import algorithm as projection_factory
-run_timed_replay
+from ocpa.algo.util.util import project_log
 
 
 def apply(ocpn, ocel, parameters=None):
@@ -98,7 +97,7 @@ def apply(ocpn, ocel, parameters=None):
         object_map[persp] = set(df[persp])
         # remove nan
         object_map[persp] = {x for x in object_map[persp] if x == x}
-        log = projection_factory.apply(df, persp, parameters=parameters)
+        log = project_log(df, persp, parameters=parameters)
 
         # # Diagonstics - Activity Counting
         # activ_count = projection_factory.apply(

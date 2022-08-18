@@ -1,16 +1,14 @@
 from ocpa.algo.enhancement.token_replay_based_performance.versions import opera
-
+from ocpa.objects.oc_petri_net.obj import ObjectCentricPetriNet
+from ocpa.objects.log.ocel import OCEL
 OPERA = "opera"
 
 VERSIONS = {OPERA: opera.apply}
 
 
-def apply(ocpn, ocel, variant=OPERA, parameters=None):
+def apply(ocpn: ObjectCentricPetriNet, ocel: OCEL, variant=OPERA, parameters=None):
     '''
-    Calculation precision and fitness for an object-centric Petri net with respect to an object-centric event log. The
-    measures are calculated according to replaying the event log and checking enabled and executed behavior. Contexts and
-    bindings can be pre-computed and passed to the method to save computation time upon multiple calling. If not given,
-    contexts and binding wil be calculated.
+    Computing object-centric performance measures using object-centric event logs. It is model-based approach where we 1) discover an object-centric Petri net, 2) replay an object-centric event log, and 3) compute object-centric performance measures based on the replay history. It provides object-centric performance measures such as lagging, pooling, synchronization, and flow times, along with traditional performance measures such as waiting, service, and sojourn times.
 
     :param ocpn: Object-centric Petri net
     :type ocpn: :class:`OCPN <ocpa.objects.oc_petri_net.obj.ObjectCentricPetriNet>`

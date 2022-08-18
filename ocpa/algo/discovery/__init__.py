@@ -1,2 +1,2 @@
-import ocpa.algo.discovery.mvp
+import ocpa.algo.discovery.enhanced_ocpn
 import ocpa.algo.discovery.ocpn

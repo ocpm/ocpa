@@ -16,7 +16,7 @@ from pm4py.objects.petri.petrinet import PetriNet, Marking
 from pm4py.objects.petri.utils import add_arc_from_to
 from pm4py.objects.petri.utils import remove_place, remove_transition
 from ocpa.objects.log.importer.mdl import factory as mdl_import_factory
-from ocpa.algo.discovery.mvp.projection import algorithm
+from ocpa.algo.util.util import project_log, project_log_with_object_count
 from ocpa.objects.oc_petri_net.obj import ObjectCentricPetriNet
 from ocpa.objects.log.importer.mdl.util import succint_mdl_to_exploded_mdl, clean_frequency, clean_arc_frequency
 from copy import deepcopy
@@ -115,8 +115,8 @@ def discover_nets(df, discovery_algorithm=discover_inductive, parameters=None):
         aa = time.time()
         if debug:
             print(persp, "getting log")
-        log = algorithm.apply(df, persp, parameters=parameters)
-        #print(log)
+        log = project_log(df, persp, parameters=parameters)
+        # print(log)
         if debug:
             print(log)
             print(len(log))
@@ -148,8 +148,8 @@ def discover_nets(df, discovery_algorithm=discover_inductive, parameters=None):
             print(len(log))
             print(persp, "discovered net")
 
-        object_count = algorithm.apply(
-            df, persp, variant="object_count", parameters=parameters)
+        object_count = project_log_with_object_count(
+            df, persp, parameters=parameters)
 
         ret["nets"][persp] = [net, im, fm]
         ret["object_count"][persp] = object_count

@@ -179,10 +179,16 @@ class ObjectCentricEventLog:
             return 0
 
     def absent_involvement(self, ot: str, act: str):
+        if len(self.act_events(act)) == 0:
+            return 0
         return self.num_events_relating_no_ot(ot, act)/len(self.act_events(act))
 
     def singular_involvement(self, ot: str, act: str):
+        if len(self.act_events(act)) == 0:
+            return 0
         return self.num_events_relating_one_ot(ot, act)/len(self.act_events(act))
 
     def multiple_involvement(self, ot: str, act: str):
+        if len(self.act_events(act)) == 0:
+            return 0
         return self.num_events_relating_multiple_ot(ot, act)/len(self.act_events(act))

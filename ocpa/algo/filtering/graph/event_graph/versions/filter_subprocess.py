@@ -1,4 +1,4 @@
-from ocpa.objects.oc_petri_net.obj import ObjectCentricPetriNet, Subprocess
+from ocpa.objects.oc_petri_net.obj import Subprocess
 from ocpa.objects.graph.correlated_event_graph.obj import CorrelatedEventGraph
 
 
