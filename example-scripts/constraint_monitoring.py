@@ -4,7 +4,7 @@ from ocpa.algo.enhancement.token_replay_based_performance import algorithm as pe
 from ocpa.objects.graph.constraint_graph.obj import ConstraintGraph, ActivityNode, ObjectTypeNode, FormulaNode, ControlFlowEdge, ObjectRelationEdge, PerformanceEdge
 import ocpa.algo.conformance.constraint_monitoring.algorithm as constraint_monitoring_factory
 
-filename = "/Users/gyunam/Documents/sample_logs/jsonocel/p2p-normal.jsonocel"
+filename = "./sample_logs/jsonocel/p2p-normal.jsonocel"
 ocel = ocel_import_factory.apply(filename)
 ocpn = ocpn_discovery_factory.apply(ocel)
 diag_params = {'measures': ['act_freq', 'arc_freq', 'object_count', 'waiting_time', 'service_time', 'sojourn_time', 'synchronization_time', 'pooling_time', 'lagging_time', 'flow_time'], 'agg': [
