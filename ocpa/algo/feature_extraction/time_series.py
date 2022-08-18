@@ -1,4 +1,4 @@
-from ocpa.algo.filtering.log import time_filtering
+from ocpa.util.filtering.log import time_filtering
 import ocpa.algo.feature_extraction.factory as feature_extraction
 import numpy as np
 import time
@@ -38,7 +38,7 @@ def construct_time_series(ocel, w, feat_events, feat_cases, f_in = time_filterin
         end = l_start +(i+1)*w
         time_index.append(start)
         s_time = time.time()
-        sublog = time_filtering.extract_sublog(ocel,start,end,f_in)
+        sublog = time_filtering.extract_sublog(ocel, start, end, f_in)
         extract_sublog += time.time()-s_time
         if len(sublog.log)==0:
             for feat in feat_events:

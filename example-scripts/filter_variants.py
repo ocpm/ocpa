@@ -1,6 +1,6 @@
 import ocpa
 from ocpa.objects.log.importer.mdl import factory as ocel_import_factory
-from ocpa.algo.filtering.log.variant_filtering import filter_infrequent_variants
+from ocpa.util.filtering.log.variant_filtering import filter_infrequent_variants
 filename = "/Users/gyunam/Documents/sample_logs/mdl/BPI2017-Full.csv"
 object_types = ["application", "offer"]
 parameters = {"obj_names": object_types,

@@ -1,13 +1,9 @@
 import pandas as pd
-from ast import literal_eval
 
 import ocpa.algo.util.process_executions.factory
-from ocpa.objects.log.ocel import OCEL
 from ocpa.objects.log.importer.mdl import factory as ocel_import_factory
-from ocpa.algo.discovery.ocpn import algorithm as ocpn_discovery_factory
-from ocpa.algo.evaluation.precision_and_fitness import evaluator as quality_measure_factory
 import ocpa.algo.feature_extraction.factory as feature_extraction
-from ocpa.algo.feature_extraction import tabular, sequential
+from ocpa.algo.feature_extraction import tabular
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import  mean_absolute_error
 

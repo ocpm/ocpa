@@ -1,6 +1,4 @@
-from ocpa.objects.log.ocel import OCEL
-from ocpa.algo.filtering.log import case_filtering
-import pandas as pd
+from ocpa.util.filtering.log import case_filtering
 
 
 def start(start, end, exec_start, exec_end):

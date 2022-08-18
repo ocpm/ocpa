@@ -1,8 +1,3 @@
-from ocpa.algo.filtering.log import time_filtering
-import ocpa.algo.feature_extraction.factory as feature_extraction
-import numpy as np
-import pandas as pd
-import time
 def construct_sequence(feature_storage, index_list = "all"):
     '''
     Constructs a sequential respresentation of the feature_graphs of a feature storage.
