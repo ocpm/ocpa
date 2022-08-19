@@ -201,6 +201,21 @@ class OCEL:
         '''
         return self.log.get_value(e_id, attribute)
 
+    def get_object_attribute_value(self, o_id, attribute):
+        '''Returns the attribute value of an object attribute if the attribute table was provided.
+
+        The object id o_id refers to the object_id attribute of an object in the corresponding table that was passed.
+        This function is the most efficient attribute value retrieval.
+
+        :param o_id: object id of the targeted object
+        :type e_id: str
+        :param attribute: attribute name of the targeted attribute, should be a column of the passed table
+        :type attribute: string
+        :return: any value
+        :rtype: anytype
+        '''
+        return self.log.get_object_attribute_value(o_id, attribute)
+
     def _calculate_process_execution_objects(self):
         self._process_executions, self._process_execution_objects, self._process_execution_mappings = process_execution_factory.apply(self,self._execution_extraction,parameters=self.parameters)
 

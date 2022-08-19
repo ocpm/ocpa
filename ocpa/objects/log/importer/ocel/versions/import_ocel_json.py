@@ -14,18 +14,21 @@ from ocpa.objects.log.variants.graph import EventGraph
 import ocpa.objects.log.variants.util.table as table_utils
 
 
-def apply(filepath, parameters: Dict) -> OCEL:
+def apply(filepath, parameters: Dict, file_path_object_attribute_table = None) -> OCEL:
     if parameters is None:
         parameters = {}
     obj = import_jsonocel(filepath, parameters)
     df, _ = convert_factory.apply(obj, variant='json_to_mdl')
+    obj_df = None
+    if(file_path_object_attribute_table):
+        obj_df = pd.read_csv(file_path_object_attribute_table)
     table_parameters = {"obj_names": obj.meta.obj_types,
                         "val_names": obj.meta.attr_types,
                         "act_name": "event_activity",
                         "time_name": "event_timestamp",
                         "sep": ","}
     table_parameters.update(parameters)
-    log = Table(df, parameters=table_parameters)
+    log = Table(df, parameters=table_parameters,object_attributes=obj_df)
     graph = EventGraph(table_utils.eog_from_log(log))
     ocel = OCEL(log, obj, graph, parameters)
     return ocel

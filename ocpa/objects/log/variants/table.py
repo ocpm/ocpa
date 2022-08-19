@@ -8,11 +8,12 @@ from typing import Dict
 
 @dataclass
 class Table:
-    def __init__(self, log, parameters):
+    def __init__(self, log, parameters, object_attributes = None):
         self._log = log
         self._log["event_index"] = self._log["event_id"]
         self._log = self._log.set_index("event_index")
         self._object_types = parameters["obj_names"]
+        self._object_attributes = object_attributes
         #self._event_mapping =  dict(zip(ocel["event_id"], ocel["event_objects"]))
         # clean empty events
         # self.clean_empty_events()
@@ -35,9 +36,17 @@ class Table:
             list(self._log.columns.values))}
         self._mapping = {c: dict(
             zip(self._log["event_id"], self._log[c])) for c in self._log.columns.values}
+        if self._object_attributes:
+            self._object_attributes = {c: dict(
+            zip(self._object_attributes["object_id"], self._object_attributes[c])) for c in self._object_attributes.columns.values}
+        else:
+            self._object_attributes = {}
 
     def get_value(self, e_id, attribute):
         return self._mapping[attribute][e_id]
+
+    def get_object_attribute_value(self,o_id,attribute):
+        return self._object_attributes[o_id][attribute]
 
     ####### Not guaranteed to keep everything consistent, only as quick helpers
     def get_objects_of_variants(self, variants):

@@ -11,7 +11,7 @@ VERSIONS = {TO_DF: to_df.apply,
             TO_OCEL: to_ocel.apply}
 
 
-def apply(file_path, variant=TO_OCEL, parameters=None):
+def apply(file_path, variant=TO_OCEL, parameters=None, file_path_object_attribute_table = None):
     '''
         Reads a csv and transforms it into an OCEL object.
 
@@ -43,4 +43,4 @@ def apply(file_path, variant=TO_OCEL, parameters=None):
         -------
         OCEL
         '''
-    return VERSIONS[variant](file_path, parameters=parameters)
+    return VERSIONS[variant](file_path, parameters=parameters, file_path_object_attribute_table = None)

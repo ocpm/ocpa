@@ -13,7 +13,7 @@ VERSIONS = {OCEL_JSON: import_ocel_json.apply,
             OCEL_XML: import_ocel_xml.apply}
 
 
-def apply(file_path, variant=OCEL_JSON, parameters=None) -> OCEL:
+def apply(file_path, variant=OCEL_JSON, parameters=None, file_path_object_attribute_table = None) -> OCEL:
     '''
         Reads a jsonocel or jsonxml and transforms it into an OCEL object.
 
@@ -40,4 +40,4 @@ def apply(file_path, variant=OCEL_JSON, parameters=None) -> OCEL:
         -------
         OCEL
         '''
-    return VERSIONS[variant](file_path, parameters=parameters)
+    return VERSIONS[variant](file_path, parameters=parameters, file_path_object_attribute_table = None)

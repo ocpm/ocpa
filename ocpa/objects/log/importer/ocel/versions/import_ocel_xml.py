@@ -12,7 +12,7 @@ def parse_xml(value, tag_str_lower):
     return str(value)
 
 
-def apply(file_path, return_obj_df=None, parameters=None) -> OCEL:
+def apply(file_path, return_obj_df=None, parameters=None, file_path_object_attribute_table = None) -> OCEL:
     if parameters is None:
         parameters = {}
 
