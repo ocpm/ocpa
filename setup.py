@@ -1,6 +1,7 @@
 # from setuptools import setup
-import setuptools
 if False:
+    import setuptools
+
     from ocpa import __name__ as ocpa_name
     from ocpa import __version__ as ocpa_version
     from ocpa import __doc__ as ocpa_doc
