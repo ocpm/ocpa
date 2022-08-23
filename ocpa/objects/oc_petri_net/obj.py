@@ -6,15 +6,7 @@ class ObjectCentricPetriNet(object):
     '''
     Storing an Object-Centric Petri Net.
 
-    ...
-    places: set(Place)
-    transitions: set(Transition)
-    arcs: set(Arcs)
-    properties: dict
 
-
-    Attributes
-    ----------
     '''
     class Place(object):
         def __init__(self, name, object_type, out_arcs=None, in_arcs=None, initial=False, final=False):
@@ -272,14 +264,38 @@ class ObjectCentricPetriNet(object):
 
     @property
     def places(self):
+        '''
+        Places of the object-centric Petri net.
+
+        :return: Set of Places
+        :rtype: set(Place)
+        -------
+
+        '''
         return self.__places
 
     @property
     def transitions(self):
+        '''
+        Transitions of the object-centric Petri net.
+
+        :return: Set of Transitions
+        :rtype: set(Transition)
+        -------
+
+        '''
         return self.__transitions
 
     @property
     def arcs(self):
+        '''
+        Arcs of the object-centric Petri net.
+
+        :return: Set of Arcs
+        :rtype: set(Arc)
+        -------
+
+        '''
         return self.__arcs
 
     @property
