@@ -51,3 +51,4 @@ threadpoolctl==2.1.0
 tqdm==4.61.0
 traitlets==5.0.5
 wcwidth==0.2.5
+markupsafe==0.23
