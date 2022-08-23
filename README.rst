@@ -23,6 +23,7 @@ It covers the following functionalities:
         - Constraint monitoring
     - Object-centric process enhancement
         - Performance analysis
+        - Model Analysis
     - Object-centric predictive process monitoring
         - Feature extraction
         - Feature encoding

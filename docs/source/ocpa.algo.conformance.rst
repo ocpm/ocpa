@@ -8,6 +8,7 @@ Subpackages
    :maxdepth: 4
 
    ocpa.algo.conformance.constraint_monitoring
+   ocpa.algo.conformance.precision_and_fitness
 
 Module contents
 ---------------
