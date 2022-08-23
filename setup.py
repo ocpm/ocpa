@@ -14,7 +14,7 @@ setuptools.setup(
     author=ocpa.__author__,
     author_email=ocpa.__author_email__,
     # Provide either the link to your github or to your website
-    url='https://github.com/gyunamister/ocpa',
+    url='https://github.com/ocpm/ocpa',
     install_requires=[            # I get to this in a second
             "pm4py>=2.2.0",
             "setuptools",

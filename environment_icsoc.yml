@@ -1,9 +1,0 @@
-# run: conda env create --file environment.yml
-name: icsoc
-dependencies:
-- python==3.9
-- anaconda
-- dglteam::dgl=0.8.0
-- pip
-- pip:
-  - -r requirements_icsoc.txt
