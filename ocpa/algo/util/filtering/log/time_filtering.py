@@ -1,5 +1,5 @@
 from ocpa.algo.util.filtering.log import case_filtering
-
+from ocpa.objects.log.util import misc as log_util
 
 def start(start, end, exec_start, exec_end):
     '''
@@ -155,16 +155,12 @@ def events(ocel, start, end):
 
     '''
     events = []
-    id_index = list(ocel.log.columns.values).index("event_id")
-    id_time = list(ocel.log.columns.values).index("event_timestamp")
-    arr = ocel.log.to_numpy()
+    id_index = list(ocel.log.log.columns.values).index("event_id")
+    id_time = list(ocel.log.log.columns.values).index("event_timestamp")
+    arr = ocel.log.log.to_numpy()
     for line in arr:
         if (start <= line[id_time]) & (line[id_time] <= end):
             events.append(line[id_index])
-    new_ocel = ocel.copy()
-    # Approx. the same speed as isin
-    #join_frame = pd.DataFrame({"event_id_right":events})
-    # join_frame.set_index("event_id_right")
-    #new_ocel.log = new_ocel.log.join(join_frame, how='inner')
-    new_ocel.log = new_ocel.log[new_ocel.log['event_id'].isin(events)]
+    new_event_df = ocel.log.log[ocel.log.log['event_id'].isin(events)]
+    new_ocel = log_util.copy_log_from_df(new_event_df,ocel.parameters)
     return new_ocel

@@ -44,7 +44,6 @@ def apply(ocel, parameters):
             object_event_mapping[ob].append(arr[i][id_index])
 
     # for each leading object extract the case
-    # self.object_types[0] # leading_type
     leading_type = parameters["leading_type"]
     for node in OG.nodes:
         case = []

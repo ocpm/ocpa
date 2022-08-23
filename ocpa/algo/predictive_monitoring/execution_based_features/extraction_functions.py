@@ -1,4 +1,6 @@
-import pandas as pd
+#This is a loose collection of possible feature functions on the process execution level. the submodule of
+#event_based_features contains a plethora of feature function on the event level. Several of these, such as
+#as remaining time, are generalizaitons of the process execution features
 
 def number_of_events(case,ocel,params):
     return len(case.nodes)
@@ -39,13 +41,6 @@ def delta_last_event(case,ocel,params):
         return (timestamps[0] - timestamps[1]).total_seconds()
     else:
         return 0
-
-def case_feature(case, ocel, params):
-    events = list(case.nodes)
-    non_zero_values = [ x for x in [ocel.get_value(e, params[0]) for e in events] if isinstance(x, (int, float))]
-    if len(non_zero_values) == 0:
-        return 0
-    return non_zero_values[0]
 
 
 def service_time(case,ocel, params):

@@ -152,10 +152,8 @@ def calculate_next_states_on_bindings(ocpn, state, binding, object_types):
 def update_binding(binding, update):
     if update:
         return binding[1:]
-        return [(elem[0], {k: v for k, v in elem[1].items()}) for elem in binding[1:]]
     else:
         return binding
-        return [(elem[0], {k: v for k, v in elem[1].items()}) for elem in binding]
 
 
 def enabled_log_activities(ocel, contexts):
@@ -263,7 +261,6 @@ def calculate_single_event(context, binding, object_types, ocpn):
 
 
 def enabled_model_activities_multiprocessing(contexts, bindings, ocpn, object_types):
-    # print("Calculating en_m ....")
     pool = ThreadPool(4)
     context_list = [contexts[i] for i in contexts.keys()]
     binding_list = [bindings[i] for i in contexts.keys()]
@@ -276,8 +273,6 @@ def enabled_model_activities_multiprocessing(contexts, bindings, ocpn, object_ty
         if k not in results.keys():
             results[k] = set()
         [results[k].add(v_elem) for v_elem in v]
-    # print("Divisions of calculation times")
-    # print(total_times)
     return results
 
 

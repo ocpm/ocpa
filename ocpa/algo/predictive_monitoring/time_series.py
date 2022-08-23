@@ -1,5 +1,5 @@
 from ocpa.algo.util.filtering.log import time_filtering
-import ocpa.algo.feature_extraction.factory as feature_extraction
+import ocpa.algo.predictive_monitoring.factory as feature_extraction
 import numpy as np
 import time
 def construct_time_series(ocel, w, feat_events, feat_cases, f_in = time_filtering.start):

@@ -77,12 +77,6 @@ def discover_nets(df, discovery_algorithm=discover_inductive, parameters=None):
     allowed_activities = parameters["allowed_activities"] if "allowed_activities" in parameters else None
     debug = parameters["debug"] if "debug" in parameters else True
 
-    # try:
-    #     if df.type == "succint":
-    #         df = mdl_import_factory.succint_mdl_to_exploded_mdl(df)
-    #         df.type = "exploded"
-    # except:
-    #     pass
     df = succint_mdl_to_exploded_mdl(df)
     if "event_variant" in df.columns.values:
         df = df.drop('event_variant', axis=1)
@@ -106,10 +100,6 @@ def discover_nets(df, discovery_algorithm=discover_inductive, parameters=None):
     ret["object_count"] = {}
 
     diff_log = 0
-    diff_model = 0
-    diff_token_replay = 0
-    diff_performance_annotation = 0
-    diff_basic_stats = 0
 
     for persp in persps:
         aa = time.time()
@@ -132,14 +122,11 @@ def discover_nets(df, discovery_algorithm=discover_inductive, parameters=None):
 
         diff_log += (bb - aa)
 
-        # filtered_log = variants_filter.apply_auto_filter(deepcopy(filtered_log), parameters={"decreasingFactor": 0.5})
-
         if debug:
             print(len(log))
             print(persp, "got log")
 
         cc = time.time()
-        #net, im, fm = inductive_miner.apply(filtered_log)
         net, im, fm = discovery_algorithm(filtered_log)
         dd = time.time()
         diff_log += (dd - cc)
@@ -171,8 +158,6 @@ def apply(df, discovery_algorithm=discover_inductive, parameters=None):
             if not (tr.label != "" and tr.label != None):
                 tr.name = persp + tr.name
         pl_count = 1
-        tr_count = 1
-        arc_count = 1
         object_count = object_count_persp[persp]
         for pl in net.places:
             p = None
