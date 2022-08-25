@@ -5,6 +5,12 @@ Performance Analysis
 _______________
 OCPA offers object-centric performance analysis. The performance analysis considers the interaction of objects in business processes, producing accurate waiting, service, and sojourn times. Moreover, it provides insightful object-centric performance metrics such as lagging, pooling, synchronization, and flow times.
 
+.. image:: _static/performance.png
+   :width: 500px
+   :align: center
+
+New performance metrics on object-centric event data.
+
 .. code-block:: python
 
     filename = "./sample_logs/jsonocel/p2p-normal.jsonocel"

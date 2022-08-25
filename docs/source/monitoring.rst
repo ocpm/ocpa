@@ -41,7 +41,6 @@ The feature storage has an underlying graph structure. OCPA allows the user to t
                    (predictive_monitoring.EVENT_ELAPSED_TIME, ())] + \
                   [(predictive_monitoring.EVENT_PRECEDING_ACTIVITES, (act,)) for act in activities]
     feature_storage = predictive_monitoring.apply(ocel, feature_set, [])
-    feature_storage = predictive_monitoring.apply(ocel, feature_set, [])
     table = tabular.construct_table(feature_storage)
     sequences = sequential.construct_sequence(feature_storage)
 

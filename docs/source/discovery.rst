@@ -7,6 +7,13 @@ Objects of this class can be visualized by calling the corresponding visualizati
 Object-Centric Petri Net Retrieval & Visualization
 ______________________________________
 
+
+.. image:: _static/petri_net.png
+   :width: 500px
+   :align: center
+
+Example of a visualized object-centric Petri net
+
 .. code-block:: python
 
     from ocpa.objects.log.importer.ocel import factory as ocel_import_factory
@@ -23,6 +30,13 @@ Equivalent control-flow behavior of process executions are called variants. Sinc
 OCPA offers two techniques to determine variants: By first calculating lexicographical presentations of the graphs and then refining these (TWO_PHASE), and through one-to-one isomorphism checking (ONE_PHASE). The first is normally faster. One can also choose to
 use the approximation of variants through only the lexicographical presentation. This is the default procedure, but can be switched off by passing the right parameter (see example below).
 The variant layouting just returns a positioning of chevrons as coordinates. The visualizaiton has to be done using another tool (www.ocpi.ai implements this end-to-end)
+
+
+.. image:: _static/variant.png
+   :width: 500px
+   :align: center
+
+A variant visualized with `OCπ <www.ocpi.ai>`_ following the layouting algorithm.
 
 .. code-block:: python
 
