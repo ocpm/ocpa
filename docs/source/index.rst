@@ -36,8 +36,11 @@ Install from Pip
    :caption: Contents:
 
    Event Log Management <eventlogmanagement>
-   readme
-   modules
+   Process Discovery <discovery>
+   Conformance Checking <conformance_checking>
+   Process Enhancement <enhancement>
+   Predictive Monitoring <monitoring>
+   Documentation <modules>
 
 
 
