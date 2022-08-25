@@ -7,9 +7,10 @@ Welcome to ocpa's documentation!
 ================================
 
 .. image:: _static/traditional_oc.PNG
-   :width: 600px
+   :width: 500px
    :align: center
 
+Object-Centric Process Mining: Moving from homogeneous event sequences to heterogeneous event graphs.
 
 Installation
 ------------
@@ -29,10 +30,12 @@ Install from Pip
     pip install ocpa
 
 
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
+   Event Log Management <eventlogmanagement>
    readme
    modules
 

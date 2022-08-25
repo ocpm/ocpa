@@ -33,6 +33,22 @@ It covers the following functionalities:
 Requirements
 ------------
 
+Installation
+------------
+
+Install from Github
+
+.. code-block:: text
+
+    git clone https://github.com/shunsvineyard/python-sample-code.git
+    cd python-sample-code
+    pip install .
+
+Install from Pip
+
+.. code-block:: text
+
+    pip install ocpa
 
 
 Event Log Management
