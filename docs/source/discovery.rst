@@ -9,17 +9,12 @@ ______________________________________
 
 .. code-block:: python
 
-    from ocpa.objects.log.importer.mdl import factory as ocel_import_factory
+    from ocpa.objects.log.importer.ocel import factory as ocel_import_factory
     from ocpa.algo.discovery.ocpn import algorithm as ocpn_discovery_factory
     from ocpa.visualization.oc_petri_net import factory as ocpn_vis_factory
-    object_types = ["application", "offer"]
-    parameters = {"obj_names":object_types,
-                  "val_names":[],
-                  "act_name":"event_activity",
-                  "time_name":"event_timestamp",
-                  "sep":",",}
-    ocel = ocel_import_factory.apply(file_path= filename,parameters = parameters)
-    ocpn = ocpn_discovery_factory.apply(ocel, parameters = {"debug":False})
+    filename = "sample_logs/jsonocel/p2p-normal.jsonocel"
+    ocel = ocel_import_factory.apply(file_path=filename)
+    ocpn = ocpn_discovery_factory.apply(ocel, parameters={"debug": False})
     ocpn_vis_factory.save(ocpn_vis_factory.apply(ocpn), "oc_petri_net.svg")
 
 Variant Calculation and Layouting
@@ -31,19 +26,11 @@ The variant layouting just returns a positioning of chevrons as coordinates. The
 
 .. code-block:: python
 
-    import ocpa
-    from ocpa.objects.log.importer.mdl import factory as ocel_import_factory
+    from ocpa.objects.log.importer.ocel import factory as ocel_import_factory
     from ocpa.visualization.log.variants import factory as variants_visualization_factory
-    object_types = ["application", "offer"]
-    parameters = {"obj_names":object_types,
-                  "val_names":[],
-                  "act_name":"event_activity",
-                  "time_name":"event_timestamp",
-                  "sep":",",
-                  "execution_extraction":ocpa.algo.util.process_executions.factory.LEAD_TYPE,
-                  "leading_type":object_types[0],
-                  "variant_calculation":ocpa.algo.util.variants.factory.TWO_PHASE
-                  "exact_variant_calculation":True}
-    ocel = ocel_import_factory.apply(file_path= filename,parameters = parameters)
+    filename = "sample_logs/jsonocel/p2p-normal.jsonocel"
+    ocel = ocel_import_factory.apply(filename)
+    print("Number of process executions: "+str(len(ocel.process_executions)))
     print("Number of variants: "+str(len(ocel.variants)))
     variant_layouting = variants_visualization_factory.apply(ocel)
+    print(variant_layouting[ocel.variants[0]])

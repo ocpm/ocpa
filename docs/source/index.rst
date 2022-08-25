@@ -19,8 +19,8 @@ Install from Github
 
 .. code-block:: text
 
-    git clone https://github.com/shunsvineyard/python-sample-code.git
-    cd python-sample-code
+    git clone https://github.com/ocpm/ocpa.git
+    cd ocpa
     pip install .
 
 Install from Pip

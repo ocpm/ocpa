@@ -10,17 +10,14 @@ ___________________
 
 .. code-block:: python
 
-    import ocpa
-    from ocpa.objects.log.importer.mdl import factory as ocel_import_factory
+    from ocpa.objects.log.importer.csv import factory as ocel_import_factory
+    filename = "sample_logs/csv/BPI2017-Final.csv"
     object_types = ["application", "offer"]
     parameters = {"obj_names":object_types,
                   "val_names":[],
                   "act_name":"event_activity",
                   "time_name":"event_timestamp",
-                  "sep":",",
-                  "execution_extraction":ocpa.algo.util.process_executions.factory.LEAD_TYPE,
-                  "leading_type":object_types[0],
-                  "variant_calculation":ocpa.algo.util.variants.factory.TWO_PHASE}
+                  "sep":","}
     ocel = ocel_import_factory.apply(file_path= filename,parameters = parameters)
 
 Importing JSON OCEL/XML OCEL Files
@@ -28,11 +25,10 @@ ___________________
 
 .. code-block:: python
 
-    import ocpa
     from ocpa.objects.log.importer.ocel import factory as ocel_import_factory
-    filename = "<path-to-your-file>"
-    parameters = {}
-    ocel = ocel_import_factory.apply(filename,parameters)
+    filename = "sample_logs/jsonocel/p2p-normal.jsonocel"
+    ocel = ocel_import_factory.apply(filename)
+
 
 Exporting JSON OCEL Files
 ___________________
@@ -41,9 +37,10 @@ ___________________
 
     from ocpa.objects.log.importer.ocel import factory as ocel_import_factory
     from ocpa.objects.log.exporter.ocel import factory as ocel_export_factory
-    filename = "<path-to-your-file>"
+    filename = "sample_logs/jsonocel/p2p-normal.jsonocel"
     ocel = ocel_import_factory.apply(filename)
-    ocel_export_factory.apply(ocel, '<path-to-save-ocel>')
+    ocel_export_factory.apply(
+        ocel, './exported-p2p-normal_export.jsonocel')
 
 
 
@@ -55,16 +52,25 @@ The process executions are extracted upon calling the corresponding property the
 
 .. code-block:: python
 
-    from ocpa.objects.log.importer.mdl import factory as ocel_import_factory
-    object_types = ["application", "offer"]
-    parameters = {"obj_names":object_types,
-                  "val_names":[],
-                  "act_name":"event_activity",
-                  "time_name":"event_timestamp",
-                  "sep":",",}
-    ocel = ocel_import_factory.apply(file_path= filename,parameters = parameters)
+    from ocpa.objects.log.importer.ocel import factory as ocel_import_factory
+    filename = "sample_logs/jsonocel/p2p-normal.jsonocel"
+    ocel = ocel_import_factory.apply(filename)
     print("Number of process executions: "+str(len(ocel.process_executions)))
     print("Events of the first process execution: "+str(ocel.process_executions[0]))
     print("Objects of the first process execution: "+str(ocel.process_execution_objects[0]))
-    print("Process execution of the first event with event id 0: "+str(ocel.process_execution_mappings[0]))
+    print("Process execution of the first event with event id 0: "+str(ocel.process_execution_mappings['0']))
 
+
+Import with Parameters
+_____________________
+
+.. code-block:: python
+
+    from ocpa.objects.log.importer.ocel import factory as ocel_import_factory
+    filename = "sample_logs/jsonocel/p2p-normal.jsonocel"
+    parameters = {"execution_extraction": "leading_type",
+                  "leading_type": "GDSRCPT",
+                  "variant_calculation": "two_phase",
+                  "exact_variant_calculation":True}
+    ocel = ocel_import_factory.apply(filename)
+    print(len(ocel.variants))

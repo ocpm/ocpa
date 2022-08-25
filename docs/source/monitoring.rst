@@ -9,28 +9,16 @@ ___________
 
 .. code-block:: python
 
-    import ocpa
-    from ocpa.objects.log.importer.mdl import factory as ocel_import_factory
-    from  ocpa.algo.feature_extraction import factory as feature_extraction
-    object_types = ["application", "offer"]
-    parameters = {"obj_names":object_types,
-                  "val_names":[],
-                  "act_name":"event_activity",
-                  "time_name":"event_timestamp",
-                  "sep":",",
-                  "execution_extraction":ocpa.algo.util.process_executions.factory.LEAD_TYPE,
-                  "leading_type":object_types[0],
-                  "variant_calculation":ocpa.algo.util.variants.factory.TWO_PHASE
-                  "exact_variant_calculation":True}
-    ocel = ocel_import_factory.apply(file_path= filename,parameters = parameters)
-    #Building feature functions
+    from ocpa.objects.log.importer.ocel import factory as ocel_import_factory
+    from ocpa.algo.predictive_monitoring import factory as predictive_monitoring
+    filename = "sample_logs/jsonocel/p2p-normal.jsonocel"
+    ocel = ocel_import_factory.apply(filename)
     activities = list(set(ocel.log.log["event_activity"].tolist()))
-    feature_set = [(feature_extraction.EVENT_REMAINING_TIME, ()),
-         (feature_extraction.EVENT_PREVIOUS_TYPE_COUNT, ("offer",)),
-         (feature_extraction.EVENT_ELAPSED_TIME, ())] + [(feature_extraction.EVENT_AGG_PREVIOUS_CHAR_VALUES, ("event_RequestedAmount", max))] \
-        + [(feature_extraction.EVENT_PRECEDING_ACTIVITES, (act,))
-            for act in activities]
-    feature_storage = feature_extraction.apply(ocel, feature_set, [])
+    feature_set = [(predictive_monitoring.EVENT_REMAINING_TIME, ()),
+                   (predictive_monitoring.EVENT_PREVIOUS_TYPE_COUNT, ("GDSRCPT",)),
+                   (predictive_monitoring.EVENT_ELAPSED_TIME, ())] + \
+                  [(predictive_monitoring.EVENT_PRECEDING_ACTIVITES, (act,)) for act in activities]
+    feature_storage = predictive_monitoring.apply(ocel, feature_set, [])
 
 The extracted features come in form of a :class:`Feature Storage <ocpa.algo.feature_extraction.obj.Feature_Storage>`. A feature storage
 contains a list of feature graphs. Each feature graph represents one process execution. Each node represents an event. The feature values extracted for events are stored as a dictionary. The feature values for a process execution are, also, stored as a dictionary associated with the feature graph.
@@ -42,29 +30,18 @@ The feature storage has an underlying graph structure. OCPA allows the user to t
 
 .. code-block:: python
 
-    import ocpa
-    from ocpa.objects.log.importer.mdl import factory as ocel_import_factory
-    from  ocpa.algo.feature_extraction import factory as feature_extraction
-    from ocpa.algo.feature_extraction import tabular, sequential
-    object_types = ["application", "offer"]
-    parameters = {"obj_names":object_types,
-                  "val_names":[],
-                  "act_name":"event_activity",
-                  "time_name":"event_timestamp",
-                  "sep":",",
-                  "execution_extraction":ocpa.algo.util.process_executions.factory.LEAD_TYPE,
-                  "leading_type":object_types[0],
-                  "variant_calculation":ocpa.algo.util.variants.factory.TWO_PHASE
-                  "exact_variant_calculation":True}
-    ocel = ocel_import_factory.apply(file_path= filename,parameters = parameters)
-    #Building feature functions
+    from ocpa.objects.log.importer.ocel import factory as ocel_import_factory
+    from ocpa.algo.predictive_monitoring import factory as predictive_monitoring
+    from ocpa.algo.predictive_monitoring import tabular, sequential
+    filename = "sample_logs/jsonocel/p2p-normal.jsonocel"
+    ocel = ocel_import_factory.apply(filename)
     activities = list(set(ocel.log.log["event_activity"].tolist()))
-    feature_set = [(feature_extraction.EVENT_REMAINING_TIME, ()),
-         (feature_extraction.EVENT_PREVIOUS_TYPE_COUNT, ("offer",)),
-         (feature_extraction.EVENT_ELAPSED_TIME, ())] + [(feature_extraction.EVENT_AGG_PREVIOUS_CHAR_VALUES, ("event_RequestedAmount", max))] \
-        + [(feature_extraction.EVENT_PRECEDING_ACTIVITES, (act,))
-            for act in activities]
-    feature_storage = feature_extraction.apply(ocel, feature_set, [])
+    feature_set = [(predictive_monitoring.EVENT_REMAINING_TIME, ()),
+                   (predictive_monitoring.EVENT_PREVIOUS_TYPE_COUNT, ("GDSRCPT",)),
+                   (predictive_monitoring.EVENT_ELAPSED_TIME, ())] + \
+                  [(predictive_monitoring.EVENT_PRECEDING_ACTIVITES, (act,)) for act in activities]
+    feature_storage = predictive_monitoring.apply(ocel, feature_set, [])
+    feature_storage = predictive_monitoring.apply(ocel, feature_set, [])
     table = tabular.construct_table(feature_storage)
     sequences = sequential.construct_sequence(feature_storage)
 
@@ -75,29 +52,18 @@ The share of test split is necessary, as well as the state for random splitting.
 
 .. code-block:: python
 
-    import ocpa
-    from ocpa.objects.log.importer.mdl import factory as ocel_import_factory
-    from  ocpa.algo.feature_extraction import factory as feature_extraction
-    from ocpa.algo.feature_extraction import tabular, sequential
-    object_types = ["application", "offer"]
-    parameters = {"obj_names":object_types,
-                  "val_names":[],
-                  "act_name":"event_activity",
-                  "time_name":"event_timestamp",
-                  "sep":",",
-                  "execution_extraction":ocpa.algo.util.process_executions.factory.LEAD_TYPE,
-                  "leading_type":object_types[0],
-                  "variant_calculation":ocpa.algo.util.variants.factory.TWO_PHASE
-                  "exact_variant_calculation":True}
-    ocel = ocel_import_factory.apply(file_path= filename,parameters = parameters)
-    #Building feature functions
+    from ocpa.objects.log.importer.ocel import factory as ocel_import_factory
+    from ocpa.algo.predictive_monitoring import factory as predictive_monitoring
+    from ocpa.algo.predictive_monitoring import tabular
+
+    filename = "sample_logs/jsonocel/p2p-normal.jsonocel"
+    ocel = ocel_import_factory.apply(filename)
     activities = list(set(ocel.log.log["event_activity"].tolist()))
-    feature_set = [(feature_extraction.EVENT_REMAINING_TIME, ()),
-         (feature_extraction.EVENT_PREVIOUS_TYPE_COUNT, ("offer",)),
-         (feature_extraction.EVENT_ELAPSED_TIME, ())] + [(feature_extraction.EVENT_AGG_PREVIOUS_CHAR_VALUES, ("event_RequestedAmount", max))] \
-        + [(feature_extraction.EVENT_PRECEDING_ACTIVITES, (act,))
-            for act in activities]
-    feature_storage = feature_extraction.apply(ocel, feature_set, [])
+    feature_set = [(predictive_monitoring.EVENT_REMAINING_TIME, ()),
+                   (predictive_monitoring.EVENT_PREVIOUS_TYPE_COUNT, ("GDSRCPT",)),
+                   (predictive_monitoring.EVENT_ELAPSED_TIME, ())] + \
+                  [(predictive_monitoring.EVENT_PRECEDING_ACTIVITES, (act,)) for act in activities]
+    feature_storage = predictive_monitoring.apply(ocel, feature_set, [])
     feature_storage.extract_normalized_train_test_split(0.3, state = 3395)
     train_table = tabular.construct_table(
             feature_storage, index_list=feature_storage.training_indices)
@@ -109,37 +75,28 @@ ___________
 
 .. code-block:: python
 
-    import ocpa
-    from ocpa.objects.log.importer.mdl import factory as ocel_import_factory
-    from  ocpa.algo.feature_extraction import factory as feature_extraction
-    from ocpa.algo.feature_extraction import tabular, sequential
-    object_types = ["application", "offer"]
-    parameters = {"obj_names":object_types,
-                  "val_names":[],
-                  "act_name":"event_activity",
-                  "time_name":"event_timestamp",
-                  "sep":",",
-                  "execution_extraction":ocpa.algo.util.process_executions.factory.LEAD_TYPE,
-                  "leading_type":object_types[0],
-                  "variant_calculation":ocpa.algo.util.variants.factory.TWO_PHASE
-                  "exact_variant_calculation":True}
-    ocel = ocel_import_factory.apply(file_path= filename,parameters = parameters)
-    #Building feature functions
+    from sklearn.linear_model import LinearRegression
+    from sklearn.metrics import mean_absolute_error
+    from ocpa.objects.log.importer.ocel import factory as ocel_import_factory
+    from ocpa.algo.predictive_monitoring import factory as predictive_monitoring
+    from ocpa.algo.predictive_monitoring import tabular
+
+    filename = "sample_logs/jsonocel/p2p-normal.jsonocel"
+    ocel = ocel_import_factory.apply(filename)
     activities = list(set(ocel.log.log["event_activity"].tolist()))
-    feature_set = [(feature_extraction.EVENT_REMAINING_TIME, ()),
-         (feature_extraction.EVENT_PREVIOUS_TYPE_COUNT, ("offer",)),
-         (feature_extraction.EVENT_ELAPSED_TIME, ())] + [(feature_extraction.EVENT_AGG_PREVIOUS_CHAR_VALUES, ("event_RequestedAmount", max))] \
-        + [(feature_extraction.EVENT_PRECEDING_ACTIVITES, (act,))
-            for act in activities]
-    feature_storage = feature_extraction.apply(ocel, feature_set, [])
+    feature_set = [(predictive_monitoring.EVENT_REMAINING_TIME, ()),
+                   (predictive_monitoring.EVENT_PREVIOUS_TYPE_COUNT, ("GDSRCPT",)),
+                   (predictive_monitoring.EVENT_ELAPSED_TIME, ())] + \
+                  [(predictive_monitoring.EVENT_PRECEDING_ACTIVITES, (act,)) for act in activities]
+    feature_storage = predictive_monitoring.apply(ocel, feature_set, [])
     feature_storage.extract_normalized_train_test_split(0.3, state = 3395)
     train_table = tabular.construct_table(
             feature_storage, index_list=feature_storage.training_indices)
     test_table = tabular.construct_table(
             feature_storage, index_list=feature_storage.test_indices)
-    y_train, y_test = train_table[F[0]], test_table[F[0]]
+    y_train, y_test = train_table[feature_set[0]], test_table[feature_set[0]]
     x_train, x_test = train_table.drop(
-            F[0], axis=1), test_table.drop(F[0], axis=1)
+            feature_set[0], axis=1), test_table.drop(feature_set[0], axis=1)
     model = LinearRegression()
     model.fit(x_train, y_train)
     y_pred = model.predict(x_test)

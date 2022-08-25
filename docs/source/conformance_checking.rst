@@ -8,24 +8,13 @@ One can calculate precision and fitness by comparing an object-centric Petri net
 
 .. code-block:: python
 
-    import ocpa
-    from ocpa.objects.log.importer.mdl import factory as ocel_import_factory
-    from ocpa.visualization.log.variants import factory as variants_visualization_factory
-    from ocpa.algo.evaluation.precision_and_fitness import evaluator as quality_measure_factory
-    object_types = ["application", "offer"]
-    parameters = {"obj_names":object_types,
-                  "val_names":[],
-                  "act_name":"event_activity",
-                  "time_name":"event_timestamp",
-                  "sep":",",
-                  "execution_extraction":ocpa.algo.util.process_executions.factory.LEAD_TYPE,
-                  "leading_type":object_types[0],
-                  "variant_calculation":ocpa.algo.util.variants.factory.TWO_PHASE
-                  "exact_variant_calculation":True}
-    ocel = ocel_import_factory.apply(file_path= filename,parameters = parameters)
+    from ocpa.objects.log.importer.ocel import factory as ocel_import_factory
+    from ocpa.algo.conformance.precision_and_fitness import evaluator as quality_measure_factory
+    from ocpa.algo.discovery.ocpn import algorithm as ocpn_discovery_factory
+    filename = "sample_logs/jsonocel/p2p-normal.jsonocel"
+    ocel = ocel_import_factory.apply(filename)
     ocpn = ocpn_discovery_factory.apply(ocel, parameters = {"debug":False})
     precision, fitness = quality_measure_factory.apply(ocel, ocpn)
-    variant_layouting = variants_visualization_factory.apply(ocel)
     print("Precision of IM-discovered net: "+str(precision))
     print("Fitness of IM-discovered net: "+str(fitness))
 
