@@ -307,7 +307,7 @@ Object-Centric Process Enhancement
 **Performance Analysis**
 OCPA offers object-centric performance analysis. The performance analysis considers the interaction of objects in business processes, producing accurate waiting, service, and sojourn times. Moreover, it provides insightful object-centric performance metrics such as lagging, pooling, synchronization, and flow times.
 
-.. image:: docs/source/_static/performance.png
+.. image:: docs/source/_static/performance.PNG
    :width: 300px
    :align: center
 
