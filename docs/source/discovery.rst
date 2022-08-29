@@ -9,7 +9,7 @@ ______________________________________
 
 
 .. image:: _static/petri_net.png
-   :width: 500px
+   :width: 300px
    :align: center
 
 Example of a visualized object-centric Petri net
@@ -36,7 +36,7 @@ The variant layouting just returns a positioning of chevrons as coordinates. The
    :width: 500px
    :align: center
 
-A variant visualized with `OCπ <www.ocpi.ai>`_ following the layouting algorithm.
+A variant visualized with `OCπ <https://ocpi.ai>`_ following the layouting algorithm.
 
 .. code-block:: python
 

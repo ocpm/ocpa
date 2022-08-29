@@ -2,7 +2,7 @@ Event Log Management
 ####################
 
 OCPA offers several ways to import object-centric event data. Additionally to the two data formats introduced in the
-(`OCEL standard <www.ocel-standard.org>`_) we support the import of CSV files. The importer is the key interface to pass
+(`OCEL standard <https://ocel-standard.org>`_) we support the import of CSV files. The importer is the key interface to pass
 parameters and settings to the event log. A full description can be found in the :func:`importer's documentation <ocpa.objects.log.importer.csv.factory.apply>`.
 
 Importing CSV Files
