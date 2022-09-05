@@ -1,0 +1,8 @@
+# run: conda env create --file environment.yml
+name: ocpa-env
+dependencies:
+- python==3.9
+- anaconda
+- pip
+- pip:
+  - -r requirements.txt
