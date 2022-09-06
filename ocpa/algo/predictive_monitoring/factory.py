@@ -89,7 +89,6 @@ VERSIONS = {
                       EXECUTION_UNIQUE_ACTIVITIES:execution_features.unique_activites,
                       EXECUTION_NUM_OF_STARTING_EVENTS:execution_features.number_of_starting_events,
                       EXECUTION_LAST_EVENT_TIME_BEFORE:execution_features.delta_last_event,
-                      EXECUTION_FEATURE:execution_features.case_feature,
                       EXECUTION_SERVICE_TIME:execution_features.service_time,
                       EXECUTION_AVG_SERVICE_TIME:execution_features.avg_service_time
                       }
