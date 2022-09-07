@@ -4,10 +4,10 @@ ocpa.algo.discovery.ocpn.versions package
 Submodules
 ----------
 
-ocpa.algo.discovery.ocpn.versions.inductive\_and\_tr module
------------------------------------------------------------
+ocpa.algo.discovery.ocpn.versions.inductive module
+--------------------------------------------------
 
-.. automodule:: ocpa.algo.discovery.ocpn.versions.inductive_and_tr
+.. automodule:: ocpa.algo.discovery.ocpn.versions.inductive
    :members:
    :undoc-members:
    :show-inheritance:

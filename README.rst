@@ -1,6 +1,11 @@
 Object-Centric Process Analysis
 ##########################
 
+.. image:: docs/source/_static/traditional_oc.PNG
+   :width: 500px
+   :align: center
+
+Object-Centric Process Mining: Moving from homogeneous event sequences to heterogeneous event graphs.
 
 
 **OCPA (Object-Centric Process Analysis)** is a Python library to enable object-centric process mining.
@@ -23,14 +28,11 @@ It covers the following functionalities:
         - Constraint monitoring
     - Object-centric process enhancement
         - Performance analysis
+        - Model Analysis
     - Object-centric predictive process monitoring
         - Feature extraction
         - Feature encoding
         - Preprocessing
-
-
-Requirements
-------------
 
 
 
@@ -41,8 +43,8 @@ Install from Github
 
 .. code-block:: text
 
-    git clone https://github.com/shunsvineyard/python-sample-code.git
-    cd python-sample-code
+    git clone https://github.com/ocpm/ocpa.git
+    cd ocpa
     pip install .
 
 Install from Pip
@@ -51,39 +53,39 @@ Install from Pip
 
     pip install ocpa
 
+
+
+
 Event Log Management
 --------------------
 
 OCPA offers several ways to import object-centric event data. Additionally to the two data formats introduced in the
-(`OCEL standard <www.ocel-standard.org>`_) we support the import of CSV files. The importer is the key interface to pass
-parameters and settings to the event log. A full description can be found in the :func:`importer's documentation <ocpa.objects.log.importer.mdl.factory.apply>`.
+(`OCEL standard <https://ocel-standard.org>`_) we support the import of CSV files. The importer is the key interface to pass
+parameters and settings to the event log. A full description can be found in the :func:`importer's documentation <ocpa.objects.log.importer.csv.factory.apply>`.
 
 **Importing CSV Files**
 
 .. code-block:: python
 
-    import ocpa
-    from ocpa.objects.log.importer.mdl import factory as ocel_import_factory
+    from ocpa.objects.log.importer.csv import factory as ocel_import_factory
+    filename = "sample_logs/csv/BPI2017-Final.csv"
     object_types = ["application", "offer"]
     parameters = {"obj_names":object_types,
                   "val_names":[],
                   "act_name":"event_activity",
                   "time_name":"event_timestamp",
-                  "sep":",",
-                  "execution_extraction":ocpa.algo.util.process_executions.factory.LEAD_TYPE,
-                  "leading_type":object_types[0],
-                  "variant_calculation":ocpa.algo.util.variants.factory.TWO_PHASE}
+                  "sep":","}
     ocel = ocel_import_factory.apply(file_path= filename,parameters = parameters)
+
 
 **Importing JSON OCEL/XML OCEL Files**
 
 .. code-block:: python
 
-    import ocpa
     from ocpa.objects.log.importer.ocel import factory as ocel_import_factory
-    filename = "<path-to-your-file>"
-    parameters = {}
-    ocel = ocel_import_factory.apply(filename,parameters)
+    filename = "sample_logs/jsonocel/p2p-normal.jsonocel"
+    ocel = ocel_import_factory.apply(filename)
+
 
 **Exporting JSON OCEL Files**
 
@@ -91,9 +93,10 @@ parameters and settings to the event log. A full description can be found in the
 
     from ocpa.objects.log.importer.ocel import factory as ocel_import_factory
     from ocpa.objects.log.exporter.ocel import factory as ocel_export_factory
-    filename = "<path-to-your-file>"
+    filename = "sample_logs/jsonocel/p2p-normal.jsonocel"
     ocel = ocel_import_factory.apply(filename)
-    ocel_export_factory.apply(ocel, '<path-to-save-ocel>')
+    ocel_export_factory.apply(
+        ocel, './exported-p2p-normal_export.jsonocel')
 
 
 
@@ -104,18 +107,28 @@ The process executions are extracted upon calling the corresponding property the
 
 .. code-block:: python
 
-    from ocpa.objects.log.importer.mdl import factory as ocel_import_factory
-    object_types = ["application", "offer"]
-    parameters = {"obj_names":object_types,
-                  "val_names":[],
-                  "act_name":"event_activity",
-                  "time_name":"event_timestamp",
-                  "sep":",",}
-    ocel = ocel_import_factory.apply(file_path= filename,parameters = parameters)
+    from ocpa.objects.log.importer.ocel import factory as ocel_import_factory
+    filename = "sample_logs/jsonocel/p2p-normal.jsonocel"
+    ocel = ocel_import_factory.apply(filename)
     print("Number of process executions: "+str(len(ocel.process_executions)))
     print("Events of the first process execution: "+str(ocel.process_executions[0]))
     print("Objects of the first process execution: "+str(ocel.process_execution_objects[0]))
-    print("Process execution of the first event with event id 0: "+str(ocel.process_execution_mappings[0]))
+    print("Process execution of the first event with event id 0: "+str(ocel.process_execution_mappings['0']))
+
+
+Import with Parameters
+_____________________
+
+.. code-block:: python
+
+    from ocpa.objects.log.importer.ocel import factory as ocel_import_factory
+    filename = "sample_logs/jsonocel/p2p-normal.jsonocel"
+    parameters = {"execution_extraction": "leading_type",
+                  "leading_type": "GDSRCPT",
+                  "variant_calculation": "two_phase",
+                  "exact_variant_calculation":True}
+    ocel = ocel_import_factory.apply(filename)
+    print(len(ocel.variants))
 
 
 Object-Centric Process Discovery
@@ -126,20 +139,22 @@ Objects of this class can be visualized by calling the corresponding visualizati
 
 **Object-Centric Petri Net Retrieval & Visualization**
 
+.. image:: docs/source/_static/petri_net.png
+   :width: 300px
+   :align: center
+
+Example of a visualized object-centric Petri net
+
 .. code-block:: python
 
-    from ocpa.objects.log.importer.mdl import factory as ocel_import_factory
+    from ocpa.objects.log.importer.ocel import factory as ocel_import_factory
     from ocpa.algo.discovery.ocpn import algorithm as ocpn_discovery_factory
     from ocpa.visualization.oc_petri_net import factory as ocpn_vis_factory
-    object_types = ["application", "offer"]
-    parameters = {"obj_names":object_types,
-                  "val_names":[],
-                  "act_name":"event_activity",
-                  "time_name":"event_timestamp",
-                  "sep":",",}
-    ocel = ocel_import_factory.apply(file_path= filename,parameters = parameters)
-    ocpn = ocpn_discovery_factory.apply(ocel, parameters = {"debug":False})
+    filename = "sample_logs/jsonocel/p2p-normal.jsonocel"
+    ocel = ocel_import_factory.apply(file_path=filename)
+    ocpn = ocpn_discovery_factory.apply(ocel, parameters={"debug": False})
     ocpn_vis_factory.save(ocpn_vis_factory.apply(ocpn), "oc_petri_net.svg")
+
 
 **Variant Calculation and Layouting**
 Equivalent control-flow behavior of process executions are called variants. Since a process execution is a graph, we can find equivalent process executions by annotating each graph's nodes with the activity attribute and finding isomorphic graphs.
@@ -147,24 +162,22 @@ OCPA offers two techniques to determine variants: By first calculating lexicogra
 use the approximation of variants through only the lexicographical presentation. This is the default procedure, but can be switched off by passing the right parameter (see example below).
 The variant layouting just returns a positioning of chevrons as coordinates. The visualizaiton has to be done using another tool (www.ocpi.ai implements this end-to-end)
 
+.. image:: docs/source/_static/variant.png
+   :width: 500px
+   :align: center
+
+A variant visualized with `OCpi <https://ocpi.ai>`_ following the layouting algorithm.
+
 .. code-block:: python
 
-    import ocpa
-    from ocpa.objects.log.importer.mdl import factory as ocel_import_factory
+    from ocpa.objects.log.importer.ocel import factory as ocel_import_factory
     from ocpa.visualization.log.variants import factory as variants_visualization_factory
-    object_types = ["application", "offer"]
-    parameters = {"obj_names":object_types,
-                  "val_names":[],
-                  "act_name":"event_activity",
-                  "time_name":"event_timestamp",
-                  "sep":",",
-                  "execution_extraction":ocpa.algo.util.process_executions.factory.LEAD_TYPE,
-                  "leading_type":object_types[0],
-                  "variant_calculation":ocpa.algo.util.variants.factory.TWO_PHASE
-                  "exact_variant_calculation":True}
-    ocel = ocel_import_factory.apply(file_path= filename,parameters = parameters)
+    filename = "sample_logs/jsonocel/p2p-normal.jsonocel"
+    ocel = ocel_import_factory.apply(filename)
+    print("Number of process executions: "+str(len(ocel.process_executions)))
     print("Number of variants: "+str(len(ocel.variants)))
     variant_layouting = variants_visualization_factory.apply(ocel)
+    print(variant_layouting[ocel.variants[0]])
 
 Object-Centric Conformance Checking
 --------------------
@@ -175,26 +188,16 @@ One can calculate precision and fitness by comparing an object-centric Petri net
 
 .. code-block:: python
 
-    import ocpa
-    from ocpa.objects.log.importer.mdl import factory as ocel_import_factory
-    from ocpa.visualization.log.variants import factory as variants_visualization_factory
-    from ocpa.algo.evaluation.precision_and_fitness import evaluator as quality_measure_factory
-    object_types = ["application", "offer"]
-    parameters = {"obj_names":object_types,
-                  "val_names":[],
-                  "act_name":"event_activity",
-                  "time_name":"event_timestamp",
-                  "sep":",",
-                  "execution_extraction":ocpa.algo.util.process_executions.factory.LEAD_TYPE,
-                  "leading_type":object_types[0],
-                  "variant_calculation":ocpa.algo.util.variants.factory.TWO_PHASE
-                  "exact_variant_calculation":True}
-    ocel = ocel_import_factory.apply(file_path= filename,parameters = parameters)
+    from ocpa.objects.log.importer.ocel import factory as ocel_import_factory
+    from ocpa.algo.conformance.precision_and_fitness import evaluator as quality_measure_factory
+    from ocpa.algo.discovery.ocpn import algorithm as ocpn_discovery_factory
+    filename = "sample_logs/jsonocel/p2p-normal.jsonocel"
+    ocel = ocel_import_factory.apply(filename)
     ocpn = ocpn_discovery_factory.apply(ocel, parameters = {"debug":False})
     precision, fitness = quality_measure_factory.apply(ocel, ocpn)
-    variant_layouting = variants_visualization_factory.apply(ocel)
     print("Precision of IM-discovered net: "+str(precision))
     print("Fitness of IM-discovered net: "+str(fitness))
+
 
 **Constraint monitoring**
 As well as the conformance of event logs to process models, OCPA also offers the conformance (compliance) of event logs to user-defined constraints. Such constraints describe control-flow, object-involvement, and performance constraints. 
@@ -304,6 +307,12 @@ Object-Centric Process Enhancement
 **Performance Analysis**
 OCPA offers object-centric performance analysis. The performance analysis considers the interaction of objects in business processes, producing accurate waiting, service, and sojourn times. Moreover, it provides insightful object-centric performance metrics such as lagging, pooling, synchronization, and flow times.
 
+.. image:: docs/source/_static/performance.PNG
+   :width: 300px
+   :align: center
+
+New performance metrics on object-centric event data.
+
 .. code-block:: python
 
     filename = "./sample_logs/jsonocel/p2p-normal.jsonocel"
@@ -327,28 +336,16 @@ Tabluer, Sequential or graph. The extracted features can already be normalized a
 
 .. code-block:: python
 
-    import ocpa
-    from ocpa.objects.log.importer.mdl import factory as ocel_import_factory
-    from  ocpa.algo.feature_extraction import factory as feature_extraction
-    object_types = ["application", "offer"]
-    parameters = {"obj_names":object_types,
-                  "val_names":[],
-                  "act_name":"event_activity",
-                  "time_name":"event_timestamp",
-                  "sep":",",
-                  "execution_extraction":ocpa.algo.util.process_executions.factory.LEAD_TYPE,
-                  "leading_type":object_types[0],
-                  "variant_calculation":ocpa.algo.util.variants.factory.TWO_PHASE
-                  "exact_variant_calculation":True}
-    ocel = ocel_import_factory.apply(file_path= filename,parameters = parameters)
-    #Building feature functions
+    from ocpa.objects.log.importer.ocel import factory as ocel_import_factory
+    from ocpa.algo.predictive_monitoring import factory as predictive_monitoring
+    filename = "sample_logs/jsonocel/p2p-normal.jsonocel"
+    ocel = ocel_import_factory.apply(filename)
     activities = list(set(ocel.log.log["event_activity"].tolist()))
-    feature_set = [(feature_extraction.EVENT_REMAINING_TIME, ()),
-         (feature_extraction.EVENT_PREVIOUS_TYPE_COUNT, ("offer",)),
-         (feature_extraction.EVENT_ELAPSED_TIME, ())] + [(feature_extraction.EVENT_AGG_PREVIOUS_CHAR_VALUES, ("event_RequestedAmount", max))] \
-        + [(feature_extraction.EVENT_PRECEDING_ACTIVITES, (act,))
-            for act in activities]
-    feature_storage = feature_extraction.apply(ocel, feature_set, [])
+    feature_set = [(predictive_monitoring.EVENT_REMAINING_TIME, ()),
+                   (predictive_monitoring.EVENT_PREVIOUS_TYPE_COUNT, ("GDSRCPT",)),
+                   (predictive_monitoring.EVENT_ELAPSED_TIME, ())] + \
+                  [(predictive_monitoring.EVENT_PRECEDING_ACTIVITES, (act,)) for act in activities]
+    feature_storage = predictive_monitoring.apply(ocel, feature_set, [])
 
 The extracted features come in form of a :class:`Feature Storage <ocpa.algo.feature_extraction.obj.Feature_Storage>`. A feature storage
 contains a list of feature graphs. Each feature graph represents one process execution. Each node represents an event. The feature values extracted for events are stored as a dictionary. The feature values for a process execution are, also, stored as a dictionary associated with the feature graph.
@@ -359,29 +356,17 @@ The feature storage has an underlying graph structure. OCPA allows the user to t
 
 .. code-block:: python
 
-    import ocpa
-    from ocpa.objects.log.importer.mdl import factory as ocel_import_factory
-    from  ocpa.algo.feature_extraction import factory as feature_extraction
-    from ocpa.algo.feature_extraction import tabular, sequential
-    object_types = ["application", "offer"]
-    parameters = {"obj_names":object_types,
-                  "val_names":[],
-                  "act_name":"event_activity",
-                  "time_name":"event_timestamp",
-                  "sep":",",
-                  "execution_extraction":ocpa.algo.util.process_executions.factory.LEAD_TYPE,
-                  "leading_type":object_types[0],
-                  "variant_calculation":ocpa.algo.util.variants.factory.TWO_PHASE
-                  "exact_variant_calculation":True}
-    ocel = ocel_import_factory.apply(file_path= filename,parameters = parameters)
-    #Building feature functions
+    from ocpa.objects.log.importer.ocel import factory as ocel_import_factory
+    from ocpa.algo.predictive_monitoring import factory as predictive_monitoring
+    from ocpa.algo.predictive_monitoring import tabular, sequential
+    filename = "sample_logs/jsonocel/p2p-normal.jsonocel"
+    ocel = ocel_import_factory.apply(filename)
     activities = list(set(ocel.log.log["event_activity"].tolist()))
-    feature_set = [(feature_extraction.EVENT_REMAINING_TIME, ()),
-         (feature_extraction.EVENT_PREVIOUS_TYPE_COUNT, ("offer",)),
-         (feature_extraction.EVENT_ELAPSED_TIME, ())] + [(feature_extraction.EVENT_AGG_PREVIOUS_CHAR_VALUES, ("event_RequestedAmount", max))] \
-        + [(feature_extraction.EVENT_PRECEDING_ACTIVITES, (act,))
-            for act in activities]
-    feature_storage = feature_extraction.apply(ocel, feature_set, [])
+    feature_set = [(predictive_monitoring.EVENT_REMAINING_TIME, ()),
+                   (predictive_monitoring.EVENT_PREVIOUS_TYPE_COUNT, ("GDSRCPT",)),
+                   (predictive_monitoring.EVENT_ELAPSED_TIME, ())] + \
+                  [(predictive_monitoring.EVENT_PRECEDING_ACTIVITES, (act,)) for act in activities]
+    feature_storage = predictive_monitoring.apply(ocel, feature_set, [])
     table = tabular.construct_table(feature_storage)
     sequences = sequential.construct_sequence(feature_storage)
 
@@ -391,29 +376,18 @@ The share of test split is necessary, as well as the state for random splitting.
 
 .. code-block:: python
 
-    import ocpa
-    from ocpa.objects.log.importer.mdl import factory as ocel_import_factory
-    from  ocpa.algo.feature_extraction import factory as feature_extraction
-    from ocpa.algo.feature_extraction import tabular, sequential
-    object_types = ["application", "offer"]
-    parameters = {"obj_names":object_types,
-                  "val_names":[],
-                  "act_name":"event_activity",
-                  "time_name":"event_timestamp",
-                  "sep":",",
-                  "execution_extraction":ocpa.algo.util.process_executions.factory.LEAD_TYPE,
-                  "leading_type":object_types[0],
-                  "variant_calculation":ocpa.algo.util.variants.factory.TWO_PHASE
-                  "exact_variant_calculation":True}
-    ocel = ocel_import_factory.apply(file_path= filename,parameters = parameters)
-    #Building feature functions
+    from ocpa.objects.log.importer.ocel import factory as ocel_import_factory
+    from ocpa.algo.predictive_monitoring import factory as predictive_monitoring
+    from ocpa.algo.predictive_monitoring import tabular
+
+    filename = "sample_logs/jsonocel/p2p-normal.jsonocel"
+    ocel = ocel_import_factory.apply(filename)
     activities = list(set(ocel.log.log["event_activity"].tolist()))
-    feature_set = [(feature_extraction.EVENT_REMAINING_TIME, ()),
-         (feature_extraction.EVENT_PREVIOUS_TYPE_COUNT, ("offer",)),
-         (feature_extraction.EVENT_ELAPSED_TIME, ())] + [(feature_extraction.EVENT_AGG_PREVIOUS_CHAR_VALUES, ("event_RequestedAmount", max))] \
-        + [(feature_extraction.EVENT_PRECEDING_ACTIVITES, (act,))
-            for act in activities]
-    feature_storage = feature_extraction.apply(ocel, feature_set, [])
+    feature_set = [(predictive_monitoring.EVENT_REMAINING_TIME, ()),
+                   (predictive_monitoring.EVENT_PREVIOUS_TYPE_COUNT, ("GDSRCPT",)),
+                   (predictive_monitoring.EVENT_ELAPSED_TIME, ())] + \
+                  [(predictive_monitoring.EVENT_PRECEDING_ACTIVITES, (act,)) for act in activities]
+    feature_storage = predictive_monitoring.apply(ocel, feature_set, [])
     feature_storage.extract_normalized_train_test_split(0.3, state = 3395)
     train_table = tabular.construct_table(
             feature_storage, index_list=feature_storage.training_indices)
@@ -424,37 +398,28 @@ The share of test split is necessary, as well as the state for random splitting.
 
 .. code-block:: python
 
-    import ocpa
-    from ocpa.objects.log.importer.mdl import factory as ocel_import_factory
-    from  ocpa.algo.feature_extraction import factory as feature_extraction
-    from ocpa.algo.feature_extraction import tabular, sequential
-    object_types = ["application", "offer"]
-    parameters = {"obj_names":object_types,
-                  "val_names":[],
-                  "act_name":"event_activity",
-                  "time_name":"event_timestamp",
-                  "sep":",",
-                  "execution_extraction":ocpa.algo.util.process_executions.factory.LEAD_TYPE,
-                  "leading_type":object_types[0],
-                  "variant_calculation":ocpa.algo.util.variants.factory.TWO_PHASE
-                  "exact_variant_calculation":True}
-    ocel = ocel_import_factory.apply(file_path= filename,parameters = parameters)
-    #Building feature functions
+    from sklearn.linear_model import LinearRegression
+    from sklearn.metrics import mean_absolute_error
+    from ocpa.objects.log.importer.ocel import factory as ocel_import_factory
+    from ocpa.algo.predictive_monitoring import factory as predictive_monitoring
+    from ocpa.algo.predictive_monitoring import tabular
+
+    filename = "sample_logs/jsonocel/p2p-normal.jsonocel"
+    ocel = ocel_import_factory.apply(filename)
     activities = list(set(ocel.log.log["event_activity"].tolist()))
-    feature_set = [(feature_extraction.EVENT_REMAINING_TIME, ()),
-         (feature_extraction.EVENT_PREVIOUS_TYPE_COUNT, ("offer",)),
-         (feature_extraction.EVENT_ELAPSED_TIME, ())] + [(feature_extraction.EVENT_AGG_PREVIOUS_CHAR_VALUES, ("event_RequestedAmount", max))] \
-        + [(feature_extraction.EVENT_PRECEDING_ACTIVITES, (act,))
-            for act in activities]
-    feature_storage = feature_extraction.apply(ocel, feature_set, [])
+    feature_set = [(predictive_monitoring.EVENT_REMAINING_TIME, ()),
+                   (predictive_monitoring.EVENT_PREVIOUS_TYPE_COUNT, ("GDSRCPT",)),
+                   (predictive_monitoring.EVENT_ELAPSED_TIME, ())] + \
+                  [(predictive_monitoring.EVENT_PRECEDING_ACTIVITES, (act,)) for act in activities]
+    feature_storage = predictive_monitoring.apply(ocel, feature_set, [])
     feature_storage.extract_normalized_train_test_split(0.3, state = 3395)
     train_table = tabular.construct_table(
             feature_storage, index_list=feature_storage.training_indices)
     test_table = tabular.construct_table(
             feature_storage, index_list=feature_storage.test_indices)
-    y_train, y_test = train_table[F[0]], test_table[F[0]]
+    y_train, y_test = train_table[feature_set[0]], test_table[feature_set[0]]
     x_train, x_test = train_table.drop(
-            F[0], axis=1), test_table.drop(F[0], axis=1)
+            feature_set[0], axis=1), test_table.drop(feature_set[0], axis=1)
     model = LinearRegression()
     model.fit(x_train, y_train)
     y_pred = model.predict(x_test)

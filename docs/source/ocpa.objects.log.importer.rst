@@ -7,7 +7,7 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
-   ocpa.objects.log.importer.mdl
+   ocpa.objects.log.importer.csv
    ocpa.objects.log.importer.ocel
 
 Module contents

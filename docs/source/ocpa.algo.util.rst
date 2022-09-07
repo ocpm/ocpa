@@ -7,7 +7,9 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
+   ocpa.algo.util.filtering
    ocpa.algo.util.process_executions
+   ocpa.algo.util.retrieval
    ocpa.algo.util.variants
 
 Submodules

@@ -1,10 +1,18 @@
-Metadata-Version: 1.0
+Metadata-Version: 2.0
 Name: ocpa
+<<<<<<< HEAD
 Version: 0.9.1
 Summary: Object-Centric Process Analysis (OCPA)
 Home-page: https://github.com/ocpm/ocpa
 Author: Gyunam Park and Niklas Adams
 Author-email: gnpark@pads.rwth-aachen.de
+=======
+Version: 1.0.0
+Summary: Object-Centric Process Analysis
+Home-page: https://github.com/ocpm/ocpa
+Author: Jan Niklas Adams and Gyunam Park
+Author-email: niklas.adams@pads.rwth-aachen.de
+>>>>>>> origin/Construction
 License: MIT
 Description: UNKNOWN
 Platform: UNKNOWN
