@@ -10,9 +10,7 @@ Subpackages
    ocpa.algo.conformance
    ocpa.algo.discovery
    ocpa.algo.enhancement
-   ocpa.algo.evaluation
    ocpa.algo.feature_extraction
-   ocpa.algo.filtering
    ocpa.algo.retrieval
    ocpa.algo.util
 

@@ -1,5 +1,5 @@
-from ocpa.objects.log.ocel import OCEL
 from ocpa.objects.log.util import misc as log_util
+
 
 def filter_process_executions(ocel, cases):
     '''
@@ -18,5 +18,5 @@ def filter_process_executions(ocel, cases):
 
     events = [e for case in cases for e in case]
     new_event_df = ocel.log[ocel.log["event_id"].isin(events)].copy()
-    new_log = log_util.copy_log_from_df(new_event_df,ocel.parameters)
+    new_log = log_util.copy_log_from_df(new_event_df, ocel.parameters)
     return new_log

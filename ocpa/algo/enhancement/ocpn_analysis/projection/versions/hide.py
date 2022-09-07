@@ -1,5 +1,5 @@
 from ocpa.objects.oc_petri_net.obj import ObjectCentricPetriNet
-from ocpa.algo.reduction.ocpn import algorithm as ocpn_reduction_factory
+from ocpa.algo.reduction import algorithm as ocpn_reduction_factory
 
 
 def apply(ocpn: ObjectCentricPetriNet, parameters):

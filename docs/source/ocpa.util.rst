@@ -1,6 +1,14 @@
 ocpa.util package
 =================
 
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   ocpa.util.filtering
+
 Submodules
 ----------
 
