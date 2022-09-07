@@ -1,10 +1,5 @@
-from ocpa.objects.log.ocel import OCEL
-import pandas as pd
 from ocpa.objects.log.util import misc as log_util
-from ocpa.objects.log.variants.table import Table
-from ocpa.objects.log.variants.graph import EventGraph
-import ocpa.objects.log.importer.csv.versions.to_obj as obj_importer
-import ocpa.objects.log.variants.util.table as table_utils
+
 
 def filter_infrequent_variants(ocel, threshold):
     '''
@@ -33,12 +28,14 @@ def filter_infrequent_variants(ocel, threshold):
             last_filtered_variant = i
             break
     # get the relevant objects
-    rel_obs = log_util.get_objects_of_variants(ocel,filtered_variants)
-    pref_sublog = log_util.remove_object_references(ocel.log.log, ocel.object_types, rel_obs)
+    rel_obs = log_util.get_objects_of_variants(ocel, filtered_variants)
+    pref_sublog = log_util.remove_object_references(
+        ocel.log.log, ocel.object_types, rel_obs)
     sublog = pref_sublog[pref_sublog["event_variant"].apply(
         lambda x: bool(set(x) & set(filtered_variants)))].copy()
     sublog = sublog.drop("event_variant", axis=1)
-    sublog = log_util.remove_object_references(sublog,ocel.object_types,rel_obs)
+    sublog = log_util.remove_object_references(
+        sublog, ocel.object_types, rel_obs)
 
-    new_log = log_util.copy_log_from_df(sublog,ocel.parameters)
+    new_log = log_util.copy_log_from_df(sublog, ocel.parameters)
     return new_log

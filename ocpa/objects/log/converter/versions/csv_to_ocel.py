@@ -1,44 +1,8 @@
 from typing import Dict, List, Any
 import pandas as pd
 from pandas import to_datetime
-from datetime import datetime
 import itertools
-
-from ocpa.objects.log.util.param import JsonParseParameters
 from ocpa.objects.log.variants.obj import Event, Obj, ObjectCentricEventLog, MetaObjectCentricData, RawObjectCentricData
-
-import math
-
-
-def add_event(events: Dict[str, Event], index, row, cfg) -> None:
-    events[str(index)] = Event(
-        id=str(index),
-        act=row[cfg["act_name"]],
-        time=to_datetime(row[cfg["time_name"]]),
-        omap=list(itertools.chain.from_iterable(
-            [safe_split(row[obj])
-             for obj in cfg["obj_names"] if (row[obj] != '{}' and str(row[obj]).lower() != "nan")]
-        )),
-        vmap={attr: row[attr] for attr in cfg["val_names"]})
-
-
-def safe_split(row_obj):
-    try:
-        if '{' in row_obj:
-            return [x.strip() for x in row_obj[1:-1].split(',')]
-        else:
-            return row_obj.split(',')
-    except TypeError:
-        return []  # f'NA-{next(counter)}'
-
-
-def add_obj(objects: Dict[str, Obj], objs: List[str]) -> None:
-    for obj_id_typ in objs:
-        obj_id_typ = obj_id_typ.split('/')  # Unpack
-        obj_id = obj_id_typ[0]  # First entry is the id
-        obj_typ = obj_id_typ[1]  # second entry is the object type
-        if obj_id not in objects:
-            objects[obj_id] = Obj(id=obj_id, type=obj_typ, ovmap={})
 
 
 def apply(df: pd.DataFrame, parameters: Dict) -> ObjectCentricEventLog:
@@ -74,6 +38,37 @@ def apply(df: pd.DataFrame, parameters: Dict) -> ObjectCentricEventLog:
         objects=objects
     )
     return ObjectCentricEventLog(meta, raw)
+
+
+def add_event(events: Dict[str, Event], index, row, cfg) -> None:
+    events[str(index)] = Event(
+        id=str(index),
+        act=row[cfg["act_name"]],
+        time=to_datetime(row[cfg["time_name"]]),
+        omap=list(itertools.chain.from_iterable(
+            [safe_split(row[obj])
+             for obj in cfg["obj_names"] if (row[obj] != '{}' and str(row[obj]).lower() != "nan")]
+        )),
+        vmap={attr: row[attr] for attr in cfg["val_names"]})
+
+
+def safe_split(row_obj):
+    try:
+        if '{' in row_obj:
+            return [x.strip() for x in row_obj[1:-1].split(',')]
+        else:
+            return row_obj.split(',')
+    except TypeError:
+        return []  # f'NA-{next(counter)}'
+
+
+def add_obj(objects: Dict[str, Obj], objs: List[str]) -> None:
+    for obj_id_typ in objs:
+        obj_id_typ = obj_id_typ.split('/')  # Unpack
+        obj_id = obj_id_typ[0]  # First entry is the id
+        obj_typ = obj_id_typ[1]  # second entry is the object type
+        if obj_id not in objects:
+            objects[obj_id] = Obj(id=obj_id, type=obj_typ, ovmap={})
 
 
 def name_type(typ: str) -> str:
