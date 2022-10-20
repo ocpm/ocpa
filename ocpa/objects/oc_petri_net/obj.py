@@ -35,6 +35,9 @@ class ObjectCentricPetriNet(object):
         def __get_final(self):
             return self.__final
 
+        def __set_final(self, final):
+            self.__final = final
+
         def __get_out_arcs(self):
             return self.__out_arcs
 
@@ -82,7 +85,7 @@ class ObjectCentricPetriNet(object):
 
         object_type = property(__get_object_type)
         initial = property(__get_initial)
-        final = property(__get_final)
+        final = property(__get_final, __set_final)
         out_arcs = property(__get_out_arcs, __set_out_arcs)
         in_arcs = property(__get_in_arcs, __set_in_arcs)
         name = property(__get_name, __set_name)

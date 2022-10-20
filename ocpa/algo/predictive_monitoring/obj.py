@@ -82,6 +82,9 @@ class Feature_Storage:
         def _get_attributes(self):
             return self._attributes
 
+        def replace_edges(self,edges):
+            self._edges = [Feature_Storage.Feature_Graph.Edge(source.event_id, target.event_id, objects=[] ) for source, target in edges]
+
         def get_node_from_event_id(self, event_id):
             return self._node_mapping[event_id]
 

@@ -23,14 +23,18 @@ def apply(filepath, parameters: Dict, file_path_object_attribute_table = None) -
     if(file_path_object_attribute_table):
         obj_df = pd.read_csv(file_path_object_attribute_table)
     table_parameters = {"obj_names": obj.meta.obj_types,
-                        "val_names": obj.meta.attr_types,
+                        #TODO check this in a future release
+                        #"val_names": obj.meta.attr_types,
+                        "val_names": [],
                         "act_name": "event_activity",
                         "time_name": "event_timestamp",
                         "sep": ","}
     table_parameters.update(parameters)
+    #TODO see here
+    #print(table_parameters)
     log = Table(df, parameters=table_parameters,object_attributes=obj_df)
     graph = EventGraph(table_utils.eog_from_log(log))
-    ocel = OCEL(log, obj, graph, parameters)
+    ocel = OCEL(log, obj, graph, table_parameters)
     return ocel
 
 
