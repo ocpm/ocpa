@@ -8,6 +8,31 @@ Object-Centric Process Analysis
 Object-Centric Process Mining: Moving from homogeneous event sequences to heterogeneous event graphs.
 
 
+Find the `Documentation <https://ocpa.readthedocs.io/>`_ on readthedocs and the relevant `Paper <https://www.sciencedirect.com/science/article/pii/S2665963822001221?via%3Dihub>`_ at Software Impacts.
+
+--------------------------------------------------------------
+
+**Citing**
+
+If you find *ocpa* and the datasets useful in your research, please consider citing the following paper:
+
+.. code-block:: text
+
+    @article{ADAMS2022100438,
+    title = {ocpa: A Python library for object-centric process analysis},
+    journal = {Software Impacts},
+    pages = {100438},
+    year = {2022},
+    issn = {2665-9638},
+    doi = {https://doi.org/10.1016/j.simpa.2022.100438},
+    url = {https://www.sciencedirect.com/science/article/pii/S2665963822001221},
+    author = {Jan Niklas Adams and Gyunam Park and Wil M.P. {van der Aalst}},
+    keywords = {Process mining, Object-centric process mining, Object-centric petri net, Predictive process monitoring, Conformance checking, Performance analysis},
+    abstract = {ocpa is a Python library supporting object-centric process mining. Traditional process mining generate insights for one single process. However, many real-life processes are composed of multiple interacting subprocesses and events may involve multiple objects. Object-centric process mining provides techniques for analyzing multiple interacting processes by generalizing process mining techniques. ocpa contains algorithms for object-centric event log management, process discovery, conformance checking, enhancement, and predictive process monitoring. ocpa is easily integrable with existing solutions as it supports existing object-centric event log standards, provides extensive documentation, and is installable through the Python package installer.}
+    }
+
+----------------------------------------------------------------
+
 **OCPA (Object-Centric Process Analysis)** is a Python library to enable object-centric process mining.
 It covers the following functionalities:
     - Object-centric event log management
@@ -108,12 +133,16 @@ The process executions are extracted upon calling the corresponding property the
 .. code-block:: python
 
     from ocpa.objects.log.importer.ocel import factory as ocel_import_factory
-    filename = "sample_logs/jsonocel/p2p-normal.jsonocel"
+    filename = "../../sample_logs/jsonocel/p2p-normal.jsonocel"
     ocel = ocel_import_factory.apply(filename)
     print("Number of process executions: "+str(len(ocel.process_executions)))
     print("Events of the first process execution: "+str(ocel.process_executions[0]))
     print("Objects of the first process execution: "+str(ocel.process_execution_objects[0]))
-    print("Process execution of the first event with event id 0: "+str(ocel.process_execution_mappings['0']))
+    print("Process execution graph of the first execution:")
+    print(ocel.get_process_execution_graph(0))
+    print("Process execution of the first event with event id 0: "+str(ocel.process_execution_mappings[0]))
+
+
 
 
 Import with Parameters
@@ -153,7 +182,7 @@ Example of a visualized object-centric Petri net
     filename = "sample_logs/jsonocel/p2p-normal.jsonocel"
     ocel = ocel_import_factory.apply(file_path=filename)
     ocpn = ocpn_discovery_factory.apply(ocel, parameters={"debug": False})
-    ocpn_vis_factory.save(ocpn_vis_factory.apply(ocpn), "oc_petri_net.svg")
+    ocpn_vis_factory.save(ocpn_vis_factory.apply(ocpn), "oc_petri_net.png")
 
 
 **Variant Calculation and Layouting**

@@ -22,7 +22,7 @@ Example of a visualized object-centric Petri net
     filename = "sample_logs/jsonocel/p2p-normal.jsonocel"
     ocel = ocel_import_factory.apply(file_path=filename)
     ocpn = ocpn_discovery_factory.apply(ocel, parameters={"debug": False})
-    ocpn_vis_factory.save(ocpn_vis_factory.apply(ocpn), "oc_petri_net.svg")
+    ocpn_vis_factory.save(ocpn_vis_factory.apply(ocpn), "oc_petri_net.png")
 
 Variant Calculation and Layouting
 ______________________________________

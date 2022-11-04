@@ -36,15 +36,9 @@ def apply(ocpn, ocel, parameters=None):
 
     eos = []
     df = ocel.log.log
-    # df, _ = convert_factory.apply(ocel, variant='json_to_mdl')
 
     for ei in ocel.obj.raw.events:
         event = ocel.obj.raw.events[ei]
-        # act = row['event_activity']
-        # start_timestamp = row['event_start_timestamp']
-        # timestamp = row['event_timestamp']
-        # event = {'event_activity': act,
-        #          'event_start_timestamp': start_timestamp, 'event_timestamp': timestamp}
         trans = ocpn.find_transition(event.act)
         eo = EventOccurrence(trans, event)
         eos.append(eo)

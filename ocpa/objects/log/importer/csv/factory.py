@@ -11,8 +11,7 @@ VERSIONS = {TO_DF: to_df.apply,
             TO_OCEL: to_ocel.apply}
 
 
-
-def apply(file_path, variant=TO_OCEL, parameters=None, file_path_object_attribute_table = None):
+def apply(file_path, variant=TO_OCEL, parameters=None, file_path_object_attribute_table=None):
     '''
         Reads a csv and transforms it into an OCEL object.
 
@@ -28,7 +27,7 @@ def apply(file_path, variant=TO_OCEL, parameters=None, file_path_object_attribut
                 - val_names: List of attribute names (columns in CSV)
                 - act_name: Column name of event's activity
                 - time_name: Column name of event's timestamp
-                - start_timestamp: Optional, column name of event's start timestamp
+                - start_timestamp: Optional, column name of event's start timestamp; If missing, replaced by time_name.
                 - execution_extraction: Optional, execution extraction technique to extract process executions (cases) in the log, possible values:
                     - :data:`ocpa.algo.util.process_executions.factory.CONN_COMP <ocpa.algo.util.process_executions.factory.CONN_COMP>` (default)
                     - :data:`ocpa.algo.util.process_executions.factory.LEAD_TYPE <ocpa.algo.util.process_executions.factory.LEAD_TPYE>`
@@ -44,4 +43,4 @@ def apply(file_path, variant=TO_OCEL, parameters=None, file_path_object_attribut
         -------
         OCEL
         '''
-    return VERSIONS[variant](file_path, parameters=parameters, file_path_object_attribute_table = None)
+    return VERSIONS[variant](file_path, parameters=parameters, file_path_object_attribute_table=None)

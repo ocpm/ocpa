@@ -9,7 +9,7 @@ from ocpa.objects.log.variants.obj import Event, Obj, ObjectCentricEventLog, Met
 
 
 def add_event(events: Dict[str, Event], index, row, cfg) -> None:
-    #print(cfg["val_names"])
+    # print(cfg["val_names"])
     events[str(index)] = Event(
         id=str(index),
         act=row[cfg["act_name"]],
@@ -25,7 +25,8 @@ def add_event(events: Dict[str, Event], index, row, cfg) -> None:
         events[str(index)].vmap["start_timestamp"] = to_datetime(
             row[cfg["start_timestamp"]])
     else:
-        events[str(index)].vmap["start_timestamp"] = None
+        events[str(index)].vmap["start_timestamp"] = to_datetime(
+            row[cfg["time_name"]])
 
 
 def safe_split(row_obj):

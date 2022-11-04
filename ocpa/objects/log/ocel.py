@@ -39,12 +39,15 @@ class OCEL:
         self._process_execution_mappings = None
         self._variants = None
         self._variant_frequency = None
-        self._variant_graphs= None
+        self._variant_graphs = None
         self._variants_dict = None
         self._object_types = self.log.object_types
-        self._execution_extraction = self.parameters["execution_extraction"] if "execution_extraction" in self.parameters.keys() else process_execution_factory.CONN_COMP
-        self._variant_calculation = self.parameters["variant_calculation"] if "variant_calculation" in self.parameters.keys() else variant_factory.TWO_PHASE
+        self._execution_extraction = self.parameters["execution_extraction"] if "execution_extraction" in self.parameters.keys(
+        ) else process_execution_factory.CONN_COMP
+        self._variant_calculation = self.parameters["variant_calculation"] if "variant_calculation" in self.parameters.keys(
+        ) else variant_factory.TWO_PHASE
     # _get_process_execution_objects
+
     @property
     def process_execution_objects(self):
         '''
@@ -123,8 +126,8 @@ class OCEL:
             self._calculate_variants()
         return self._variants
 
-
     # _get_variant_frequency
+
     @property
     def variant_frequencies(self):
         '''
@@ -185,7 +188,6 @@ class OCEL:
         '''
         return self._object_types
 
-
     def get_value(self, e_id, attribute):
         '''Returns the attribute value of an event efficiently.
 
@@ -208,7 +210,7 @@ class OCEL:
         This function is the most efficient attribute value retrieval.
 
         :param o_id: object id of the targeted object
-        :type e_id: str
+        :type o_id: str
         :param attribute: attribute name of the targeted attribute, should be a column of the passed table
         :type attribute: string
         :return: any value
@@ -216,8 +218,23 @@ class OCEL:
         '''
         return self.log.get_object_attribute_value(o_id, attribute)
 
+    def get_process_execution_graph(self, process_exec_id):
+        '''Returns the process execution graph of a process execution.
+
+        The process_exec_id refers to the index of the process execution in the list of process executions held by this
+        class.
+
+        :param process_exec_id: index of the targeted process execution
+        :type process_exec_id: int
+        :return: process execution graph
+        :rtype: NetworkX Graph
+        '''
+        return self.graph.eog.subgraph(self.process_executions[process_exec_id])
+
     def _calculate_process_execution_objects(self):
-        self._process_executions, self._process_execution_objects, self._process_execution_mappings = process_execution_factory.apply(self,self._execution_extraction,parameters=self.parameters)
+        self._process_executions, self._process_execution_objects, self._process_execution_mappings = process_execution_factory.apply(
+            self, self._execution_extraction, parameters=self.parameters)
 
     def _calculate_variants(self):
-        self._variants, self._variant_frequency, self._variant_graphs, self._variants_dict = variant_factory.apply(self,self._variant_calculation,parameters=self.parameters)
+        self._variants, self._variant_frequency, self._variant_graphs, self._variants_dict = variant_factory.apply(
+            self, self._variant_calculation, parameters=self.parameters)
