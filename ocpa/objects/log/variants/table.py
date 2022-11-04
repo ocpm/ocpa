@@ -10,6 +10,7 @@ from typing import Dict
 class Table:
     def __init__(self, log, parameters, object_attributes = None):
         self._log = log
+        self._log["event_id"] = self._log["event_id"].astype(int)
         self._log["event_index"] = self._log["event_id"]
         self._log = self._log.set_index("event_index")
         self._object_types = parameters["obj_names"]
@@ -31,10 +32,12 @@ class Table:
 
 
     def create_efficiency_objects(self):
+
         self._numpy_log = self._log.to_numpy()
         self._column_mapping = {k: v for v, k in enumerate(
             list(self._log.columns.values))}
-        self._mapping = {int(c): dict(
+
+        self._mapping = {c: dict(
             zip(self._log["event_id"], self._log[c])) for c in self._log.columns.values}
         if self._object_attributes:
             self._object_attributes = {c: dict(
@@ -47,6 +50,7 @@ class Table:
 
     def get_object_attribute_value(self,o_id,attribute):
         return self._object_attributes[o_id][attribute]
+
 
     ####### Not guaranteed to keep everything consistent, only as quick helpers
     def get_objects_of_variants(self, variants):

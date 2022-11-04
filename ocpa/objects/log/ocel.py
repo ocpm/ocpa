@@ -216,6 +216,19 @@ class OCEL:
         '''
         return self.log.get_object_attribute_value(o_id, attribute)
 
+    def get_process_execution_graph(self, process_exec_id):
+        '''Returns the process execution graph of a process execution.
+
+        The process_exec_id refers to the index of the process execution in the list of process executions held by this
+        class.
+
+        :param process_exec_id: index of the targeted process execution
+        :type process_exec_id: int
+        :return: process execution graph
+        :rtype: NetworkX Graph
+        '''
+        return self.graph.eog.subgraph(self.process_executions[process_exec_id])
+
     def _calculate_process_execution_objects(self):
         self._process_executions, self._process_execution_objects, self._process_execution_mappings = process_execution_factory.apply(self,self._execution_extraction,parameters=self.parameters)
 
