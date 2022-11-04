@@ -9,7 +9,6 @@ from ocpa.objects.log.variants.obj import Event, Obj, ObjectCentricEventLog, Met
 
 
 def add_event(events: Dict[str, Event], index, row, cfg) -> None:
-    # print(cfg["val_names"])
     events[str(index)] = Event(
         id=str(index),
         act=row[cfg["act_name"]],

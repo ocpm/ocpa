@@ -52,6 +52,7 @@ class Table:
         return self._object_attributes[o_id][attribute]
 
     # Not guaranteed to keep everything consistent, only as quick helpers
+
     def get_objects_of_variants(self, variants):
         obs = {}
         for ot in self.object_types:

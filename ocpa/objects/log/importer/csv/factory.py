@@ -43,4 +43,5 @@ def apply(file_path, variant=TO_OCEL, parameters=None, file_path_object_attribut
         -------
         OCEL
         '''
+
     return VERSIONS[variant](file_path, parameters=parameters, file_path_object_attribute_table=None)
