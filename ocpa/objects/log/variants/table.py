@@ -34,7 +34,7 @@ class Table:
         self._numpy_log = self._log.to_numpy()
         self._column_mapping = {k: v for v, k in enumerate(
             list(self._log.columns.values))}
-        self._mapping = {c: dict(
+        self._mapping = {int(c): dict(
             zip(self._log["event_id"], self._log[c])) for c in self._log.columns.values}
         if self._object_attributes:
             self._object_attributes = {c: dict(

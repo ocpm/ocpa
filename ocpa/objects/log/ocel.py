@@ -208,7 +208,7 @@ class OCEL:
         This function is the most efficient attribute value retrieval.
 
         :param o_id: object id of the targeted object
-        :type e_id: str
+        :type o_id: str
         :param attribute: attribute name of the targeted attribute, should be a column of the passed table
         :type attribute: string
         :return: any value
