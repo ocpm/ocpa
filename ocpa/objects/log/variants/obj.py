@@ -16,7 +16,7 @@ class Event:
         return id(self)
 
     def __repr__(self):
-        return str(self.act) + str(self.time) + str(self.omap) + str(self.vmap)
+        return f'Event {self.id} - Activity: {self.act}, Timestamp: {str(self.time)}, OMAP: {str(self.omap)}, VMAP: {str(self.vmap)}'
 
 
 @dataclass
@@ -24,6 +24,9 @@ class Obj:
     id: str
     type: str
     ovmap: Dict
+
+    def __repr__(self):
+        return f'Object {self.id} - Type: {self.type}, OVMAP: {str(self.ovmap)}'
 
 
 @dataclass

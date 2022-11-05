@@ -30,6 +30,8 @@ def apply(filepath, parameters=None):
     if "start_timestamp" in parameters:
         df['start_timestamp'] = df[parameters['start_timestamp']]
         del df[parameters['start_timestamp']]
+    else:
+        df['start_timestamp'] = df['timestamp']
 
     rename_dict = {}
     for col in [x for x in df.columns if not x.startswith("event_")]:
