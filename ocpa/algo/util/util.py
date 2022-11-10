@@ -32,7 +32,6 @@ def project_log(df, persp, parameters=None):
 
     df = df.rename(columns=renaming)
     df = df.dropna(subset=["concept:name"])
-    print(df)
     log = log_conv_factory.apply(df)
 
     return log
