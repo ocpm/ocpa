@@ -8,7 +8,7 @@ def filter_infrequent_variants(ocel, threshold):
     :param ocel: Object-centric event log
     :type ocel: :class:`OCEL <ocpa.objects.log.ocel.OCEL>`
 
-    :param threshold: Kumulative frequency of the most frequent variants to be included.
+    :param threshold: Cumulative frequency of the most frequent variants to be included.
     :type threshold: float
 
     :return: Object-centric event log
