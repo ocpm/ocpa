@@ -12,8 +12,12 @@ def apply(ocel: OCEL, file_path: str, parameters=None):
     raw = ocel.obj.raw
     export = dict()
     export[cfg.log_params["meta"]] = dict()
-    export[cfg.log_params["meta"]][cfg.log_params["attr_names"]] = meta.attr_names
-    export[cfg.log_params["meta"]][cfg.log_params["obj_types"]] = meta.obj_types
+    export["ocel:global-event"] = {"ocel:activity": "__INVALID__"}
+    export["ocel:global-object"] = {"ocel:type": "__INVALID__"}
+    export[cfg.log_params["meta"]][cfg.log_params["attr_names"]] = list(
+        meta.attr_names)
+    export[cfg.log_params["meta"]
+           ][cfg.log_params["obj_types"]] = list(meta.obj_types)
     export[cfg.log_params["meta"]][cfg.log_params["version"]] = "1.0"
     export[cfg.log_params["meta"]][cfg.log_params["ordering"]] = "timestamp"
     events = {}

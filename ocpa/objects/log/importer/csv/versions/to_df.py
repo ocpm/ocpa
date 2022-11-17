@@ -13,8 +13,8 @@ def apply(filepath, parameters=None):
 
     def _eval(x):
         if x == 'set()':
-            x = {}
-        if type(x) == float and math.isnan(x):
+            return []
+        elif type(x) == float and math.isnan(x):
             return []
         else:
             return literal_eval(x)
