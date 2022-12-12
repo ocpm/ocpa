@@ -1,30 +1,18 @@
-import pm4py
-
 from pm4py.algo.discovery.alpha import algorithm as alpha_miner
 from pm4py.algo.discovery.inductive import algorithm as inductive_miner
 from pm4py.algo.discovery.dfg import algorithm as dfg_discovery
 from pm4py.statistics.start_activities.log import get as sa_get
 from pm4py.statistics.end_activities.log import get as ea_get
 from pm4py.objects.conversion.dfg import converter as dfg_converter
-from pm4py.algo.conformance.tokenreplay import algorithm as tr_factory
-from pm4py.visualization.petrinet.util import performance_map
-from pm4py.statistics.variants.log import get as variants_module
-from pm4py.algo.filtering.log.paths import paths_filter
-from pm4py.algo.filtering.log.variants import variants_filter
-from pm4py.algo.filtering.log.attributes import attributes_filter
-from pm4py.objects.petri.petrinet import PetriNet, Marking
+# from pm4py.algo.filtering.log.attributes import attributes_filter
 from pm4py.objects.petri.utils import add_arc_from_to
 from pm4py.objects.petri.utils import remove_place, remove_transition
-from ocpa.objects.log.importer.csv import factory as mdl_import_factory
 from ocpa.algo.util.util import project_log, project_log_with_object_count
 from ocpa.objects.oc_petri_net.obj import ObjectCentricPetriNet
 from ocpa.objects.log.importer.csv.util import succint_mdl_to_exploded_mdl, clean_frequency, clean_arc_frequency
-from copy import deepcopy
-import uuid
 import pandas as pd
 import time
 
-PARAM_ACTIVITY_KEY = pm4py.util.constants.PARAMETER_CONSTANT_ACTIVITY_KEY
 MAX_FREQUENCY = float("inf")
 
 
@@ -111,13 +99,13 @@ def discover_nets(df, discovery_algorithm=discover_inductive, parameters=None):
             print(log)
             print(len(log))
 
-        if allowed_activities is not None:
-            if persp not in allowed_activities:
-                continue
-            filtered_log = attributes_filter.apply_events(
-                log, allowed_activities[persp])
-        else:
-            filtered_log = log
+        # if allowed_activities is not None:
+        #     if persp not in allowed_activities:
+        #         continue
+        #     filtered_log = attributes_filter.apply_events(
+        #         log, allowed_activities[persp])
+        # else:
+        #     filtered_log = log
         bb = time.time()
 
         diff_log += (bb - aa)
@@ -127,7 +115,7 @@ def discover_nets(df, discovery_algorithm=discover_inductive, parameters=None):
             print(persp, "got log")
 
         cc = time.time()
-        net, im, fm = discovery_algorithm(filtered_log)
+        net, im, fm = discovery_algorithm(log)
         dd = time.time()
         diff_log += (dd - cc)
 
