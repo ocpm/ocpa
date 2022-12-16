@@ -14,6 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with PM4Py.  If not, see <https://www.gnu.org/licenses/>.
 '''
+import pkgutil
 from pm4py.statistics.variants.log import get as variants_module
 from pm4py.util import xes_constants as xes_util
 from ocpa.util import constants as ocpa_constants
@@ -32,7 +33,10 @@ from pm4py.objects.log.obj import EventLog, EventStream
 import pandas as pd
 from pm4py.objects.petri_net.obj import PetriNet, Marking
 from pm4py.util import typing
-from pm4py.visualization.petrinet.util import performance_map
+if pkgutil.find_loader("graphviz"):
+    from pm4py.visualization.petri_net.util import performance_map
+else:
+    print("GraphViz not installed. Might lead to visualization problems.")
 
 
 class Parameters(Enum):

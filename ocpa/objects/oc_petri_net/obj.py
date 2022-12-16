@@ -114,8 +114,14 @@ class ObjectCentricPetriNet(object):
         def __get_out_arcs(self):
             return self.__out_arcs
 
+        def __set_out_arcs(self, out_arcs):
+            self.__out_arcs = out_arcs
+
         def __get_in_arcs(self):
             return self.__in_arcs
+
+        def __set_in_arcs(self, in_arcs):
+            self.__in_arcs = in_arcs
 
         def __set_properties(self, properties):
             self.__properties = properties
@@ -175,8 +181,8 @@ class ObjectCentricPetriNet(object):
 
         name = property(__get_name, __set_name)
         label = property(__get_label, __set_label)
-        in_arcs = property(__get_in_arcs)
-        out_arcs = property(__get_out_arcs)
+        in_arcs = property(__get_in_arcs, __set_in_arcs)
+        out_arcs = property(__get_out_arcs, __set_out_arcs)
         properties = property(__get_properties, __set_properties)
         silent = property(__get_silent, __set_silent)
 

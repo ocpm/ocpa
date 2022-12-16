@@ -5,8 +5,8 @@ from pm4py.statistics.start_activities.log import get as sa_get
 from pm4py.statistics.end_activities.log import get as ea_get
 from pm4py.objects.conversion.dfg import converter as dfg_converter
 # from pm4py.algo.filtering.log.attributes import attributes_filter
-from pm4py.objects.petri.utils import add_arc_from_to
-from pm4py.objects.petri.utils import remove_place, remove_transition
+from pm4py.objects.petri_net.utils.petri_utils import add_arc_from_to
+from pm4py.objects.petri_net.utils.petri_utils import remove_place, remove_transition
 from ocpa.algo.util.util import project_log, project_log_with_object_count
 from ocpa.objects.oc_petri_net.obj import ObjectCentricPetriNet
 from ocpa.objects.log.importer.csv.util import succint_mdl_to_exploded_mdl, clean_frequency, clean_arc_frequency
