@@ -12,7 +12,7 @@ def apply(ocel, variant=INDUCTIVE, parameters=None):
     if type(ocel) == OCEL:
         return VERSIONS[variant](ocel.log.log, parameters=parameters)
     if type(ocel) == ObjectCentricEventLog:
-        df, _ = convert_factory.apply(ocel, variant='json_to_mdl')
+        df, _ = convert_factory.apply(ocel, variant='json_to_csv')
         return VERSIONS[variant](df, parameters=parameters)
     else:
         return VERSIONS[variant](ocel, parameters=parameters)

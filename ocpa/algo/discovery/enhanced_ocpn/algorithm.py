@@ -5,7 +5,6 @@ import ocpa.algo.util.retrieval.correlated_event_graph.algorithm as correlated_e
 
 
 def apply(ocpn, ocel, parameters=None) -> EnhancedObjectCentricPetriNet:
-    # df, _ = convert_factory.apply(ocel, variant='json_to_mdl')
     diag = performance_factory.apply(ocpn, ocel, parameters=parameters)
     eog = event_graph_factory.apply(ocel, parameters=None)
     cegs = correlated_event_graph_factory.apply(eog)

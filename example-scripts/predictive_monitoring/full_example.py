@@ -11,16 +11,17 @@ activities = list(set(ocel.log.log["event_activity"].tolist()))
 feature_set = [(predictive_monitoring.EVENT_REMAINING_TIME, ()),
                (predictive_monitoring.EVENT_PREVIOUS_TYPE_COUNT, ("GDSRCPT",)),
                (predictive_monitoring.EVENT_ELAPSED_TIME, ())] + \
-              [(predictive_monitoring.EVENT_PRECEDING_ACTIVITES, (act,)) for act in activities]
+    [(predictive_monitoring.EVENT_PRECEDING_ACTIVITES, (act,))
+     for act in activities]
 feature_storage = predictive_monitoring.apply(ocel, feature_set, [])
-feature_storage.extract_normalized_train_test_split(0.3, state = 3395)
+feature_storage.extract_normalized_train_test_split(0.3, state=3395)
 train_table = tabular.construct_table(
-        feature_storage, index_list=feature_storage.training_indices)
+    feature_storage, index_list=feature_storage.training_indices)
 test_table = tabular.construct_table(
-        feature_storage, index_list=feature_storage.test_indices)
+    feature_storage, index_list=feature_storage.test_indices)
 y_train, y_test = train_table[feature_set[0]], test_table[feature_set[0]]
 x_train, x_test = train_table.drop(
-        feature_set[0], axis=1), test_table.drop(feature_set[0], axis=1)
+    feature_set[0], axis=1), test_table.drop(feature_set[0], axis=1)
 model = LinearRegression()
 model.fit(x_train, y_train)
 y_pred = model.predict(x_test)

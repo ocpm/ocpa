@@ -1,17 +1,20 @@
 # from ocpa.objects.oc_petri_net.obj import EnhancedObjectCentricPetriNet
 from ocpa.algo.conformance.constraint_monitoring.versions import log_based
-from ocpa.objects.graph.constraint_graph.obj import ConstraintGraph
+from ocpa.algo.conformance.constraint_monitoring.versions import extensive_log_based
 from ocpa.objects.log.ocel import OCEL
 from typing import Dict
 
 
 # MODEL_BASED = "model_based"
 LOG_BASED = "log_based"
+EXTENSIVE = "extensive_log_based"
+VERSIONS = {
+    LOG_BASED: log_based.apply,
+    EXTENSIVE: extensive_log_based.apply
+}
 
-VERSIONS = {LOG_BASED: log_based.apply}
 
-
-def apply(cg: ConstraintGraph, ocel: OCEL, diag: Dict, variant=LOG_BASED, parameters=None):
+def apply(cg, ocel: OCEL, variant=EXTENSIVE, parameters=None):
     '''
     Monitoring the violation of constraints by analyzing object-centric event logs. The constraints are represented as object-centric constraint graphs. For each violation of the constraint, it provides the analysis of the violation.
 
@@ -28,4 +31,4 @@ def apply(cg: ConstraintGraph, ocel: OCEL, diag: Dict, variant=LOG_BASED, parame
     :rtype: Boolean, List
 
     '''
-    return VERSIONS[variant](cg, ocel, diag, parameters=parameters)
+    return VERSIONS[variant](cg, ocel, parameters=parameters)
