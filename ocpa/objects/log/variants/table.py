@@ -1,3 +1,4 @@
+from numbers import Number
 import time
 from dataclasses import dataclass, field
 import networkx as nx
@@ -9,7 +10,7 @@ from typing import Dict
 
 @dataclass
 class Table:
-    def __init__(self, log, parameters, object_attributes=None):
+    def __init__(self, log: pd.DataFrame, parameters: Dict, object_attributes=None):
         self._log = log
         self._log["event_id"] = self._log["event_id"].astype(int)
         self._log["event_index"] = self._log["event_id"]
@@ -22,13 +23,13 @@ class Table:
         self.create_efficiency_objects()
         #self._log = self._log[self._log.apply(lambda x: any([len(x[ot]) > 0 for ot in self._object_types]))]
 
-    def _get_log(self):
+    def _get_log(self) -> pd.DataFrame:
         return self._log
 
     def _get_object_types(self):
         return self._object_types
 
-    log = property(_get_log)
+    log: pd.DataFrame = property(_get_log)
     object_types = property(_get_object_types)
 
     def create_efficiency_objects(self):
@@ -53,7 +54,7 @@ class Table:
 
     # Not guaranteed to keep everything consistent, only as quick helpers
 
-    def get_objects_of_variants(self, variants):
+    def get_objects_of_variants(self, variants) -> Dict:
         obs = {}
         for ot in self.object_types:
             obs[ot] = set()
@@ -75,7 +76,7 @@ class Table:
         self._log = self._log[self._log[self._object_types].astype(
             bool).any(axis=1)]
 
-    def sample_cases(self, percent):
+    def sample_cases(self, percent:Number):
         index_array = random.sample(
             list(range(0, len(self.cases))), int(len(self.cases)*percent))
         self._cases = [self.cases[i] for i in index_array]
