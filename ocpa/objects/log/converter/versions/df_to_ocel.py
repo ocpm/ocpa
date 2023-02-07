@@ -4,7 +4,7 @@ from pandas import to_datetime
 from ocpa.objects.log.variants.obj import Event, Obj, ObjectCentricEventLog, MetaObjectCentricData, RawObjectCentricData
 
 
-def apply(df: pd.DataFrame) -> ObjectCentricEventLog:
+def apply(df: pd.DataFrame, parameters: Dict=None) -> ObjectCentricEventLog:
     events = {}
     objects = {}
     acts = set()
