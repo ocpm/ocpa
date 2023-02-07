@@ -3,7 +3,7 @@ from ast import literal_eval
 import math
 
 
-def apply(filepath, parameters=None):
+def apply(filepath, parameters=None, file_path_object_attribute_table=None):
     if parameters is None:
         raise ValueError("Specify parsing parameters")
     df = pd.read_csv(filepath, parameters["sep"])
