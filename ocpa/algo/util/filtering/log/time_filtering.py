@@ -1,6 +1,7 @@
 from ocpa.algo.util.filtering.log import case_filtering
 from ocpa.objects.log.util import misc as log_util
 
+
 def start(start, end, exec_start, exec_end):
     '''
     Indicates whether a process execution belongs to a window given window start and end, and process execution start
@@ -119,11 +120,11 @@ def extract_sublog(ocel, start, end, strategy):
 
     '''
 
-
     if strategy == events:
         return events(ocel, start, end)
     cases = []
-    mapping_time = dict(zip(ocel.log["event_id"], ocel.log["event_timestamp"]))
+    mapping_time = dict(
+        zip(ocel.log.log["event_id"], ocel.log.log["event_timestamp"]))
     #id_index = list(ocel.log.columns.values).index("event_id")
     #id_time = list(ocel.log.columns.values).index("event_timestamp")
     #arr = ocel.log.to_numpy()
@@ -162,5 +163,5 @@ def events(ocel, start, end):
         if (start <= line[id_time]) & (line[id_time] <= end):
             events.append(line[id_index])
     new_event_df = ocel.log.log[ocel.log.log['event_id'].isin(events)]
-    new_ocel = log_util.copy_log_from_df(new_event_df,ocel.parameters)
+    new_ocel = log_util.copy_log_from_df(new_event_df, ocel.parameters)
     return new_ocel

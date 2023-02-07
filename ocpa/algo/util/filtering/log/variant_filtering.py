@@ -36,6 +36,5 @@ def filter_infrequent_variants(ocel, threshold):
     sublog = sublog.drop("event_variant", axis=1)
     sublog = log_util.remove_object_references(
         sublog, ocel.object_types, rel_obs)
-
     new_log = log_util.copy_log_from_df(sublog, ocel.parameters)
     return new_log

@@ -11,21 +11,21 @@ from ocpa.objects.log.variants.obj import Event, Obj, ObjectCentricEventLog, Met
 def add_event(events: Dict[str, Event], index, row, cfg) -> None:
     events[str(index)] = Event(
         id=str(index),
-        act=row[cfg["act_name"]],
-        time=to_datetime(row[cfg["time_name"]]),
+        act=getattr(row, cfg["act_name"]),
+        time=to_datetime(getattr(row, cfg["time_name"])),
         omap=list(itertools.chain.from_iterable(
-            [row[obj]
-             for obj in cfg["obj_names"] if (row[obj] != '{}' and row[obj] != [] and row[obj] != '[]' and row[obj] != '' and str(row[obj]).lower() != "nan")]
+            [getattr(row, obj)
+             for obj in cfg["obj_names"] if (getattr(row, obj) != '{}' and getattr(row, obj) != [] and getattr(row, obj) != '[]' and getattr(row, obj) != '' and str(getattr(row, obj)).lower() != "nan")]
         )),
         vmap={attr: row[attr] for attr in cfg["val_names"]})
 
     # add start time if exists, otherwise None for performance analysis
     if "start_timestamp" in cfg:
         events[str(index)].vmap["start_timestamp"] = to_datetime(
-            row[cfg["start_timestamp"]])
+            getattr(row, cfg["start_timestamp"]))
     else:
         events[str(index)].vmap["start_timestamp"] = to_datetime(
-            row[cfg["time_name"]])
+            getattr(row, cfg["time_name"]))
 
 
 def safe_split(row_obj):
@@ -38,13 +38,17 @@ def safe_split(row_obj):
         return []  # f'NA-{next(counter)}'
 
 
-def add_obj(objects: Dict[str, Obj], objs: List[str]) -> None:
+def add_obj(objects: Dict[str, Obj], index, objs: List[str], obj_event_mapping: Dict[str, List[str]]) -> None:
     for obj_id_typ in objs:
         obj_id_typ = obj_id_typ.split('/')  # Unpack
         obj_id = obj_id_typ[0]  # First entry is the id
         obj_typ = obj_id_typ[1]  # second entry is the object type
         if obj_id not in objects:
             objects[obj_id] = Obj(id=obj_id, type=obj_typ, ovmap={})
+        if obj_id in obj_event_mapping:
+            obj_event_mapping[obj_id].append(str(index))
+        else:
+            obj_event_mapping[obj_id] = [str(index)]
 
 
 def apply(df: pd.DataFrame, parameters: Dict) -> ObjectCentricEventLog:
@@ -53,16 +57,17 @@ def apply(df: pd.DataFrame, parameters: Dict) -> ObjectCentricEventLog:
     events = {}
     objects = {}
     acts = set()
-    for index, row in df.iterrows():
+    obj_event_mapping = {}
+    for index, row in enumerate(df.itertuples(), 1):
         add_event(events, index, row, parameters)
-        add_obj(objects,
+        add_obj(objects, index,
                 # Only nonempty sets of objects ids per object type
                 list(itertools.chain.from_iterable(
-                    [[obj_id + '/' + str(obj) for i, obj_id in enumerate(row[obj])]
-                     for obj in parameters["obj_names"] if row[obj] != '{}' and row[obj] != [] and row[obj] != '[]' and row[obj] != '' and str(row[obj]).lower() != "nan"]
-                ))
+                    [[obj_id + '/' + str(obj) for i, obj_id in enumerate(getattr(row, obj))]
+                     for obj in parameters["obj_names"] if getattr(row, obj) != '{}' and getattr(row, obj) != [] and getattr(row, obj) != '[]' and getattr(row, obj) != '' and str(getattr(row, obj)).lower() != "nan"]
+                )), obj_event_mapping
                 )
-        acts.add(row[parameters["act_name"]])
+        acts.add(getattr(row, parameters["act_name"]))
 
     events = OrderedDict(sorted(events.items(), key=lambda kv: kv[1].time))
 
@@ -79,7 +84,8 @@ def apply(df: pd.DataFrame, parameters: Dict) -> ObjectCentricEventLog:
     )
     raw = RawObjectCentricData(
         events=events,
-        objects=objects
+        objects=objects,
+        obj_event_mapping=obj_event_mapping
     )
     return ObjectCentricEventLog(meta, raw)
 

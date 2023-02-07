@@ -2,6 +2,7 @@ from typing import Dict, List, Any
 import pandas as pd
 from pandas import to_datetime
 from ocpa.objects.log.variants.obj import Event, Obj, ObjectCentricEventLog, MetaObjectCentricData, RawObjectCentricData
+import time
 
 
 def apply(df: pd.DataFrame, parameters: Dict=None) -> ObjectCentricEventLog:
@@ -11,11 +12,14 @@ def apply(df: pd.DataFrame, parameters: Dict=None) -> ObjectCentricEventLog:
     obj_names = set([x for x in df.columns if not x.startswith("event_")])
     val_names = set([x for x in df.columns if x.startswith(
         "event_")]) - set(['event_activity', 'event_timestamp', 'event_start_timestamp'])
-    for index, row in df.iterrows():
+    obj_event_mapping = {}
+    start = time.time()
+    for index, row in enumerate(df.itertuples(), 1):
         add_event(events, index, row, obj_names, val_names)
-        add_obj(objects, [(o, obj) for obj in obj_names for o in row[obj]])
-        acts.add(row['event_activity'])
-
+        add_obj(objects, index, [(o, obj)
+                for obj in obj_names for o in getattr(row, obj)], obj_event_mapping)
+        acts.add(getattr(row, 'event_activity'))
+    end = time.time()
     attr_typ = {attr: name_type(str(df.dtypes[attr]))
                 for attr in val_names}
     attr_types = list(set(typ for typ in attr_typ.values()))
@@ -29,25 +33,29 @@ def apply(df: pd.DataFrame, parameters: Dict=None) -> ObjectCentricEventLog:
     )
     raw = RawObjectCentricData(
         events=events,
-        objects=objects
+        objects=objects,
+        obj_event_mapping=obj_event_mapping
     )
     return ObjectCentricEventLog(meta, raw)
 
 
 def add_event(events: Dict[str, Event], index, row, obj_names, val_names) -> None:
+    start = time.time()
     events[str(index)] = Event(
         id=str(index),
-        act=row['event_activity'],
-        time=to_datetime(row['event_timestamp']),
-        omap=[o for obj in obj_names for o in row[obj]],
-        vmap={attr: row[attr] for attr in val_names})
+        act=getattr(row, 'event_activity'),
+        time=to_datetime(getattr(row, 'event_timestamp')),
+        omap=[o for obj in obj_names for o in getattr(row, obj)],
+        vmap={attr: getattr(row, attr) for attr in val_names})
     # add start time if exists, otherwise None for performance analysis
     if "event_start_timestamp" in val_names:
         events[str(index)].vmap["start_timestamp"] = to_datetime(
-            row['event_start_timestamp'])
+            getattr(row, 'event_start_timestamp'))
     else:
         events[str(index)].vmap["start_timestamp"] = to_datetime(
-            row['event_timestamp'])
+            getattr(row, 'event_timestamp'))
+    end = time.time()
+    # print(f'Add event: f{end - start}')
 
 
 def safe_split(row_obj):
@@ -61,12 +69,19 @@ def safe_split(row_obj):
         return []  # f'NA-{next(counter)}'
 
 
-def add_obj(objects: Dict[str, Obj], objs: List[str]) -> None:
+def add_obj(objects: Dict[str, Obj], index, objs: List[str], obj_event_mapping: Dict[str, List[str]]) -> None:
+    start = time.time()
     for obj_id_typ in objs:
         obj_id = obj_id_typ[0]  # First entry is the id
         obj_typ = obj_id_typ[1]  # second entry is the object type
         if obj_id not in objects:
             objects[obj_id] = Obj(id=obj_id, type=obj_typ, ovmap={})
+        if obj_id in obj_event_mapping:
+            obj_event_mapping[obj_id].append(str(index))
+        else:
+            obj_event_mapping[obj_id] = [str(index)]
+    end = time.time()
+    # print(f'Add object: f{end - start}')
 
 
 def name_type(typ: str) -> str:
