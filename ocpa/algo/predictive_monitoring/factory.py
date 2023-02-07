@@ -76,7 +76,7 @@ VERSIONS = {
                   EVENT_POOLING_TIME: event_features.pooling_time,
                   EVENT_WAITING_TIME: event_features.waiting_time,
                   EVENT_SOJOURN_TIME: event_features.sojourn_time,
-                  EVENT_SYNCHRONIZATION_TIME: event_features.sojourn_time,
+                  EVENT_SYNCHRONIZATION_TIME: event_features.synchronization_time,
                   EVENT_FLOW_TIME: event_features.flow_time
 
 
