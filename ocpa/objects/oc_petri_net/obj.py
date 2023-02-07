@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from typing import List, Dict, Set, Tuple, Any
+from copy import deepcopy
 
 
 class ObjectCentricPetriNet(object):
@@ -73,7 +74,7 @@ class ObjectCentricPetriNet(object):
             if id(self) in memodict:
                 return memodict[id(self)]
             new_place = ObjectCentricPetriNet.Place(
-                self.name, properties=self.properties)
+                self.name, self.object_type)
             memodict[id(self)] = new_place
             for arc in self.in_arcs:
                 new_arc = deepcopy(arc, memo=memodict)
@@ -461,6 +462,50 @@ class ObjectCentricPetriNet(object):
             if transition.name == name:
                 return transition
         return None
+
+    def find_place(self, name):
+        '''
+        finds a transition by name of the transition.
+        Parameters
+        ----------
+        name: string
+
+        Returns
+        -------
+        None
+        '''
+        for place in self.__places:
+            if place.name == name:
+                return place
+        return None
+
+    def backward_pass(self, t):
+        if len(t.preset) == 0:
+            return set()
+        else:
+            T = []
+            for p in t.preset:
+                for t2 in p.preset:
+                    T.append(t2)
+            for p in t.preset:
+                for t2 in p.preset:
+                    for t3 in self.backward_pass(t2):
+                        T.append(t3)
+            return set(T)
+
+    def forward_pass(self, t):
+        if len(t.postset) == 0:
+            return set()
+        else:
+            T = []
+            for p in t.postset:
+                for t2 in p.postset:
+                    T.append(t2)
+            for p in t.postset:
+                for t2 in p.postset:
+                    for t3 in self.forward_pass(t2):
+                        T.append(t3)
+            return set(T)
 
 
 @dataclass

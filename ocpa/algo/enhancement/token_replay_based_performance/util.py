@@ -1289,6 +1289,7 @@ def apply_traces(log, net, initial_marking, final_marking, enable_pltr_fitness=F
                 threads_results = {}
 
                 for idx, trace in enumerate(log):
+
                     threads[idx] = ApplyTraceTokenReplay(trace, net, initial_marking, final_marking,
                                                          trans_map, enable_pltr_fitness, place_fitness_per_trace,
                                                          transition_fitness_per_trace,
@@ -1310,13 +1311,15 @@ def apply_traces(log, net, initial_marking, final_marking, enable_pltr_fitness=F
                     if progress is not None:
                         progress.update()
                     t = threads[idx]
-                    threads_results[idx] = {"trace_is_fit": copy(t.t_fit),
-                                            "activated_transitions": copy(t.act_trans),
-                                            "reached_marking": copy(t.reached_marking),
-                                            "enabled_transitions_in_marking": copy(
-                        t.enabled_trans_in_mark),
+                    threads_results[idx] = {
+                        "trace_id": trace._attributes[xes_util.DEFAULT_TRACEID_KEY],
+                        "trace_is_fit": copy(t.t_fit),
+                        "activated_transitions": copy(t.act_trans),
+                        "reached_marking": (copy(t.reached_marking)),
+                        "enabled_transitions_in_marking": copy(
+                            t.enabled_trans_in_mark),
                         "transitions_with_problems": copy(
-                        t.trans_probl),
+                            t.trans_probl),
                         "token_visits": copy(t.tvs),
                         "event_occurrences": copy(t.ocs)}
 
