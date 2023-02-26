@@ -12,10 +12,11 @@ class Feature_Storage:
 
     class Feature_Graph:
         class Node:
-            def __init__(self, event_id, objects):
+            def __init__(self, event_id, objects,pexec_id):
                 self._event = event_id
                 self._attributes = {}
                 self._objects = objects
+                self._pexec_id = pexec_id
 
             def add_attribute(self, key, value):
                 self._attributes[key] = value
@@ -28,9 +29,14 @@ class Feature_Storage:
 
             def _get_event_id(self):
                 return self._event
+
+            def _get_pexec_id(self):
+                return self._pexec_id
+
             event_id = property(_get_event_id)
             attributes = property(_get_attributes)
             objects = property(_get_objects)
+            pexec_id = property(_get_pexec_id)
 
         class Edge:
             def __init__(self, source, target, objects):
@@ -61,7 +67,7 @@ class Feature_Storage:
 
         def __init__(self, case_id, graph, ocel):
             self._case_id = case_id
-            self._nodes = [Feature_Storage.Feature_Graph.Node(e_id, ocel.get_value(e_id, "event_objects")) for e_id in
+            self._nodes = [Feature_Storage.Feature_Graph.Node(e_id, ocel.get_value(e_id, "event_objects"),case_id) for e_id in
                            graph.nodes]
             #self._nodes = [Feature_Storage.Feature_Graph.Node(e_id, ocel.log.loc[e_id]["event_objects"]) for e_id in graph.nodes]
             self._node_mapping = {node.event_id: node for node in self._nodes}
