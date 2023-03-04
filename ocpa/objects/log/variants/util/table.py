@@ -1,14 +1,16 @@
 from ocpa.objects.log.variants.table import Table
 import networkx as nx
 
-def eog_from_log(table_log: Table):
-    ocel = table_log.log.copy
-    EOG = nx.DiGraph()
-    EOG.add_nodes_from(ocel["event_id"].to_list())
+
+def eog_from_log(table_log: Table) -> nx.DiGraph:
+    ocel = table_log.log.copy()
+    eog = nx.DiGraph()
+    eog.add_nodes_from(ocel["event_id"].to_list())
     edge_list = []
 
-    ot_index = {ot: list(ocel.columns.values).index(ot)
-                for ot in table_log.object_types}
+    ot_index = {
+        ot: list(ocel.columns.values).index(ot) for ot in table_log.object_types
+    }
     event_index = list(ocel.columns.values).index("event_id")
     arr = ocel.to_numpy()
     last_ev = {}
@@ -20,5 +22,5 @@ def eog_from_log(table_log: Table):
                     edge_target = arr[i][event_index]
                     edge_list += [(edge_source, edge_target)]
                 last_ev[(ot, o)] = i
-    EOG.add_edges_from(edge_list)
-    return EOG
+    eog.add_edges_from(edge_list)
+    return eog
