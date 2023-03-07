@@ -1,5 +1,4 @@
 import time
-from typing import Callable
 
 from ocpa.objects.log.ocel import OCEL
 import ocpa.algo.predictive_monitoring.event_based_features.extraction_functions as event_features
@@ -99,8 +98,8 @@ VERSIONS = {
 
 def apply(
     ocel: OCEL,
-    event_based_features: list[tuple[Callable, tuple]] =[],
-    execution_based_features: list[tuple[Callable, tuple]] =[],
+    event_based_features=[],
+    execution_based_features=[],
     event_attributes=[],
     event_object_attributes=[],
     execution_object_attributes=[],
