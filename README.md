@@ -31,7 +31,7 @@ doi = {https://doi.org/10.1016/j.simpa.2022.100438},
 url = {https://www.sciencedirect.com/science/article/pii/S2665963822001221},
 author = {Jan Niklas Adams and Gyunam Park and Wil M.P. {van der Aalst}},
 keywords = {Process mining, Object-centric process mining, Object-centric petri net, Predictive process monitoring, Conformance checking, Performance analysis},
-abstract = {ocpa is a Python library supporting object-centric process mining. Traditional process mining generate insights for one single process. However, many real-life processes are composed of multiple interacting subprocesses and events may involve multiple objects. Object-centric process mining provides techniques for analyzing multiple interacting processes by generalizing process mining techniques. ocpa contains algorithms for object-centric event log management, process discovery, conformance checking, enhancement, and predictive process monitoring. ocpa is easily integrable with existing solutions as it supports existing object-centric event log standards, provides extensive documentation, and is installable through the Python package installer.}
+abstract = {ocpa is a Python library supporting object-centric process mining. Traditional process mining generates insights for one single process. However, many real-life processes are composed of multiple interacting subprocesses and events may involve multiple objects. Object-centric process mining provides techniques for analyzing multiple interacting processes by generalizing process mining techniques. ocpa contains algorithms for object-centric event log management, process discovery, conformance checking, enhancement, and predictive process monitoring. ocpa is easily integrable with existing solutions as it supports existing object-centric event log standards, provides extensive documentation, and is installable through the Python package installer.}
 }
 ```
 
@@ -39,28 +39,28 @@ abstract = {ocpa is a Python library supporting object-centric process mining. T
 
 **OCPA (Object-Centric Process Analysis)** is a Python library to enable
 object-centric process mining. It covers the following functionalities:
-* Object-centric event log management 
+* Object-centric event log management
   * Import  
-    * From CSV 
-    * From JSONOCEL & JSONXML 
-  * Export 
-    - To JSONOCEL 
-  - Process execution extraction (object-centric cases) 
-- Object-centric process discovery 
-  - Object-centric Petri nets 
-  - Object-centric Variant calculation 
-  - Control-flow visualization 
-    - Object-centric Petri net 
-    - Object-centric variants 
-- Object-centric conformance checking 
-  - Fitness & Precision 
-  - Constraint monitoring 
-- Object-centric process enhancement 
-  - Performance analysis 
-  - Model Analysis 
+	* From CSV
+	* From JSONOCEL & JSONXML
+  * Export
+	- To JSONOCEL
+  - Process execution extraction (object-centric cases)
+- Object-centric process discovery
+  - Object-centric Petri nets
+  - Object-centric Variant calculation
+  - Control-flow visualization
+	- Object-centric Petri net
+	- Object-centric variants
+- Object-centric conformance checking
+  - Fitness & Precision
+  - Constraint monitoring
+- Object-centric process enhancement
+  - Performance analysis
+  - Model Analysis
 - Object-centric predictive process monitoring
-  - Feature extraction 
-  - Feature encoding 
+  - Feature extraction
+  - Feature encoding
   - Preprocessing
 
 Installation
@@ -97,10 +97,10 @@ from ocpa.objects.log.importer.csv import factory as ocel_import_factory
 filename = "sample_logs/csv/BPI2017-Final.csv"
 object_types = ["application", "offer"]
 parameters = {"obj_names":object_types,
-              "val_names":[],
-              "act_name":"event_activity",
-              "time_name":"event_timestamp",
-              "sep":","}
+          	"val_names":[],
+          	"act_name":"event_activity",
+          	"time_name":"event_timestamp",
+          	"sep":","}
 ocel = ocel_import_factory.apply(file_path= filename,parameters = parameters)
 ```
 
@@ -120,7 +120,7 @@ from ocpa.objects.log.exporter.ocel import factory as ocel_export_factory
 filename = "sample_logs/jsonocel/p2p-normal.jsonocel"
 ocel = ocel_import_factory.apply(filename)
 ocel_export_factory.apply(
-    ocel, './exported-p2p-normal_export.jsonocel')
+	ocel, './exported-p2p-normal_export.jsonocel')
 ```
 
 **Process Execution Extraction & Management** The technique passed
@@ -147,9 +147,9 @@ print("Process execution of the first event with event id 0: "+str(ocel.process_
 from ocpa.objects.log.importer.ocel import factory as ocel_import_factory
 filename = "sample_logs/jsonocel/p2p-normal.jsonocel"
 parameters = {"execution_extraction": "leading_type",
-              "leading_type": "GDSRCPT",
-              "variant_calculation": "two_phase",
-              "exact_variant_calculation":True}
+          	"leading_type": "GDSRCPT",
+          	"variant_calculation": "two_phase",
+          	"exact_variant_calculation":True}
 ocel = ocel_import_factory.apply(filename)
 print(len(ocel.variants))
 ```
@@ -190,7 +190,7 @@ refining these (TWO_PHASE), and through one-to-one isomorphism checking
 the approximation of variants through only the lexicographical
 presentation. This is the default procedure, but can be switched off by
 passing the right parameter (see example below). The variant layouting
-just returns a positioning of chevrons as coordinates. The visualizaiton
+just returns a positioning of chevrons as coordinates. The visualization
 has to be done using another tool (www.ocpi.ai implements this
 end-to-end)
 
@@ -248,7 +248,7 @@ filename = "<path-to-your-log>"
 ocel = ocel_import_factory.apply(filename)
 ocpn = ocpn_discovery_factory.apply(ocel)
 diag_params = {'measures': ['act_freq', 'arc_freq', 'object_count', 'waiting_time', 'service_time', 'sojourn_time', 'synchronization_time', 'pooling_time', 'lagging_time', 'flow_time'], 'agg': [
-    'mean', 'min', 'max']}
+	'mean', 'min', 'max']}
 diag = performance_factory.apply(ocpn, ocel, parameters=diag_params)
 
 # Example1: VM and PGI should not be concurrently executed.
@@ -259,9 +259,9 @@ cg1.add_nodes([act_vm, act_pgi])
 cf1 = ControlFlowEdge(act_vm, act_pgi, 'concur', 'MATERIAL', 0.1)
 cg1.add_cf_edge(cf1)
 violated, diagnostics = constraint_monitoring_factory.apply(
-    cg1, ocel, diag, parameters=None)
+	cg1, ocel, diag, parameters=None)
 if violated:
-    print(diagnostics)
+	print(diagnostics)
 
 # Example2: CPR should alway be followed by CPO.
 cg2 = ConstraintGraph('Example2')
@@ -271,9 +271,9 @@ cg2.add_nodes([act_cpr, act_cpo])
 cf2 = ControlFlowEdge(act_cpr, act_cpo, 'causal', 'PURCHREQ', 0.99)
 cg2.add_cf_edge(cf2)
 violated, diagnostics = constraint_monitoring_factory.apply(
-    cg2, ocel, diag, parameters=None)
+	cg2, ocel, diag, parameters=None)
 if violated:
-    print(diagnostics)
+	print(diagnostics)
 
 # Example3: CPR should not be skipped
 cg3 = ConstraintGraph('Example3')
@@ -282,9 +282,9 @@ cg3.add_nodes([act_cpr])
 cf3 = ControlFlowEdge(act_cpr, act_cpr, 'skip', 'PURCHREQ', 0)
 cg3.add_cf_edge(cf3)
 violated, diagnostics = constraint_monitoring_factory.apply(
-    cg3, ocel, diag, parameters=None)
+	cg3, ocel, diag, parameters=None)
 if violated:
-    print(diagnostics)
+	print(diagnostics)
 
 # Example4: PGI should always involve PURCHORD
 cg4 = ConstraintGraph('Example4')
@@ -294,9 +294,9 @@ cg4.add_nodes([act_pgi, obj_node1])
 or1 = ObjectRelationEdge(obj_node1, act_pgi, 'absent', 0)
 cg4.add_obj_edge(or1)
 violated, diagnostics = constraint_monitoring_factory.apply(
-    cg4, ocel, diag, parameters=None)
+	cg4, ocel, diag, parameters=None)
 if violated:
-    print(diagnostics)
+	print(diagnostics)
 
 # Example5: PGI should not involve MATERIAL
 cg5 = ConstraintGraph('Example5')
@@ -306,9 +306,9 @@ cg5.add_nodes([act_cpr])
 or2 = ObjectRelationEdge(obj_node2, act_pgi, 'present', 0)
 cg5.add_obj_edge(or2)
 violated, diagnostics = constraint_monitoring_factory.apply(
-    cg5, ocel, diag, parameters=None)
+	cg5, ocel, diag, parameters=None)
 if violated:
-    print(diagnostics)
+	print(diagnostics)
 
 # Example6: CPO should involve only one PURCHORD
 cg6 = ConstraintGraph('Example6')
@@ -318,9 +318,9 @@ cg6.add_nodes([obj_node1, act_cpo])
 or3 = ObjectRelationEdge(obj_node1, act_cpo, 'singular', 0.99)
 cg6.add_obj_edge(or3)
 violated, diagnostics = constraint_monitoring_factory.apply(
-    cg6, ocel, diag, parameters=None)
+	cg6, ocel, diag, parameters=None)
 if violated:
-    print(diagnostics)
+	print(diagnostics)
 
 # Example7: CPO should mostly involve multiple PURCHORD
 cg7 = ConstraintGraph('Example7')
@@ -330,9 +330,9 @@ cg7.add_nodes([act_cpo, obj_node2])
 or4 = ObjectRelationEdge(obj_node2, act_cpo, 'multiple', 0.7)
 cg7.add_obj_edge(or4)
 violated, diagnostics = constraint_monitoring_factory.apply(
-    cg7, ocel, diag, parameters=None)
+	cg7, ocel, diag, parameters=None)
 if violated:
-    print(diagnostics)
+	print(diagnostics)
 ```
 
 Object-Centric Process Enhancement
@@ -353,11 +353,11 @@ filename = "./sample_logs/jsonocel/p2p-normal.jsonocel"
 ocel = ocel_import_factory.apply(filename)
 ocpn = ocpn_discovery_factory.apply(ocel)
 diag_params = {'measures': ['act_freq', 'arc_freq', 'object_count', 'waiting_time', 'service_time', 'sojourn_time', 'synchronization_time', 'pooling_time', 'lagging_time', 'flow_time'], 'agg': [
-    'mean', 'min', 'max'], 'format': 'svg'}
+	'mean', 'min', 'max'], 'format': 'svg'}
 diag = performance_factory.apply(ocpn, ocel, parameters=diag_params)
 print(f'Diagnostics: {diag}')
 gviz = ocpn_vis_factory.apply(
-    ocpn, diagnostics=diag, variant="annotated_with_opera", parameters=diag_params)
+	ocpn, diagnostics=diag, variant="annotated_with_opera", parameters=diag_params)
 ocpn_vis_factory.view(gviz)
 ```
 
@@ -381,9 +381,9 @@ filename = "sample_logs/jsonocel/p2p-normal.jsonocel"
 ocel = ocel_import_factory.apply(filename)
 activities = list(set(ocel.log.log["event_activity"].tolist()))
 feature_set = [(predictive_monitoring.EVENT_REMAINING_TIME, ()),
-               (predictive_monitoring.EVENT_PREVIOUS_TYPE_COUNT, ("GDSRCPT",)),
-               (predictive_monitoring.EVENT_ELAPSED_TIME, ())] + \
-              [(predictive_monitoring.EVENT_PRECEDING_ACTIVITES, (act,)) for act in activities]
+           	(predictive_monitoring.EVENT_PREVIOUS_TYPE_COUNT, ("GDSRCPT",)),
+           	(predictive_monitoring.EVENT_ELAPSED_TIME, ())] + \
+          	[(predictive_monitoring.EVENT_PRECEDING_ACTIVITES, (act,)) for act in activities]
 feature_storage = predictive_monitoring.apply(ocel, feature_set, [])
 ```
 
@@ -393,7 +393,7 @@ feature graph represents one process execution. Each node represents an
 event. The feature values extracted for events are stored as a
 dictionary. The feature values for a process execution are, also, stored
 as a dictionary associated with the feature graph. Feature functions are
-predefined (can of course be extended). A funciton is identified with
+predefined (can of course be extended). A function is identified with
 the corresponding string. Parameters are passed as a tuple.
 
 **Feature Encoding** The feature storage has an underlying graph
@@ -408,9 +408,9 @@ filename = "sample_logs/jsonocel/p2p-normal.jsonocel"
 ocel = ocel_import_factory.apply(filename)
 activities = list(set(ocel.log.log["event_activity"].tolist()))
 feature_set = [(predictive_monitoring.EVENT_REMAINING_TIME, ()),
-               (predictive_monitoring.EVENT_PREVIOUS_TYPE_COUNT, ("GDSRCPT",)),
-               (predictive_monitoring.EVENT_ELAPSED_TIME, ())] + \
-              [(predictive_monitoring.EVENT_PRECEDING_ACTIVITES, (act,)) for act in activities]
+           	(predictive_monitoring.EVENT_PREVIOUS_TYPE_COUNT, ("GDSRCPT",)),
+           	(predictive_monitoring.EVENT_ELAPSED_TIME, ())] + \
+          	[(predictive_monitoring.EVENT_PRECEDING_ACTIVITES, (act,)) for act in activities]
 feature_storage = predictive_monitoring.apply(ocel, feature_set, [])
 table = tabular.construct_table(feature_storage)
 sequences = sequential.construct_sequence(feature_storage)
@@ -431,15 +431,15 @@ filename = "sample_logs/jsonocel/p2p-normal.jsonocel"
 ocel = ocel_import_factory.apply(filename)
 activities = list(set(ocel.log.log["event_activity"].tolist()))
 feature_set = [(predictive_monitoring.EVENT_REMAINING_TIME, ()),
-               (predictive_monitoring.EVENT_PREVIOUS_TYPE_COUNT, ("GDSRCPT",)),
-               (predictive_monitoring.EVENT_ELAPSED_TIME, ())] + \
-              [(predictive_monitoring.EVENT_PRECEDING_ACTIVITES, (act,)) for act in activities]
+           	(predictive_monitoring.EVENT_PREVIOUS_TYPE_COUNT, ("GDSRCPT",)),
+           	(predictive_monitoring.EVENT_ELAPSED_TIME, ())] + \
+          	[(predictive_monitoring.EVENT_PRECEDING_ACTIVITES, (act,)) for act in activities]
 feature_storage = predictive_monitoring.apply(ocel, feature_set, [])
 feature_storage.extract_normalized_train_test_split(0.3, state = 3395)
 train_table = tabular.construct_table(
-        feature_storage, index_list=feature_storage.training_indices)
+    	feature_storage, index_list=feature_storage.training_indices)
 test_table = tabular.construct_table(
-        feature_storage, index_list=feature_storage.test_indices)
+    	feature_storage, index_list=feature_storage.test_indices)
 ```
 
 **Full Example**
@@ -455,23 +455,23 @@ filename = "sample_logs/jsonocel/p2p-normal.jsonocel"
 ocel = ocel_import_factory.apply(filename)
 activities = list(set(ocel.log.log["event_activity"].tolist()))
 feature_set = [(predictive_monitoring.EVENT_REMAINING_TIME, ()),
-               (predictive_monitoring.EVENT_PREVIOUS_TYPE_COUNT, ("GDSRCPT",)),
-               (predictive_monitoring.EVENT_ELAPSED_TIME, ())] + \
-              [(predictive_monitoring.EVENT_PRECEDING_ACTIVITES, (act,)) for act in activities]
+           	(predictive_monitoring.EVENT_PREVIOUS_TYPE_COUNT, ("GDSRCPT",)),
+           	(predictive_monitoring.EVENT_ELAPSED_TIME, ())] + \
+          	[(predictive_monitoring.EVENT_PRECEDING_ACTIVITES, (act,)) for act in activities]
 feature_storage = predictive_monitoring.apply(ocel, feature_set, [])
 feature_storage.extract_normalized_train_test_split(0.3, state = 3395)
 train_table = tabular.construct_table(
-        feature_storage, index_list=feature_storage.training_indices)
+    	feature_storage, index_list=feature_storage.training_indices)
 test_table = tabular.construct_table(
-        feature_storage, index_list=feature_storage.test_indices)
+    	feature_storage, index_list=feature_storage.test_indices)
 y_train, y_test = train_table[feature_set[0]], test_table[feature_set[0]]
 x_train, x_test = train_table.drop(
-        feature_set[0], axis=1), test_table.drop(feature_set[0], axis=1)
+    	feature_set[0], axis=1), test_table.drop(feature_set[0], axis=1)
 model = LinearRegression()
 model.fit(x_train, y_train)
 y_pred = model.predict(x_test)
 avg_rem = sum(y_train)/len(y_train)
 print('MAE baseline: ', mean_absolute_error(
-    y_test, [avg_rem for elem in y_test]))
+	y_test, [avg_rem for elem in y_test]))
 print('MAE: ', mean_absolute_error(y_test, y_pred))
 ```
