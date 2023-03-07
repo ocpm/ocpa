@@ -1,5 +1,7 @@
 import time
+from typing import Callable
 
+from ocpa.objects.log.ocel import OCEL
 import ocpa.algo.predictive_monitoring.event_based_features.extraction_functions as event_features
 import ocpa.algo.predictive_monitoring.execution_based_features.extraction_functions as execution_features
 from ocpa.algo.predictive_monitoring.obj import Feature_Storage
@@ -12,7 +14,7 @@ EVENT_ACTIVITY = "event_activity"
 EVENT_SERVICE_TIME = "event_service"
 EVENT_IDENTITY = "event_identity"
 EVENT_TYPE_COUNT = "event_type_count"
-EVENT_PRECEDING_ACTIVITES = "event_preceding_activities"
+EVENT_PRECEDING_ACTIVITIES = "event_preceding_activities"
 EVENT_PREVIOUS_ACTIVITY_COUNT = "event_previous_activity_count"
 EVENT_CURRENT_ACTIVITIES = "event_current_activities"
 EVENT_AGG_PREVIOUS_CHAR_VALUES = "event_aggregate_previous_char"
@@ -56,7 +58,7 @@ VERSIONS = {
         EVENT_SERVICE_TIME: event_features.service_time,
         EVENT_IDENTITY: event_features.event_identity,
         EVENT_TYPE_COUNT: event_features.event_type_count,
-        EVENT_PRECEDING_ACTIVITES: event_features.preceding_activities,
+        EVENT_PRECEDING_ACTIVITIES: event_features.preceding_activities,
         EVENT_PREVIOUS_ACTIVITY_COUNT: event_features.previous_activity_count,
         EVENT_CURRENT_ACTIVITIES: event_features.current_activities,
         EVENT_AGG_PREVIOUS_CHAR_VALUES: event_features.agg_previous_char_values,
@@ -86,7 +88,7 @@ VERSIONS = {
         EXECUTION_THROUGHPUT: execution_features.throughput_time,
         EXECUTION_IDENTITY: execution_features.execution,
         EXECUTION_NUM_OBJECT: execution_features.number_of_objects,
-        EXECUTION_UNIQUE_ACTIVITIES: execution_features.unique_activites,
+        EXECUTION_UNIQUE_ACTIVITIES: execution_features.unique_activities,
         EXECUTION_NUM_OF_STARTING_EVENTS: execution_features.number_of_starting_events,
         EXECUTION_LAST_EVENT_TIME_BEFORE: execution_features.delta_last_event,
         EXECUTION_SERVICE_TIME: execution_features.service_time,
@@ -96,11 +98,9 @@ VERSIONS = {
 
 
 def apply(
-    ocel,
-    scaler,
-    target_label: str,
-    event_based_features=[],
-    execution_based_features=[],
+    ocel: OCEL,
+    event_based_features: list[tuple[Callable, tuple]] =[],
+    execution_based_features: list[tuple[Callable, tuple]] =[],
     event_attributes=[],
     event_object_attributes=[],
     execution_object_attributes=[],
@@ -116,9 +116,6 @@ def apply(
 
     :param ocel: Object-centric event log
     :type ocel: :class:`OCEL <ocpa.objects.log.ocel.OCEL>`
-
-    :param scaler: Scaler from Scikit-learn (uses .fit_transform() and .transform())
-    :type Mixin from Scikit-learn: :class:`Some mixin based on: (OneToOneFeatureMixin, TransformerMixin, BaseEstimator)`
 
     :param event_based_features: list of event-based features. Each feature is a tuple of the function and parameter tuple
     :type event_based_features: Tuple(function, Tuple())
@@ -146,7 +143,6 @@ def apply(
         event_features=event_based_features,
         execution_features=execution_based_features,
         ocel=ocel,
-        scaler=scaler,
     )
     object_f_time = time.time() - s_time
     id = 0
@@ -196,7 +192,7 @@ def apply(
         adding_time += time.time() - s_time
         id += 1
     del ocel.log.log["event_objects"]
-    # print("___")
+    # print("_"*16)
     # print("Execution time "+str(execution_time))
     # print("Node Features " + str(nodes_time))
     # print("Adding Features " + str(adding_time))

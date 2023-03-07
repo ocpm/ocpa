@@ -2,7 +2,7 @@ from ocpa.objects.log.variants.table import Table
 import networkx as nx
 
 
-def eog_from_log(table_log: Table):
+def eog_from_log(table_log: Table) -> nx.DiGraph:
     ocel = table_log.log.copy()
     eog = nx.DiGraph()
     eog.add_nodes_from(ocel["event_id"].to_list())

@@ -25,7 +25,7 @@ def number_of_objects(case, ocel,params):
         objects= objects.union(set(ocel.get_value(e, "event_objects")))
     return len(objects)
 
-def unique_activites(case, ocel,params):
+def unique_activities(case, ocel,params):
     events = list(case.nodes)
     activities = set([ocel.get_value(e,"event_activity") for e in events])
     return len(activities)
