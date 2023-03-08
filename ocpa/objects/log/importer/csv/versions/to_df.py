@@ -4,7 +4,7 @@ import math
 
 
 def apply(
-    filepath, parameters: dict = None, file_path_object_attribute_table=None
+    filepath: str, parameters: dict = None, file_path_object_attribute_table=None
 ) -> pd.DataFrame:
     if parameters is None:
         raise ValueError("Specify parsing parameters")
@@ -39,7 +39,10 @@ def apply(
         df_ocel["event_start_timestamp"] = pd.to_datetime(df[parameters["time_name"]])
 
     for val_name in parameters["val_names"]:
-        df_ocel[("event_" + val_name)] = df[parameters[val_name]]
+        if val_name.startswith("event_"):
+            df_ocel[val_name] = df[val_name]
+        else:
+            df_ocel[("event_" + val_name)] = df[val_name]
 
     if "obj_val_names" in parameters:
         for obj_val_name in parameters["val_names"]:

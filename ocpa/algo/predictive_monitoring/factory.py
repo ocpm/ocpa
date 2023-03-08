@@ -191,10 +191,15 @@ def apply(
         adding_time += time.time() - s_time
         id += 1
     del ocel.log.log["event_objects"]
-    # print("_"*16)
-    # print("Execution time "+str(execution_time))
-    # print("Node Features " + str(nodes_time))
-    # print("Adding Features " + str(adding_time))
-    # print("Subgraph Features " + str(subgraph_time))
-    # print("prep time " + str(object_f_time))
+
+    # pprint_table = [
+    #     ("Execution time", execution_time),
+    #     ("Node features", nodes_time),
+    #     ("Adding features", adding_time),
+    #     ("Subgraph features", subgraph_time),
+    #     ("Preparation time", object_f_time),
+    # ]
+    # for measure, measurement in pprint_table:
+    #     print(f"    | {measure:17} | {measurement:8.5f} |")
+
     return feature_storage

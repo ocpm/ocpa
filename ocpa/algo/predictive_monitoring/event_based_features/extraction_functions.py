@@ -1,13 +1,18 @@
 # helper functions:
-def get_recent_events(event, case_index, ocel):
+def _get_recent_events(event, case_index, ocel):
     case = ocel.process_executions[case_index]
-    subset_events = []
-    for e in case:
-        if ocel.get_value(e, "event_timestamp") <= ocel.get_value(
-            event, "event_timestamp"
-        ):
-            subset_events.append(e)
+    subset_events = [
+        e
+        for e in case
+        if ocel.get_value(e, "event_timestamp")
+        <= ocel.get_value(event, "event_timestamp")
+    ]
+    # print("result of `_get_recent_events`: ", subset_events)
     return subset_events
+
+
+def _get_characteristic_value(event_id, ocel, attribute):
+    return ocel.get_value(event_id, attribute)
 
 
 # Control Flow
@@ -19,7 +24,7 @@ def current_activities(node, ocel, params):
     value_array = []
     for case in cases:
         c_res = 0
-        recent_events = get_recent_events(e_id, case, ocel)
+        recent_events = _get_recent_events(e_id, case, ocel)
         subgraph = ocel.graph.eog.subgraph(recent_events)
         end_nodes = [n for n in subgraph.nodes if len(list(subgraph.out_edges(n))) == 0]
         for e in end_nodes:
@@ -35,7 +40,7 @@ def preceding_activities(node, ocel, params):
     e_id = node.event_id
     in_edges = ocel.graph.eog.in_edges(e_id)
     count = 0
-    for (source, target) in in_edges:
+    for source, target in in_edges:
         if ocel.get_value(source, "event_activity") == act:
             count += 1
     return count
@@ -76,16 +81,34 @@ def agg_previous_char_values(node, ocel, params):
     aggregation = params[1]
     e_id = node.event_id
     cases = ocel.process_execution_mappings[e_id]
+    # print(cases)
+    # boy = [_get_recent_events(e_id, case, ocel) for case in cases]
+    # count_boy = lambda x: len(x)
+    # boy_count = sum([count_boy(event) for event in boy])
+    # print("How many times get_value is being called: ", boy_count)
+    # value_array = [
+    #     aggregation(
+    #         [
+    #             _get_characteristic_value(event, ocel, attribute)
+    #             for event in _get_recent_events(e_id, case, ocel)
+    #         ]
+    #     )
+    #     for case in cases
+    # ]
+    # Slower, but more readable version:
     value_array = []
     for c in cases:
         c_vals = []
-        events = get_recent_events(e_id, c, ocel)
-        for e in events:
-            c_vals.append(ocel.get_value(e, attribute))
+        events = _get_recent_events(e_id, c, ocel)
+        for event in events:
+            # try:
+            c_vals.append(_get_characteristic_value(event, ocel, attribute))
+        # except:
+        #     c_vals.append()
         value_array += [aggregation(c_vals)]
 
+    # COMMENT BY TIM: looks like taking the mean as an aggregation function
     return sum(value_array) / len(value_array)
-    return
 
 
 def preceding_char_values(node, ocel, params):
@@ -94,17 +117,16 @@ def preceding_char_values(node, ocel, params):
     e_id = node.event_id
     in_edges = ocel.graph.eog.in_edges(e_id)
     value_array = []
-    for (source, target) in in_edges:
+    for source, target in in_edges:
         v = ocel.get_value(source, attribute)
         value_array.append(v)
 
     return aggregation(value_array)
-    return
 
 
 def characteristic_value(node, ocel, params):
     attribute = params[0]
-    return ocel.get_value(node.event_id, attribute)
+    return _get_characteristic_value(node.event_id, ocel, attribute)
 
 
 # resource
@@ -166,7 +188,7 @@ def elapsed_time(node, ocel, params):
     value_array = []
     for case in cases:
         c_res = 0
-        events = get_recent_events(e_id, case, ocel)
+        events = _get_recent_events(e_id, case, ocel)
         timestamps = [ocel.get_value(e, "event_timestamp") for e in events]
         duration = (max(timestamps) - min(timestamps)).total_seconds()
         value_array.append(duration)
@@ -180,7 +202,7 @@ def remaining_time(node, ocel, params):
     value_array = []
     for case in cases:
         c_res = 0
-        prev_events = get_recent_events(e_id, case, ocel)
+        prev_events = _get_recent_events(e_id, case, ocel)
         following_events = [
             e for e in ocel.process_executions[case] if e not in prev_events
         ]
@@ -373,7 +395,7 @@ def previous_object_count(node, ocel, params):
     value_array = []
     for c in cases:
         all_obs = set()
-        events = get_recent_events(e_id, c, ocel)
+        events = _get_recent_events(e_id, c, ocel)
         for e in events:
             all_obs = all_obs.union(set(ocel.get_value(e, "event_objects")))
         value_array += [len(list(all_obs))]
@@ -388,7 +410,7 @@ def previous_type_count(node, ocel, params):
     value_array = []
     for c in cases:
         all_obs = set()
-        events = get_recent_events(e_id, c, ocel)
+        events = _get_recent_events(e_id, c, ocel)
         for e in events:
             obs = ocel.get_value(e, "event_objects")
             for o in obs:
