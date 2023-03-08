@@ -1,7 +1,9 @@
 """Object-Centric Event Log"""
 
 from dataclasses import dataclass
-from typing import Dict
+from typing import Any
+import networkx as nx
+
 from ocpa.objects.log.variants.obj import ObjectCentricEventLog
 from ocpa.objects.log.variants.graph import EventGraph
 from ocpa.objects.log.variants.table import Table
@@ -11,7 +13,7 @@ from ocpa.algo.util.variants import factory as variant_factory
 
 @dataclass
 class OCEL:
-    '''
+    """
     Storing and processing an object-centric event log.
     -------------------
     Can be imported through the:
@@ -20,37 +22,66 @@ class OCEL:
     3) :func:`JSONXML importer <ocpa.objects.log.importer.ocel.factory.apply>`
 
     Properties are lazily instantiated upon calling their getter functions.
-    '''
+    """
+
+    # Use slots for faster attribute access and memory saving
+    # 16.57% performance improvement for get/set/del operations (on my machine)
+    # Using slots disables dynamically adding class attributes after instantiation
+    # Slots are available via dataclass as decorator parameter from Python 3.10
+    __slots__ = (
+        "log",
+        "obj",
+        "graph",
+        "parameters",
+        "_process_executions",
+        "_process_execution_objects",
+        "_process_execution_mappings",
+        "_variants",
+        "_variant_frequency",
+        "_variant_graphs",
+        "_variants_dict",
+        "_object_types",
+        "_execution_extraction",
+        "_variant_calculation",
+    )
+
     log: Table
     obj: ObjectCentricEventLog
     graph: EventGraph
-    parameters: Dict
+    parameters: dict
 
-    def __post_init__(self):
-        '''
+    def __post_init__(self) -> None:
+        """
         Initializes the classes' attributes.
 
         Returns
         -------
         None
-        '''
-        self._process_executions = None
-        self._process_execution_objects = None
-        self._process_execution_mappings = None
-        self._variants = None
-        self._variant_frequency = None
-        self._variant_graphs = None
-        self._variants_dict = None
-        self._object_types = self.log.object_types
-        self._execution_extraction = self.parameters["execution_extraction"] if "execution_extraction" in self.parameters.keys(
-        ) else process_execution_factory.CONN_COMP
-        self._variant_calculation = self.parameters["variant_calculation"] if "variant_calculation" in self.parameters.keys(
-        ) else variant_factory.TWO_PHASE
+        """
+        self._process_executions: list = None
+        self._process_execution_objects: list = None
+        self._process_execution_mappings: dict = None
+        self._variants: list = None
+        self._variant_frequency: list = None
+        self._variant_graphs: dict = None
+        self._variants_dict: dict = None
+        self._object_types: list[str] = self.log.object_types
+        self._execution_extraction: str = (
+            self.parameters["execution_extraction"]
+            if "execution_extraction" in self.parameters.keys()
+            else process_execution_factory.CONN_COMP
+        )
+        self._variant_calculation: str = (
+            self.parameters["variant_calculation"]
+            if "variant_calculation" in self.parameters.keys()
+            else variant_factory.TWO_PHASE
+        )
+
     # _get_process_execution_objects
 
     @property
-    def process_execution_objects(self):
-        '''
+    def process_execution_objects(self) -> list[list[tuple[str, str]]]:
+        """
         Each process execution is identified by its index in the process_execution list. Using this index, one can retrieve
         this process execution's associated objects through this list.
 
@@ -58,15 +89,15 @@ class OCEL:
         :rtype: list(list(Tuple(string, string)))
         -------
 
-        '''
+        """
         if not self._process_executions:
             self._calculate_process_execution_objects()
         return self._process_execution_objects
 
     # _get_process_executions
     @property
-    def process_executions(self):
-        '''
+    def process_executions(self) -> list[list[int]]:
+        """
         Stores the process executions (object-centric cases) of an object-centric event log. Each process execution is
         implicitly identified by its index in this list. At the corresponding index in this array, the events of the process
         execution are stored.
@@ -84,30 +115,30 @@ class OCEL:
         :rtype: list(list(int))
         -------
 
-        '''
+        """
         if not self._process_executions:
             self._calculate_process_execution_objects()
         return self._process_executions
 
     # _get_process_execution_mappings
     @property
-    def process_execution_mappings(self):
-        '''
+    def process_execution_mappings(self) -> dict:
+        """
         Storing the process executions of an event.
 
         :return: Dictionary mapping events to the process executions that an event belong to, identified by their index in the process_execution list.
         :rtype: Dict
         -------
 
-        '''
+        """
         if not self._process_executions:
             self._calculate_process_execution_objects()
         return self._process_execution_mappings
 
     # _get_variants
     @property
-    def variants(self):
-        '''
+    def variants(self) -> list[str]:
+        """
         Variants are calcuated through the variant calculation technique in the parameters dict. These are probably
         already set in the import in one of the the importers: :func:`CSV importer <ocpa.objects.log.importer.csv.factory.apply>`
         or :func:`JSONOCEL importer <ocpa.objects.log.importer.ocel.factory.apply>`
@@ -121,7 +152,7 @@ class OCEL:
         :rtype: list(str)
         -------
 
-        '''
+        """
         if not self._variants:
             self._calculate_variants()
         return self._variants
@@ -129,8 +160,8 @@ class OCEL:
     # _get_variant_frequency
 
     @property
-    def variant_frequencies(self):
-        '''
+    def variant_frequencies(self) -> list[float]:
+        """
         Each variant is identified by its index in the variants list. Using this index, one can retrieve
         this variants's frequency through this list.
 
@@ -138,45 +169,45 @@ class OCEL:
         :rtype: list(float)
         -------
 
-        '''
+        """
         if not self._variants:
             self._calculate_variants()
         return self._variant_frequency
 
     # _get_variant_graphs
     @property
-    def variant_graphs(self):
-        '''
+    def variant_graphs(self) -> dict:
+        """
         Stores the graph of a variant.
 
         :return: Dict mapping a variant identifier to this variant's graph labeled with activity and object types
         :rtype: Tuple(nx.DiGraph, list(Tuple(string, string)))
         -------
 
-        '''
+        """
         if not self._variants:
             self._calculate_variants()
         return self._variant_graphs
 
     # _get_variants_dict
     @property
-    def variants_dict(self):
-        '''
+    def variants_dict(self) -> dict:
+        """
         Stores the process_executions associated with a variant.
 
         :return: Dict mapping a variant identifier to this variant's process executions (as indexes of the process_execution list)
         :rtype: Dict
         -------
 
-        '''
+        """
         if not self._variants:
             self._calculate_variants()
         return self._variants_dict
 
     # _get_object_types
     @property
-    def object_types(self):
-        '''
+    def object_types(self) -> list[str]:
+        """
         Stores the object types of the event log.
 
         Set through the parameters in the import.
@@ -185,14 +216,14 @@ class OCEL:
         :rtype: list(str)
         -------
 
-        '''
+        """
         return self._object_types
 
-    def get_value(self, e_id, attribute):
-        '''Returns the attribute value of an event efficiently.
+    def get_value(self, e_id: int, attribute: str) -> Any:
+        """Returns the attribute value of an event efficiently.
 
-        The event id e_id refers to the event_id attribute of an event, not the index of the event in the dataframe.
-        This function is the most efficient attribute value retrieval.
+        The event id (e_id) refers to the event_id attribute of an event, not the index of the event in the dataframe.
+        This function is the most efficient attribute value retrieval available.
 
         :param e_id: event id of the targeted event
         :type e_id: int
@@ -200,11 +231,11 @@ class OCEL:
         :type attribute: string
         :return: any value
         :rtype: anytype
-        '''
+        """
         return self.log.get_value(e_id, attribute)
 
-    def get_object_attribute_value(self, o_id, attribute):
-        '''Returns the attribute value of an object attribute if the attribute table was provided.
+    def get_object_attribute_value(self, o_id: str, attribute: str):
+        """Returns the attribute value of an object attribute if the attribute table was provided.
 
         The object id o_id refers to the object_id attribute of an object in the corresponding table that was passed.
         This function is the most efficient attribute value retrieval.
@@ -215,11 +246,11 @@ class OCEL:
         :type attribute: string
         :return: any value
         :rtype: anytype
-        '''
+        """
         return self.log.get_object_attribute_value(o_id, attribute)
 
-    def get_process_execution_graph(self, process_exec_id):
-        '''Returns the process execution graph of a process execution.
+    def get_process_execution_graph(self, process_exec_id: int) -> nx.Graph:
+        """Returns the process execution graph of a process execution.
 
         The process_exec_id refers to the index of the process execution in the list of process executions held by this
         class.
@@ -228,13 +259,24 @@ class OCEL:
         :type process_exec_id: int
         :return: process execution graph
         :rtype: NetworkX Graph
-        '''
+        """
         return self.graph.eog.subgraph(self.process_executions[process_exec_id])
 
-    def _calculate_process_execution_objects(self):
-        self._process_executions, self._process_execution_objects, self._process_execution_mappings = process_execution_factory.apply(
-            self, self._execution_extraction, parameters=self.parameters)
+    def _calculate_process_execution_objects(self) -> None:
+        (
+            self._process_executions,
+            self._process_execution_objects,
+            self._process_execution_mappings,
+        ) = process_execution_factory.apply(
+            self, self._execution_extraction, parameters=self.parameters
+        )
 
-    def _calculate_variants(self):
-        self._variants, self._variant_frequency, self._variant_graphs, self._variants_dict = variant_factory.apply(
-            self, self._variant_calculation, parameters=self.parameters)
+    def _calculate_variants(self) -> None:
+        (
+            self._variants,
+            self._variant_frequency,
+            self._variant_graphs,
+            self._variants_dict,
+        ) = variant_factory.apply(
+            self, self._variant_calculation, parameters=self.parameters
+        )
