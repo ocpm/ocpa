@@ -81,33 +81,28 @@ def agg_previous_char_values(node, ocel, params):
     aggregation = params[1]
     e_id = node.event_id
     cases = ocel.process_execution_mappings[e_id]
-    # print(cases)
-    # boy = [_get_recent_events(e_id, case, ocel) for case in cases]
-    # count_boy = lambda x: len(x)
-    # boy_count = sum([count_boy(event) for event in boy])
-    # print("How many times get_value is being called: ", boy_count)
-    # value_array = [
-    #     aggregation(
-    #         [
-    #             _get_characteristic_value(event, ocel, attribute)
-    #             for event in _get_recent_events(e_id, case, ocel)
-    #         ]
-    #     )
-    #     for case in cases
-    # ]
+    value_array = [
+        aggregation(
+            [
+                _get_characteristic_value(event, ocel, attribute)
+                for event in _get_recent_events(e_id, case, ocel)
+            ]
+        )
+        for case in cases
+    ]
     # Slower, but more readable version:
-    value_array = []
-    for c in cases:
-        c_vals = []
-        events = _get_recent_events(e_id, c, ocel)
-        for event in events:
-            # try:
-            c_vals.append(_get_characteristic_value(event, ocel, attribute))
-        # except:
-        #     c_vals.append()
-        value_array += [aggregation(c_vals)]
+    # value_array = []
+    # for c in cases:
+    #     c_vals = []
+    #     events = _get_recent_events(e_id, c, ocel)
+    #     for event in events:
+    #         # try:
+    #         c_vals.append(_get_characteristic_value(event, ocel, attribute))
+    #     # except:
+    #     #     c_vals.append()
+    #     value_array += [aggregation(c_vals)]
 
-    # COMMENT BY TIM: looks like taking the mean as an aggregation function
+    # COMMENT BY TIM: looks like taking the mean as an aggregation function (but max was passed)
     return sum(value_array) / len(value_array)
 
 
