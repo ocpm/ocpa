@@ -15,11 +15,12 @@ class Feature_Storage:
     class Feature_Graph:
         class Node:
             def __init__(self, event_id, objects):
+                """Initializes a Node object"""
                 self._event = event_id
                 self._attributes = {}
                 self._objects = objects
 
-            def add_attribute(self, key, value):
+            def add_attribute(self, key, value) -> None:
                 self._attributes[key] = value
 
             def _get_attributes(self):
@@ -37,12 +38,13 @@ class Feature_Storage:
 
         class Edge:
             def __init__(self, source, target, objects):
+                """Initializes an Edge object"""
                 self._source = source
                 self._target = target
                 self._objects = objects
                 self._attributes = {}
 
-            def add_attribute(self, key, value):
+            def add_attribute(self, key, value) -> None:
                 self._attributes[key] = value
 
             def _get_source(self):
@@ -63,6 +65,7 @@ class Feature_Storage:
             objects = property(_get_objects)
 
         def __init__(self, case_id, graph, ocel: OCEL):
+            """Initializes a Feature_Graph object"""
             self._case_id = case_id
             self._nodes = [
                 Feature_Storage.Feature_Graph.Node(
@@ -70,7 +73,6 @@ class Feature_Storage:
                 )
                 for e_id in graph.nodes
             ]
-            # self._nodes = [Feature_Storage.Feature_Graph.Node(e_id, ocel.log.loc[e_id]["event_objects"]) for e_id in graph.nodes]
             self._node_mapping = {node.event_id: node for node in self._nodes}
             self._objects = {
                 (source, target): set(
@@ -78,7 +80,6 @@ class Feature_Storage:
                 ).intersection(set(ocel.get_value(target, "event_objects")))
                 for source, target in graph.edges
             }
-            # self._objects = {(source,target):set(ocel.log.loc[source]["event_objects"]).intersection(set(ocel.log.loc[target]["event_objects"])) for source,target in graph.edges}
             self._edges = [
                 Feature_Storage.Feature_Graph.Edge(
                     source, target, objects=self._objects[(source, target)]
@@ -90,19 +91,22 @@ class Feature_Storage:
             }
             self._attributes = {}
 
-        def _get_nodes(self):
+        def _get_nodes(self) -> list[Node]:
             return self._nodes
 
-        def _get_edges(self):
+        def _get_edges(self) -> list[Edge]:
             return self._edges
 
-        def _get_objects(self):
+        def _get_objects(self) -> dict[tuple, set]:
             return self._objects
 
-        def _get_attributes(self):
+        def _get_attributes(self) -> dict:
             return self._attributes
 
-        def replace_edges(self, edges):
+        def _get_size(self) -> int:
+            return len(self._get_nodes())
+
+        def replace_edges(self, edges) -> None:
             self._edges = [
                 Feature_Storage.Feature_Graph.Edge(
                     source.event_id, target.event_id, objects=[]
@@ -119,10 +123,11 @@ class Feature_Storage:
         def add_attribute(self, key, value):
             self._attributes[key] = value
 
-        attributes = property(_get_attributes)
-        nodes = property(_get_nodes)
-        edges = property(_get_edges)
-        objects = property(_get_objects)
+        nodes: list[Node] = property(_get_nodes)
+        edges: list[Edge] = property(_get_edges)
+        objects: dict[tuple, set] = property(_get_objects)
+        attributes: dict = property(_get_attributes)
+        size: int = property(_get_size)
 
     def __init__(
         self,
@@ -130,13 +135,13 @@ class Feature_Storage:
         execution_features: list,
         ocel: OCEL = None,
     ):
+        """Initializes a Feature_Storage object"""
         self._event_features = event_features
         self._edge_features = []
         self._case_features = execution_features
         self._feature_graphs: list[self.Feature_Graph] = []
         self._scaler = None
         self._scaling_exempt_features = []
-        # self._graph_indices: list[int] = None
         self._train_indices = None
         self._validation_indices = None
         self._test_indices = None
