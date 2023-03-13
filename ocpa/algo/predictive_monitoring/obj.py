@@ -137,9 +137,9 @@ class Feature_Storage:
         self._scaler = None
         self._scaling_exempt_features = []
         # self._graph_indices: list[int] = None
-        self._train_indices = None
-        self._validation_indices = None
-        self._test_indices = None
+        self._train_indices: list[int] = None
+        self._validation_indices: list[int] = None
+        self._test_indices: list[int] = None
 
     def _get_event_features(self):
         return self._event_features
@@ -171,7 +171,7 @@ class Feature_Storage:
     def _get_train_indices(self) -> list[int]:
         return self._train_indices
 
-    def _set_train_indices(self, new_train_indices):
+    def _set_train_indices(self, new_train_indices: list[int]) -> None:
         self._train_indices = new_train_indices
 
     def _get_validation_indices(self) -> list[int]:
@@ -196,9 +196,11 @@ class Feature_Storage:
     execution_features = property(_get_execution_features, _set_execution_features)
     feature_graphs = property(_get_feature_graphs, _set_feature_graphs)
     scaler = property(_get_scaler, _set_scaler)
-    train_indices = property(_get_train_indices, _set_train_indices)
-    validation_indices = property(_get_validation_indices, _set_validation_indices)
-    test_indices = property(_get_test_indices, _set_test_indices)
+    train_indices: list[int] = property(_get_train_indices, _set_train_indices)
+    validation_indices: list[int] = property(
+        _get_validation_indices, _set_validation_indices
+    )
+    test_indices: list[int] = property(_get_test_indices, _set_test_indices)
     scaling_exempt_features = property(
         _get_scaling_exempt_features, _set_scaling_exempt_features
     )
