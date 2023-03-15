@@ -120,7 +120,7 @@ class Feature_Storage:
         def get_edge_from_event_ids(self, source, target):
             return self._edge_mapping[(source, target)]
 
-        def add_attribute(self, key, value):
+        def add_attribute(self, key, value) -> None:
             self._attributes[key] = value
 
         nodes: list[Node] = property(_get_nodes)
@@ -141,7 +141,7 @@ class Feature_Storage:
         self._case_features = execution_features
         self._feature_graphs: list[self.Feature_Graph] = []
         self._scaler = None
-        self._scaling_exempt_features = []
+        self._scaling_exempt_features: list[tuple] = []
         self._train_indices: list[int] = None
         self._validation_indices: list[int] = None
         self._test_indices: list[int] = None
@@ -149,28 +149,28 @@ class Feature_Storage:
     def _get_event_features(self):
         return self._event_features
 
-    def _set_event_features(self, event_features):
+    def _set_event_features(self, event_features) -> None:
         self._event_features = event_features
 
     def _get_execution_features(self):
         return self._case_features
 
-    def _set_execution_features(self, execution_features):
+    def _set_execution_features(self, execution_features) -> None:
         self._case_features = execution_features
 
-    def _get_feature_graphs(self):
+    def _get_feature_graphs(self) -> list[Feature_Graph]:
         return self._feature_graphs
 
-    def _set_feature_graphs(self, feature_graphs):
+    def _set_feature_graphs(self, feature_graphs: list[Feature_Graph]) -> None:
         self._feature_graphs = feature_graphs
 
-    def add_feature_graph(self, feature_graph):
+    def add_feature_graph(self, feature_graph: Feature_Graph) -> None:
         self.feature_graphs += [feature_graph]
 
     def _get_scaler(self):
         return self._scaler
 
-    def _set_scaler(self, scaler):
+    def _set_scaler(self, scaler) -> None:
         self._scaler = scaler
 
     def _get_train_indices(self) -> list[int]:
@@ -188,25 +188,29 @@ class Feature_Storage:
     def _get_test_indices(self) -> list[int]:
         return self._test_indices
 
-    def _set_test_indices(self, test_indices):
+    def _set_test_indices(self, test_indices) -> None:
         self._test_indices = test_indices
 
-    def _get_scaling_exempt_features(self):
+    def _get_scaling_exempt_features(self) -> list[tuple]:
         return self._scaling_exempt_features
 
-    def _set_scaling_exempt_features(self, scaling_exempt_features):
+    def _set_scaling_exempt_features(
+        self, scaling_exempt_features: list[tuple]
+    ) -> None:
         self._scaling_exempt_features = scaling_exempt_features
 
     event_features = property(_get_event_features, _set_event_features)
     execution_features = property(_get_execution_features, _set_execution_features)
-    feature_graphs = property(_get_feature_graphs, _set_feature_graphs)
+    feature_graphs: list[Feature_Graph] = property(
+        _get_feature_graphs, _set_feature_graphs
+    )
     scaler = property(_get_scaler, _set_scaler)
     train_indices: list[int] = property(_get_train_indices, _set_train_indices)
     validation_indices: list[int] = property(
         _get_validation_indices, _set_validation_indices
     )
     test_indices: list[int] = property(_get_test_indices, _set_test_indices)
-    scaling_exempt_features = property(
+    scaling_exempt_features: list[tuple] = property(
         _get_scaling_exempt_features, _set_scaling_exempt_features
     )
 
