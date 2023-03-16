@@ -223,6 +223,9 @@ class Feature_Storage:
                 dict_list.append({**{"event_id": node.event_id}, **node.attributes})
                 # print(node.attributes)
         df = pd.DataFrame(dict_list)
+        from copy import copy
+
+        self.ugly_boy = copy(df)
         return df
 
     def _create_mapper(self, table: pd.DataFrame) -> dict:
@@ -272,9 +275,36 @@ class Feature_Storage:
             table[self.event_features] = initialized_scaler.transform(
                 X=table[self.event_features]
             )
-        # Update graphs' feature values
+        # Update graphs' feature values from the normalized `table`
         mapper = self._create_mapper(table)  # for efficiency
         self.__map_graph_values(mapper, graphs)
+
+    def denormalize(
+        self, normalized_data: dict[str, list[float]] or pd.DataFrame
+    ) -> dict[str, list[float]]:
+        """
+        Returns denormalized data, when given a dictionary with
+        variable names as keys and lists of normalized floats as values
+        """
+        if type(normalized_data) == dict:
+            all_keys_in_feature_storage = all(
+                [var_name in self.event_features for var_name in normalized_data.keys()]
+            )
+            all_values_have_equal_length = (
+                len(set([len(v) for v in normalized_data.values()])) == 1
+            )
+
+            if all_keys_in_feature_storage and all_values_have_equal_length:
+                # create dict with length that `X` requires (=len(self.event_features)+1)
+                # fill it with keys as index numbers, from 0 to n
+                # fill it with values as lists containing 0, and length equal to len(normalized_data.values()[0])
+
+                # look up which column belongs to which key,
+                # for column in `X` expected by scaler.inverse_transform()
+                [event_features.index(key) for key in normalized_data.keys()]
+                # and replace these keys with the values that were given at that key-column-index in normalized_data
+
+        return self.scaler.inverse_transform(normalized_data)
 
     def extract_normalized_train_test_split(
         self,
