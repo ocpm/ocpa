@@ -215,18 +215,14 @@ class Feature_Storage:
     )
 
     def _event_id_table(self, feature_graphs: list[Feature_Graph]) -> pd.DataFrame:
-        features = self.event_features
-        df = pd.DataFrame(columns=["event_id"] + [features])
+        # features = self.event_features
+        # df = pd.DataFrame(columns=["event_id"] + [features])
         dict_list = []
         for g in feature_graphs:
             for node in g.nodes:
                 dict_list.append({**{"event_id": node.event_id}, **node.attributes})
-                # print(node.attributes)
-        df = pd.DataFrame(dict_list)
-        from copy import copy
-
-        self.ugly_boy = copy(df)
-        return df
+        fg_table = pd.DataFrame(dict_list)
+        return fg_table
 
     def _create_mapper(self, table: pd.DataFrame) -> dict:
         arr = table.to_numpy()
@@ -284,17 +280,23 @@ class Feature_Storage:
     ) -> dict[str, list[float]]:
         """
         Returns denormalized data, when given a dictionary with
-        variable names as keys and lists of normalized floats as values
+        variable names as keys and lists of normalized floats as values.
         """
+        # For easy consistency checks:
         if type(normalized_data) == dict:
+            keys_not_in_event_features = set(normalized_data.keys()) - set(
+                self.event_features
+            )
+            warn(
+                f"Could not find keys '{keys_not_in_event_features}' as event features in Feature_Storage. They will be excluded from denormalization."
+            )
+            valid_keys = set(normalized_data.keys()) & set(self.event_features)
             all_keys_in_feature_storage = all(
                 [var_name in self.event_features for var_name in normalized_data.keys()]
             )
-            all_values_have_equal_length = (
-                len(set([len(v) for v in normalized_data.values()])) == 1
-            )
 
-            if all_keys_in_feature_storage and all_values_have_equal_length:
+            if all_keys_in_feature_storage:
+                normalized_data = pd.DataFrame(normalized_data)
                 # create dict with length that `X` requires (=len(self.event_features)+1)
                 # fill it with keys as index numbers, from 0 to n
                 # fill it with values as lists containing 0, and length equal to len(normalized_data.values()[0])
