@@ -222,6 +222,7 @@ class Feature_Storage:
             for node in g.nodes:
                 dict_list.append({**{"event_id": node.event_id}, **node.attributes})
         fg_table = pd.DataFrame(dict_list)
+        self.ugly_boy = fg_table
         return fg_table
 
     def _create_mapper(self, table: pd.DataFrame) -> dict:
@@ -237,7 +238,7 @@ class Feature_Storage:
             }
         return mapper
 
-    def __map_graph_values(self, mapper, graphs: Feature_Graph) -> None:
+    def __map_graph_values(self, mapper, graphs: list[Feature_Graph]) -> None:
         """
         Private method (impure) that sets graph features to scaled values.
 
@@ -279,34 +280,75 @@ class Feature_Storage:
         self, normalized_data: dict[str, list[float]] or pd.DataFrame
     ) -> dict[str, list[float]]:
         """
-        Returns denormalized data, when given a dictionary with
+        Returns denormalized data (in same format as input), when given a dictionary with
         variable names as keys and lists of normalized floats as values.
+
+        :param normalized_data: Between 0 and 1, indicates the share of the data that should go to the test set.
+        :type normalized_data: dict[str, list[float]] or pd.DataFrame
         """
-        # For easy consistency checks:
+        # # For easy consistency checks:
+        # if type(normalized_data) == dict and all_keys_in_feature_storage:
+        #     normalized_data = pd.DataFrame(normalized_data)
+
+        # Consistency checks (both for if `normalized_data` is dict and pd.DataFrame)
         if type(normalized_data) == dict:
-            keys_not_in_event_features = set(normalized_data.keys()) - set(
-                self.event_features
+            all_values_have_equal_length = (
+                len(set([len(v) for v in normalized_data.values()])) == 1
             )
-            warn(
-                f"Could not find keys '{keys_not_in_event_features}' as event features in Feature_Storage. They will be excluded from denormalization."
+            assert (
+                all_values_have_equal_length
+            ), f"All values in `normalized_data` should be of equal length"
+            len_normalized_data = len(list(normalized_data.values())[0])
+        if type(normalized_data) == pd.DataFrame:
+            len_normalized_data = len(normalized_data)
+        num_event_features = len(self.event_features)
+
+        # all_keys_in_feature_storage = all(
+        #     [var_name in self.event_features for var_name in normalized_data.keys()]
+        # )
+        # assert (
+        #     all_keys_in_feature_storage
+        # ), f"All keys in `normalized_data` should exist as event features in Feature_Storage"
+
+        keys_not_in_event_features = set(normalized_data.keys()) - set(
+            self.event_features
+        )
+        warn(
+            f"Could not find keys '{keys_not_in_event_features}' as event features in Feature_Storage. They will be excluded from denormalization."
+        )
+        valid_keys = set(normalized_data.keys()) & set(self.event_features)
+
+        idxs_of_valid_keys_in_event_feats = {
+            self.event_features.index(key) for key in valid_keys
+        }
+        empty_dict = {
+            k: v
+            for (k, v) in zip(
+                range(num_event_features),
+                [[0] * len_normalized_data] * num_event_features,
             )
-            valid_keys = set(normalized_data.keys()) & set(self.event_features)
-            all_keys_in_feature_storage = all(
-                [var_name in self.event_features for var_name in normalized_data.keys()]
-            )
+        }
 
-            if all_keys_in_feature_storage:
-                normalized_data = pd.DataFrame(normalized_data)
-                # create dict with length that `X` requires (=len(self.event_features)+1)
-                # fill it with keys as index numbers, from 0 to n
-                # fill it with values as lists containing 0, and length equal to len(normalized_data.values()[0])
+        for key_idx, key in zip(idxs_of_valid_keys_in_event_feats, valid_keys):
+            for k, _ in empty_dict.items():
+                if key_idx == k:
+                    empty_dict.update({key_idx: normalized_data[key]})
+            empty_dict[key] = empty_dict.pop(key_idx)
+        self.empty_dict = empty_dict
+        prepared_normalized_data = pd.DataFrame(empty_dict)
+        self.prepared_normalized_data = prepared_normalized_data
+        col_name_map = {k: v for k, v in enumerate(self.event_features)}
+        self.col_name_map = col_name_map
+        prepared_normalized_data.rename(columns=col_name_map, inplace=True)
+        # create dict with length that `X` requires (=len(self.event_features)+1)
+        # fill it with keys as index numbers, from 0 to n
+        # fill it with values as lists containing 0, and length equal to len(normalized_data.values()[0])
 
-                # look up which column belongs to which key,
-                # for column in `X` expected by scaler.inverse_transform()
-                [event_features.index(key) for key in normalized_data.keys()]
-                # and replace these keys with the values that were given at that key-column-index in normalized_data
+        # look up which column belongs to which key,
+        # for column in `X` expected by scaler.inverse_transform()
+        # and replace these keys with the values that were given at that key-column-index in normalized_data
 
-        return self.scaler.inverse_transform(normalized_data)
+        return self.scaler.inverse_transform(prepared_normalized_data)
 
     def extract_normalized_train_test_split(
         self,
