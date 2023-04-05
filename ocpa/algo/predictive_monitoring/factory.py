@@ -106,7 +106,6 @@ def _apply_to_process_execution(args):
         feature_graph.add_attribute(
             execution_feature, VERSIONS[EXECUTION_BASED][execution_function](case_graph, ocel, params))
         for (object_type, attr, fun) in execution_object_attributes:
-            # TODO add object frame
             feature_graph.add_attribute(
                 object_type + "_" + attr + fun.__name__, fun([object_type[attr]]))
     for node in feature_graph.nodes:
@@ -122,9 +121,7 @@ def _apply_to_process_execution(args):
                 event_feature, VERSIONS[EVENT_BASED][event_function](node, ocel, params))
         for attr in event_attributes:
             node.add_attribute(attr, ocel.get_value(node.event_id, attr))
-            # node.add_attribute(attr,ocel.log.loc[node.event_id][attr])
         for (object_type, attr, fun) in event_object_attributes:
-            # TODO add object frame
             feature_graph.add_attribute(
                 object_type + "_" + attr + fun.__name__, fun([object_type[attr]]))
     return feature_graph
