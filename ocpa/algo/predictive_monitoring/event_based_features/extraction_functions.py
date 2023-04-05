@@ -160,9 +160,8 @@ def elapsed_time(node, ocel, params):
 
 def remaining_time(node, ocel, params):
     e_id = node.event_id
-    cases = ocel.process_execution_mappings[e_id]
     value_array = []
-    for case in cases:
+    for case in [node.pexec_id]:
         c_res = 0
         prev_events = get_recent_events(e_id, case, ocel)
         following_events = [e for e in ocel.process_executions[case] if e not in prev_events]
