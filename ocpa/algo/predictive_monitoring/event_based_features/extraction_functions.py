@@ -292,7 +292,7 @@ def service_time(node, ocel, params):
     if ocel.get_value(node.event_id,"event_activity") == activity:
         return (ocel.get_value(node.event_id,"event_timestamp") - ocel.get_value(node.event_id,start_column)).total_seconds()
     else:
-        return None
+        return 0
 
 
 #objects
