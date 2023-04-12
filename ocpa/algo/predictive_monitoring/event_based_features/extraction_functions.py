@@ -281,18 +281,9 @@ def lagging_time(node, ocel, params):
 
     return sum(res) / len(res)
 
-def event_duration(node, ocel, params):
-    start_column = params[0]
-    return (ocel.get_value(node.event_id, "event_timestamp") - ocel.get_value(node.event_id,
-                                                                              start_column)).total_seconds()
-
 def service_time(node, ocel, params):
     start_column = params[0]
-    activity = params[1]
-    if ocel.get_value(node.event_id,"event_activity") == activity:
-        return (ocel.get_value(node.event_id,"event_timestamp") - ocel.get_value(node.event_id,start_column)).total_seconds()
-    else:
-        return None
+    return (ocel.get_value(node.event_id,"event_timestamp") - ocel.get_value(node.event_id,start_column)).total_seconds()
 
 
 #objects

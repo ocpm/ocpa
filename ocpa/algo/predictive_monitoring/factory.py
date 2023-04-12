@@ -32,7 +32,6 @@ EVENT_OBJECTS = "event_objects"
 EVENT_EXECUTION_DURATION = "event_execution_time"
 EVENT_ELAPSED_TIME = "event_elapsed_time"
 EVENT_REMAINING_TIME = "event_remaining_time"
-EVENT_DURATION = "event_duration"
 EVENT_FLOW_TIME = "event_flow_time"
 EVENT_SYNCHRONIZATION_TIME = "event_synchronization_time"
 EVENT_SOJOURN_TIME = "event_sojourn_time"
@@ -75,7 +74,6 @@ VERSIONS = {
                   EVENT_EXECUTION_DURATION: event_features.execution_duration,
                   EVENT_ELAPSED_TIME: event_features.elapsed_time,
                   EVENT_REMAINING_TIME: event_features.remaining_time,
-                  EVENT_DURATION: event_features.event_duration,
                   EVENT_LAGGING_TIME: event_features.lagging_time,
                   EVENT_POOLING_TIME: event_features.pooling_time,
                   EVENT_WAITING_TIME: event_features.waiting_time,
