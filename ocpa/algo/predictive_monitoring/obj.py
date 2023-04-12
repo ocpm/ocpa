@@ -65,9 +65,9 @@ class Feature_Storage:
             target = property(_get_target)
             objects = property(_get_objects)
 
-        def __init__(self, case_id, graph, ocel):
-            self._case_id = case_id
-            self._nodes = [Feature_Storage.Feature_Graph.Node(e_id, ocel.get_value(e_id, "event_objects"),case_id) for e_id in
+        def __init__(self, pexec_id, graph, ocel):
+            self._pexec_id = pexec_id
+            self._nodes = [Feature_Storage.Feature_Graph.Node(e_id, ocel.get_value(e_id, "event_objects"),pexec_id) for e_id in
                            graph.nodes]
             #self._nodes = [Feature_Storage.Feature_Graph.Node(e_id, ocel.log.loc[e_id]["event_objects"]) for e_id in graph.nodes]
             self._node_mapping = {node.event_id: node for node in self._nodes}
@@ -82,6 +82,9 @@ class Feature_Storage:
 
         def _get_nodes(self):
             return self._nodes
+        
+        def _get_pexec_id(self):
+            return self._pexec_id
 
         def _get_edges(self):
             return self._edges
@@ -106,6 +109,7 @@ class Feature_Storage:
             self._attributes[key] = value
 
         attributes = property(_get_attributes)
+        pexec_id = property(_get_pexec_id)
         nodes = property(_get_nodes)
         edges = property(_get_edges)
         objects = property(_get_objects)
