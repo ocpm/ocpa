@@ -4,6 +4,8 @@ from dataclasses import dataclass
 from typing import Dict
 from ocpa.objects.log.variants.obj import ObjectCentricEventLog
 from ocpa.objects.log.variants.graph import EventGraph
+from ocpa.objects.log.variants.object_graph import ObjectGraph
+from ocpa.objects.log.variants.object_change_table import ObjectChangeTable
 from ocpa.objects.log.variants.table import Table
 from ocpa.algo.util.process_executions import factory as process_execution_factory
 from ocpa.algo.util.variants import factory as variant_factory
@@ -24,6 +26,8 @@ class OCEL:
     log: Table
     obj: ObjectCentricEventLog
     graph: EventGraph
+    o2o_graph: ObjectGraph
+    change_table: ObjectChangeTable
     parameters: Dict
 
     def __post_init__(self):

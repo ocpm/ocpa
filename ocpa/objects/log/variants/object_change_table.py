@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 import pandas as pd
-
+from typing import Dict
 
 @dataclass
 class ObjectChangeTable:
-    eog: pd.DataFrame
+    tables: Dict[str,pd.DataFrame]

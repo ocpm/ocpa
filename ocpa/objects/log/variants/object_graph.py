@@ -4,4 +4,4 @@ import networkx as nx
 
 @dataclass
 class ObjectGraph:
-    eog: nx.Graph
+    graph: nx.DiGraph
