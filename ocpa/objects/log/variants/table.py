@@ -11,7 +11,7 @@ from typing import Dict
 class Table:
     def __init__(self, log, parameters, object_attributes=None):
         self._log = log
-        self._log["event_id"] = self._log["event_id"].astype(int)
+        #self._log["event_id"] = self._log["event_id"].astype(int)
         self._log["event_index"] = self._log["event_id"]
         self._log = self._log.set_index("event_index")
         self._object_types = parameters["obj_names"]

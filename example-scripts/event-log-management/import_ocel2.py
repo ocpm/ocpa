@@ -4,3 +4,4 @@ ocel = ocel_import_factory.apply("../../sample_logs/ocel2/sqlite/ocel20_example.
 print(len(ocel.process_executions))
 print(len(ocel.o2o_graph.graph.nodes()))
 print(ocel.change_table)
+print(ocel.graph.eog.nodes["e1"])

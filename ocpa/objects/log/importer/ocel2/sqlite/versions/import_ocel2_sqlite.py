@@ -114,8 +114,7 @@ def apply(filepath, parameters: Dict = {}) -> OCEL:
     connection.close()
 
     # Set the table_df variable
-    event_df
-    event_df["event_id"] = list(range(0,len(event_df)))
+    #event_df["event_id"] = list(range(0,len(event_df)))
     print(event_df)
 
     if "obj_names" not in parameters:
@@ -123,7 +122,7 @@ def apply(filepath, parameters: Dict = {}) -> OCEL:
 
     log = Table(event_df, parameters=parameters)
     obj = None
-    graph = EventGraph(table_utils.eog_from_log(log))
+    graph = EventGraph(table_utils.eog_from_log(log,qualifiers=qualifiers_from_file(filepath)))
     o2o_graph = ObjectGraph(o2o_graph_from_file(filepath))
     change_table = ObjectChangeTable(change_tables_from_file(filepath))
     ocel = OCEL(log, obj, graph, o2o_graph, change_table, parameters)
@@ -182,3 +181,31 @@ def change_tables_from_file(filepath):
     # Close the connection to the database
     connection.close()
     return object_type_dataframes
+
+
+def qualifiers_from_file(filepath):
+    # Connect to the SQLite database
+    connection = sqlite3.connect(filepath)
+
+    # Read the event_object table into a DataFrame
+    event_object_df = pd.read_sql('SELECT ocel_event_id, ocel_object_id, ocel_qualifier FROM event_object', connection)
+
+    # Close the connection to the database
+    connection.close()
+
+    # Initialize the dictionary to store the mappings
+    event_id_object_mappings = {}
+
+    # Iterate through the rows in the event_object_df and populate the dictionaries
+    for index, row in event_object_df.iterrows():
+        event_id = row['ocel_event_id']
+        object_id = row['ocel_object_id']
+        qualifier = row['ocel_qualifier']
+
+        # If the event_id is not in the dictionary, initialize an empty dictionary for it
+        if event_id not in event_id_object_mappings:
+            event_id_object_mappings[event_id] = {}
+
+        # Add the object_id and qualifier to the dictionary for the current event_id
+        event_id_object_mappings[event_id][object_id] = qualifier
+    return event_id_object_mappings

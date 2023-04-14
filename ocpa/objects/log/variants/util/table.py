@@ -1,10 +1,12 @@
 import networkx as nx
 
 
-def eog_from_log(table_log):
+def eog_from_log(table_log, qualifiers = None):
     ocel = table_log.log.copy()
     EOG = nx.DiGraph()
     EOG.add_nodes_from(ocel["event_id"].to_list())
+    if qualifiers:
+        nx.set_node_attributes(EOG,qualifiers)
     edge_list = []
 
     ot_index = {ot: list(ocel.columns.values).index(ot)
