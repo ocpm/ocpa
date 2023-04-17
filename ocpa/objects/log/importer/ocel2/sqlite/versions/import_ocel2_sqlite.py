@@ -7,6 +7,7 @@ from ocpa.objects.log.variants.graph import EventGraph
 from ocpa.objects.log.variants.object_graph import ObjectGraph
 from ocpa.objects.log.variants.object_change_table import ObjectChangeTable
 import ocpa.objects.log.variants.util.table as table_utils
+import ocpa.objects.log.converter.versions.df_to_ocel as obj_converter
 import networkx as nx
 pd.set_option('display.max_rows', 500)
 pd.set_option('display.max_columns', 500)
@@ -121,7 +122,7 @@ def apply(filepath, parameters: Dict = {}) -> OCEL:
         parameters["obj_names"] = [c for c in event_df.columns if not c.startswith("event_")]
 
     log = Table(event_df, parameters=parameters)
-    obj = None
+    obj = obj_converter.apply(event_df)
     graph = EventGraph(table_utils.eog_from_log(log,qualifiers=qualifiers_from_file(filepath)))
     o2o_graph = ObjectGraph(o2o_graph_from_file(filepath))
     change_table = ObjectChangeTable(change_tables_from_file(filepath))
