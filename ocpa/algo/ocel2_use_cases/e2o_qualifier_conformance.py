@@ -74,7 +74,7 @@ def e2o_qualifier_conformance(ocel, activity, object_type, qualifier, permitted_
                         # Check if the qualifier between the event and the object matches the specified qualifier
                         if ocel.graph.eog.nodes[n][o] == qualifier:
                             # Find the last appearance value of the object in the change table of the object type
-                            attribute_value = find_last_appearance_value(ocel.change_table.tables[object_type], attribute_lookup, "ocel_id", o)
+                            attribute_value = find_last_appearance_value(ocel.change_table.tables[object_type], attribute_lookup, "object_id", o)
                             # Update the allowed and not allowed counts based on the attribute value
                             if attribute_value in permitted_attributes:
                                 allowed_count[attribute_value] += 1

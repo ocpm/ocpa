@@ -1,9 +1,11 @@
 import matplotlib.pyplot as plt
 import seaborn as sns
 import matplotlib.dates as mdates
+import pandas as pd
 
 def plot_attribute_over_time(ocel, object_type, target_column, group_column, filename, title=None):
     type_df = ocel.change_table.tables[object_type]
+    print(type_df)
     timestamp_column = "ocel_time"
     # Sort the DataFrame by the timestamp column
     dataframe = type_df.sort_values(by=timestamp_column)
@@ -12,6 +14,7 @@ def plot_attribute_over_time(ocel, object_type, target_column, group_column, fil
     plt.figure(figsize=(10, 6))
 
     # Create a line plot using seaborn
+    # dataframe[timestamp_column] = pd.to_datetime(dataframe[timestamp_column])
     sns.lineplot(data=dataframe, x=timestamp_column, y=target_column, hue=group_column, marker='o')
 
     # Customize the plot

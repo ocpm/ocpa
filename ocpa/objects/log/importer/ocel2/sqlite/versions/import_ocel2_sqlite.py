@@ -98,10 +98,10 @@ def apply(filepath, parameters: Dict = {}) -> OCEL:
 
     # Read the event_object table and populate the sets for each event_id
     event_object_df = pd.read_sql('SELECT ocel_event_id, ocel_object_id, ocel_qualifier FROM event_object', connection)
-    object_df = pd.read_sql('SELECT ocel_id, ocel_type FROM object', connection)
+    object_df = pd.read_sql('SELECT ocel_id as object_id, ocel_type FROM object', connection)
 
     # Merge event_object_df with object_df to get the ocel_type for each ocel_object_id
-    event_object_merged = event_object_df.merge(object_df, left_on='ocel_object_id', right_on='ocel_id')
+    event_object_merged = event_object_df.merge(object_df, left_on='ocel_object_id', right_on='object_id')
     event_object_merged = event_object_merged[['ocel_event_id', 'ocel_object_id', 'ocel_type']]
 
     # Iterate through the rows in event_object_merged and populate the sets in event_df
@@ -135,7 +135,7 @@ def o2o_graph_from_file(filepath):
     connection = sqlite3.connect(filepath)
 
     # Read the objects table into a DataFrame
-    objects_df = pd.read_sql('SELECT ocel_id FROM object', connection)
+    objects_df = pd.read_sql('SELECT ocel_id as object_id FROM object', connection)
 
     # Read the object_object table into a DataFrame
     object_object_df = pd.read_sql('SELECT ocel_source_id, ocel_target_id, ocel_qualifier FROM object_object',
@@ -148,8 +148,8 @@ def o2o_graph_from_file(filepath):
     G = nx.DiGraph()
 
     # Add nodes to the graph
-    for ocel_id in objects_df['ocel_id']:
-        G.add_node(ocel_id)
+    for object_id in objects_df['object_id']:
+        G.add_node(object_id)
 
     # Add edges to the graph with the qualifier as an attribute
     for index, row in object_object_df.iterrows():
@@ -175,6 +175,7 @@ def change_tables_from_file(filepath):
         ocel_type_map = object_map_types.loc[object_map_types['ocel_type'] == object_type, 'ocel_type_map'].values[0]
         table_name = f"object_{ocel_type_map}"
         object_type_df = pd.read_sql(f'SELECT * FROM {table_name}', connection)
+        object_type_df.rename(columns={'ocel_id': 'object_id'}, inplace=True)
 
         # Add the DataFrame to the dictionary
         object_type_dataframes[object_type] = object_type_df
