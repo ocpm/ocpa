@@ -59,71 +59,53 @@ def apply(obj, parameters=None):
         color_mapping[ot] = COLORS[index % len(COLORS)]
 
     for pl in obj.places:
-        # this_uuid = str(uuid.uuid4())
-        this_uuid = "p%d" % (pl_count)
+        this_uuid = str(uuid.uuid4())
+        # this_uuid = "p%d" % (pl_count)
         # pl_str = this_uuid
         pl_label = ''.join(w[0].upper() for w in pl.name.split())
+        pl_label = pl.name
         pl_count += 1
         color = color_mapping[pl.object_type]
         if pl.initial == True:
-            g.node(pl.name, pl_label, shape="circle", style="filled", fillcolor=color, color=color,
+            g.node(this_uuid, pl_label, shape="circle", style="filled", fillcolor=color, color=color,
                    fontsize="13.0", labelfontsize="13.0")
         elif pl.final == True:
-            g.node(pl.name, pl_label, shape="circle", style="filled", color=color, fillcolor=color,
+            g.node(this_uuid, pl_label, shape="circle", style="filled", color=color, fillcolor=color,
                    fontsize="13.0", labelfontsize="13.0")
         else:
-            g.node(pl.name, pl_label, shape="circle", color=color,
+            g.node(this_uuid, pl_label, shape="circle", color=color,
                    fontsize="13.0", labelfontsize="13.0")
-        all_objs[pl] = pl.name
+        all_objs[pl] = this_uuid
 
     for tr in obj.transitions:
-        # this_uuid = str(uuid.uuid4())
-        this_uuid = "t%d" % (tr_count)
+        this_uuid = str(uuid.uuid4())
         tr_count += 1
         if tr.silent == True:
-            # g.node(this_uuid, this_uuid, fontcolor="#FFFFFF", shape="box",
-            #       fillcolor="#000000", style="filled", xlabel="Test", labelfontsize="18.0")
-            g.node(tr.name, this_uuid, fontcolor="#FFFFFF", shape="box",
-                   fillcolor="#000000", style="filled", xlabel="Test", labelfontsize="13.0")
-            all_objs[tr] = tr.name  # this_uuid
-        elif tr.name not in trans_names:
-            # g.node(this_uuid, "%s \n (%s)" % (tr.name, this_uuid), shape="box", fontsize="36.0",
-            #       labelfontsize="36.0")
-            g.node(tr.name, tr.name, shape="box", fontsize="13.0",
+            g.node(this_uuid, "", fontcolor="#FFFFFF", shape="box",
+                   fillcolor="#000000", style="filled", xlabel="", labelfontsize="13.0")
+            all_objs[tr] = this_uuid  # this_uuid
+        elif tr.label not in trans_names:
+            g.node(this_uuid, tr.label, shape="box", fontsize="13.0",
                    labelfontsize="13.0")
-            trans_names[tr.name] = tr.name  # this_uuid
-            all_objs[tr] = tr.name  # this_uuid
+            trans_names[tr.label] = tr.label  # this_uuid
+            all_objs[tr] = this_uuid
         else:
-            all_objs[tr] = trans_names[tr.name]
+            all_objs[tr] = this_uuid
 
     for arc in obj.arcs:
-        # this_uuid = str(uuid.uuid4())
-        this_uuid = "a%d" % (arc_count)
-        arc_count += 1
+        this_uuid = str(uuid.uuid4())
 
-        source_node = arc.source
-        target_node = arc.target
-
-        if type(source_node) == ObjectCentricPetriNet.Place:
-            color = color_mapping[source_node.object_type]
-        if type(target_node) == ObjectCentricPetriNet.Place:
-            color = color_mapping[target_node.object_type]
+        if type(arc.source) == ObjectCentricPetriNet.Place:
+            color = color_mapping[arc.source.object_type]
+        if type(arc.target) == ObjectCentricPetriNet.Place:
+            color = color_mapping[arc.target.object_type]
 
         if arc.variable == True:
-            if source_node in all_objs and target_node in all_objs:
-                g.edge(all_objs[source_node], all_objs[target_node],
-                       label="", color=color + ":white:" + color, fontsize="13.0")
-            else:
-                print("Either {} or {} not existing in nodes".format(
-                    source_node, target_node))
-
+            g.edge(all_objs[arc.source], all_objs[arc.target], label="",
+                   color=color + ":white:" + color, fontsize="13.0")
         else:
-            if source_node in all_objs and target_node in all_objs:
-                g.edge(all_objs[source_node], all_objs[target_node],
-                       label="", color=color, fontsize="13.0")
-            else:
-                print("Either {} or {} not existing in nodes".format(
-                    source_node, target_node))
+            g.edge(all_objs[arc.source], all_objs[arc.target],
+                   label="", color=color, fontsize="13.0")
 
         all_objs[arc] = this_uuid
 

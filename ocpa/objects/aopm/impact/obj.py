@@ -17,22 +17,37 @@ class ActionChange(object):
 class FunctionWiseStructuralImpact(object):
     elements: Set[ObjectCentricPetriNet.Transition]
 
+    def quantify(self):
+        return len(self.elements)
+
 
 @dataclass
 class ObjectWiseStructuralImpact(object):
     elements: Set[str]
 
+    def quantify(self):
+        return len(self.elements)
+
 
 @dataclass
 class OperationalImpact(object):
-    elements: Set[str]
+    elements: Dict[ObjectCentricPetriNet.Transition, Set[str]]
+
+    def quantify(self):
+        return {k: len(v) for k, v in self.elements.items()}
 
 
 @dataclass
 class FunctionWisePerformanceImpact(object):
     elements: Dict[ObjectCentricPetriNet.Transition, float]
 
+    def quantify(self):
+        return {k: len(v) for k, v in self.elements.items()}
+
 
 @dataclass
 class ObjectWisePerformanceImpact(object):
     elements: Dict[str, float]
+
+    def quantify(self):
+        return {k: len(v) for k, v in self.elements.items()}

@@ -1,11 +1,11 @@
-from ocpa.algo.discovery.ocpn.versions import inductive
+from ocpa.algo.discovery.ocpn.versions import inductive, new_inductive
 from ocpa.objects.log.ocel import OCEL
 from ocpa.objects.log.variants.obj import ObjectCentricEventLog
 import ocpa.objects.log.converter.factory as convert_factory
 
 INDUCTIVE = "inductive"
 
-VERSIONS = {INDUCTIVE: inductive.apply}
+VERSIONS = {INDUCTIVE: new_inductive.apply}
 
 
 def apply(ocel, variant=INDUCTIVE, parameters=None):

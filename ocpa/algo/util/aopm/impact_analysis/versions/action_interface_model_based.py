@@ -10,78 +10,103 @@ from ocpa.algo.enhancement.token_replay_based_performance.util import run_timed_
 from ocpa.algo.util.util import project_log
 from ocpa.algo.enhancement.event_graph_based_performance import algorithm as performance_factory
 from ocpa.algo.util.filtering.log import time_filtering
+from ocpa.algo.enhancement.ocpn_analysis.projection import algorithm as projection_factory
 
 
 def apply(ai: ActionInstance, config: Configuration, ocel: OCEL, tw: Tuple[datetime.datetime, datetime.datetime], parameters):
     if parameters is None:
         parameters = {}
-    ac = detect_change(ai, config)
-    object_types = config.aim.ocpn.object_types
-    for ot in object_types:
-        print(type_specific_FSA(ac, ot))
-    print(backward_pass_FSA(ai.aim, ac))
-    print(forward_pass_FSA(ai.aim, ac))
-    print(direct_OSA(ai.aim, ac))
-    print(backward_pass_OSA(ai.aim, ac))
-    print(forward_pass_OSA(ai.aim, ac))
-    marking = new_compute_marking(ocel, ai.aim.ocpn)
-    os = OperationalState(ai.aim, marking, {})
-    print(preceding_OIA(ai.aim, ac, os))
-    print(following_OIA(ai.aim, ac, os))
-    print(backward_pass_OIA(ai.aim, ac, os))
-    print(forward_pass_OIA(ai.aim, ac, os))
-    for measure in ['flow', 'sojourn', 'syncronization']:
-        agg = 'avg'
-        print(measure, agg)
-        print(FPI(ai.aim, ac, tw, ocel, measure, agg))
+    # ac = detect_change(ai, config)
+    # object_types = config.aim.ocpn.object_types
+    # for ot in object_types:
+    #     print(type_specific_FSA(ac, ot))
+    # print(backward_pass_FSA(ai.aim, ac))
+    # print(forward_pass_FSA(ai.aim, ac))
+    # print(direct_OSA(ai.aim, ac))
+    # print(backward_pass_OSA(ai.aim, ac))
+    # print(forward_pass_OSA(ai.aim, ac))
+    # marking = new_compute_marking(ocel, ai.aim.ocpn)
+    # os = OperationalState(ai.aim, marking, {})
+    # print(preceding_OIA(ai.aim, ac, os))
+    # print(following_OIA(ai.aim, ac, os))
+    # print(backward_pass_OIA(ai.aim, ac, os))
+    # print(forward_pass_OIA(ai.aim, ac, os))
+    # for measure in ['flow', 'sojourn', 'syncronization']:
+    #     agg = 'avg'
+    #     print(measure, agg)
+    #     print(FPI(ai.aim, ac, tw, ocel, measure, agg))
 
-    for ot in object_types:
-        for measure in ['pooling', 'lagging', 'readying', 'elapsed', 'remaining']:
-            agg = 'avg'
-            print(measure, agg, ot)
-            print(FPI(ai.aim, ac, tw, ocel, measure, agg, ot))
+    # for ot in object_types:
+    #     for measure in ['pooling', 'lagging', 'readying', 'elapsed', 'remaining']:
+    #         agg = 'avg'
+    #         print(measure, agg, ot)
+    #         print(FPI(ai.aim, ac, tw, ocel, measure, agg, ot))
 
-    for ot in object_types:
-        for measure in ['elapsed', 'remaining']:
-            agg = 'avg'
-            print(measure, agg, ot)
-            print(OPI(ai.aim, ac, tw, ocel, measure, agg, ot))
+    # for ot in object_types:
+    #     for measure in ['elapsed', 'remaining']:
+    #         agg = 'avg'
+    #         print(measure, agg, ot)
+    #         print(OPI(ai.aim, ac, tw, ocel, measure, agg, ot))
 
 
 def apply_v2(ac: ActionChange, ocel: OCEL, tw: Tuple[datetime.datetime, datetime.datetime], parameters=None):
     if parameters is None:
         parameters = {}
+    results = {}
     object_types = ac.aim.ocpn.object_types
-    # for ot in object_types:
-    #     print(type_specific_FSA(ac, ot))
-    print(backward_pass_FSA(ac))
-    print(forward_pass_FSA(ac.aim, ac))
-    print(direct_OSA(ac.aim, ac))
-    print(backward_pass_OSA(ac.aim, ac))
-    print(forward_pass_OSA(ac.aim, ac))
+
+    # results['BP-FSA'] = {}
+    for ot in object_types:
+        # print(ot, 'BP_FSA', backward_pass_FSA(ac, ot).quantify())
+        results[f'BP-FSA-{ot}'] = backward_pass_FSA(ac, ot).quantify()
+
+    for ot in object_types:
+        # print(ot, 'FP_FSA', forward_pass_FSA(ac, ot).quantify())
+        results[f'FP-FSA-{ot}'] = forward_pass_FSA(ac, ot).quantify()
+
+    # print('direct_OSA', direct_OSA(ac).quantify())
+    results['D-OSA'] = direct_OSA(ac).quantify()
+    # print('BP_OSA', backward_pass_OSA(ac).quantify())
+    results['BP-OSA'] = backward_pass_OSA(ac).quantify()
+    # print('FP_OSA', forward_pass_OSA(ac).quantify())
+    results['FP-OSA'] = forward_pass_OSA(ac).quantify()
+
     filtered_ocel = time_filtering.events(ocel, ac.tw[0], ac.tw[1])
-    marking = new_compute_marking(filtered_ocel, ac.aim.ocpn)
+    filtered_ocel.log.log.to_csv('./filtered_log.csv')
+    marking, token_history = new_compute_marking(filtered_ocel, ac.aim.ocpn)
+    # print(marking)
     os = OperationalState(ac.aim, marking, {})
-    print(preceding_OIA(ac.aim, ac, os))
-    print(following_OIA(ac.aim, ac, os))
-    print(backward_pass_OIA(ac.aim, ac, os))
-    print(forward_pass_OIA(ac.aim, ac, os))
-    for measure in ['flow', 'sojourn', 'syncronization']:
-        agg = 'avg'
-        print(measure, agg)
-        print(FPI(ac.aim, ac, tw, ocel, measure, agg))
 
     for ot in object_types:
-        for measure in ['pooling', 'lagging', 'readying', 'elapsed', 'remaining']:
-            agg = 'avg'
-            print(measure, agg, ot)
-            print(FPI(ac.aim, ac, tw, ocel, measure, agg, ot))
+        results[f'BP-OIA-{ot}'] = backward_pass_OIA(
+            ac, os, ot).quantify()
+        # print(ot, 'BP_OIA', backward_pass_OIA(ac, os, ot).quantify())
 
+    # results['FP-OIA'] = {}
     for ot in object_types:
-        for measure in ['elapsed', 'remaining']:
-            agg = 'avg'
-            print(measure, agg, ot)
-            print(OPI(ac.aim, ac, tw, ocel, measure, agg, ot))
+        results[f'FP-OIA-{ot}'] = forward_pass_OIA(
+            ac, os, ot).quantify()
+        # print(ot, 'FP_OIA', forward_pass_OIA(ac, os, ot).quantify())
+
+    # results['FPA'] = {}
+    # for ot in object_types:
+    #     results['FPA'][ot] = {}
+    #     for measure in ['pooling', 'lagging', 'readying', 'elapsed', 'remaining']:
+    #         agg = 'avg'
+    #         results['FPA'][ot][measure] = FPA(ac, tw, ocel, measure, agg, ot)
+    #         # print(measure, agg, ot)
+    #         # print(FPA(ac.aim, ac, tw, ocel, measure, agg, ot))
+
+    # results['OPA'] = {}
+    # for ot in object_types:
+    #     results['OPA'][ot] = {}
+    #     for measure in ['elapsed', 'remaining']:
+    #         agg = 'avg'
+    #         results['OPA'][ot][measure] = OPA(ac, tw, ocel, measure, agg, ot)
+    #         # print(measure, agg, ot)
+    #         # print(OPA(ac.aim, ac, tw, ocel, measure, agg, ot))
+
+    return results
 
 
 def detect_change(ai: ActionInstance, config: Configuration):
@@ -109,56 +134,93 @@ def type_specific_FSA(change: ActionChange, ot: str) -> FunctionWiseStructuralIm
     return FunctionWiseStructuralImpact(set([t for t in change.transitions if ot in [p.object_type for p in t.preset]]))
 
 
-def backward_pass_FSA(change: ActionChange) -> FunctionWiseStructuralImpact:
+# def backward_pass_FSA(change: ActionChange) -> FunctionWiseStructuralImpact:
+#     return FunctionWiseStructuralImpact(set([t2 for t in change.transitions for t2 in change.aim.ocpn.backward_pass(t)]))
+
+
+def backward_pass_FSA(change: ActionChange, ot: str) -> FunctionWiseStructuralImpact:
+    ancestor_transitions = set()
     for t in change.transitions:
-        print(change.aim.ocpn.backward_pass(t))
-    return FunctionWiseStructuralImpact(set([t2 for t in change.transitions for t2 in change.aim.ocpn.backward_pass(t)]))
+        ancestor_transitions = ancestor_transitions | set([t2 for t2 in change.aim.ocpn.ancestor_transitions(
+            t, ot) if t2.silent == False])
+    return FunctionWiseStructuralImpact(ancestor_transitions)
 
 
-def forward_pass_FSA(aim: ActionInterfaceModel, change: ActionChange) -> FunctionWiseStructuralImpact:
-    return FunctionWiseStructuralImpact(set([t2 for t in change.transitions for t2 in aim.ocpn.forward_pass(t)]))
+def forward_pass_FSA(change: ActionChange, ot: str) -> FunctionWiseStructuralImpact:
+    descendant_transitions = set()
+    for t in change.transitions:
+        descendant_transitions = descendant_transitions | set([t2 for t2 in change.aim.ocpn.descendant_transitions(
+            t, ot) if t2.silent == False])
+    return FunctionWiseStructuralImpact(descendant_transitions)
 
 
-def direct_OSA(aim: ActionInterfaceModel, change: ActionChange) -> ObjectWiseStructuralImpact:
+def direct_OSA(change: ActionChange) -> ObjectWiseStructuralImpact:
     return ObjectWiseStructuralImpact(set([ot for t in change.transitions for ot in [p.object_type for p in t.preset]]))
 
 
-def backward_pass_OSA(aim: ActionInterfaceModel, change: ActionChange) -> ObjectWiseStructuralImpact:
-    return ObjectWiseStructuralImpact(set([ot for t in change.transitions for t2 in aim.ocpn.backward_pass(t) for ot in [p.object_type for p in t2.preset]]))
-
-
-def forward_pass_OSA(aim: ActionInterfaceModel, change: ActionChange) -> ObjectWiseStructuralImpact:
-    return ObjectWiseStructuralImpact(set([ot for t in change.transitions for t2 in aim.ocpn.forward_pass(t) for ot in [p.object_type for p in t2.postset]]))
-
-
-def preceding_OIA(aim: ActionInterfaceModel, change: ActionChange, os: OperationalState) -> OperationalImpact:
-    objects = []
+def backward_pass_OSA(change: ActionChange) -> ObjectWiseStructuralImpact:
+    ancestor_places = set()
     for t in change.transitions:
-        objects += [oi for p, oi in os.marking.tokens if p in t.preset]
-    return OperationalImpact(set(objects))
+        for ot in change.aim.ocpn.object_types:
+            ancestor_places = ancestor_places | change.aim.ocpn.ancestor_places(
+                t, ot)
+    return ObjectWiseStructuralImpact(set([ot for ot in [p.object_type for p in ancestor_places]]))
 
 
-def following_OIA(aim: ActionInterfaceModel, change: ActionChange, os: OperationalState) -> OperationalImpact:
-    objects = []
+def forward_pass_OSA(change: ActionChange) -> ObjectWiseStructuralImpact:
+    descendant_places = set()
     for t in change.transitions:
-        objects += [oi for p, oi in os.marking.tokens if p in t.postset]
-    return OperationalImpact(set(objects))
+        for ot in change.aim.ocpn.object_types:
+            descendant_places = descendant_places | change.aim.ocpn.descendant_places(
+                t, ot)
+    return ObjectWiseStructuralImpact(set([ot for ot in [p.object_type for p in descendant_places]]))
 
 
-def backward_pass_OIA(aim: ActionInterfaceModel, change: ActionChange, os: OperationalState) -> OperationalImpact:
-    objects = []
+# def preceding_OIA(change: ActionChange, os: OperationalState, ot: str) -> OperationalImpact:
+#     objects = []
+#     for t in change.transitions:
+#         print(t, t.preset)
+#         objects += [oi for p,
+#                     oi in os.marking.tokens if p in t.preset and p.object_type == ot]
+#     return OperationalImpact(set(objects))
+
+
+# def following_OIA(change: ActionChange, os: OperationalState, ot: str) -> OperationalImpact:
+#     objects = []
+#     for t in change.transitions:
+#         objects += [oi for p,
+#                     oi in os.marking.tokens if p in t.postset and p.object_type == ot]
+#     return OperationalImpact(set(objects))
+
+
+def backward_pass_OIA(change: ActionChange, os: OperationalState, ot: str) -> OperationalImpact:
+    objects = {}
     for t in change.transitions:
-        for t2 in aim.ocpn.backward_pass(t):
-            objects += [oi for p, oi in os.marking.tokens if p in t2.preset]
-    return OperationalImpact(set(objects))
+        for t2 in change.aim.ocpn.ancestor_transitions(t, ot):
+            if t2.silent == False:
+                project_parameters = {'source': t2.label,
+                                      'target': t.label, 'object_type': ot}
+                subnet = projection_factory.apply(change.aim.ocpn, variant="subprocess",
+                                                  parameters=project_parameters)
+
+                objects[t2] = set([token[1] for token,
+                                   count in os.marking.items() if token[0] in subnet.places])
+                # print(t2, subnet.places, len(objects[t2]))
+    return OperationalImpact(objects)
 
 
-def forward_pass_OIA(aim: ActionInterfaceModel, change: ActionChange, os: OperationalState) -> OperationalImpact:
-    objects = []
+def forward_pass_OIA(change: ActionChange, os: OperationalState, ot: str) -> OperationalImpact:
+    objects = {}
     for t in change.transitions:
-        for t2 in aim.ocpn.forward_pass(t):
-            objects += [oi for p, oi in os.marking.tokens if p in t2.postset]
-    return OperationalImpact(set(objects))
+        for t2 in change.aim.ocpn.descendant_transitions(t, ot):
+            if t2.silent == False:
+                project_parameters = {'source': t.label,
+                                      'target': t2.label, 'object_type': ot}
+                subnet = projection_factory.apply(change.aim.ocpn, variant="subprocess",
+                                                  parameters=project_parameters)
+                objects[t2] = set([token[1] for token,
+                                   count in os.marking.items() if token[0] in subnet.places])
+    return OperationalImpact(objects)
 
 
 def compute_marking(ocel: OCEL, ocpn: ObjectCentricPetriNet):
@@ -166,7 +228,7 @@ def compute_marking(ocel: OCEL, ocpn: ObjectCentricPetriNet):
     for i, row in ocel.log.log.iterrows():
         activity = row["event_activity"]
         for tr in ocpn.transitions:
-            if tr.name == activity:
+            if tr.label == activity:
                 for arc in tr.out_arcs:
                     pl = arc.target
                     ois = row[pl.object_type]
@@ -174,12 +236,13 @@ def compute_marking(ocel: OCEL, ocpn: ObjectCentricPetriNet):
                         if not pd.isna(oi):
                             marking.add_token(pl, oi)
                 break
-    return marking
+    return marking, '_'
 
 
 def new_compute_marking(ocel: OCEL, ocpn: ObjectCentricPetriNet):
     df = succint_mdl_to_exploded_mdl(ocel.log.log)
     marking = Marking()
+    token_history = {}
     for persp in ocpn.object_types:
         net, im, fm = ocpn.nets[persp]
         log = project_log(df, persp)
@@ -187,13 +250,17 @@ def new_compute_marking(ocel: OCEL, ocpn: ObjectCentricPetriNet):
         for result in replay_results:
             token_id = result['trace_id']
             reached_marking = result['reached_marking']
+            activated_transitions = result['activated_transitions']
+            # print(token_id, [(ocpn.place_mapping[p[0]], token_id)
+            #       for p in reached_marking.items()])
             for p in reached_marking.items():
-                for i in range(p[1]):
-                    marking.add_token(ocpn.find_place(p[0].name), token_id)
-    return marking
+                marking += {(ocpn.place_mapping[p[0]], token_id): p[1]}
+                # marking.add_token()
+                token_history[token_id] = activated_transitions
+    return marking, token_history
 
 
-def FPI(aim: ActionInterfaceModel, change: ActionChange, tw: Tuple[datetime.datetime, datetime.datetime], ocel: OCEL, measure, agg, ot=None) -> FunctionWisePerformanceImpact:
+def FPA(change: ActionChange, tw: Tuple[datetime.datetime, datetime.datetime], ocel: OCEL, measure, agg, ot=None) -> FunctionWisePerformanceImpact:
     change_log = time_filtering.events(ocel, change.tw[0], change.tw[1])
     comp_log = time_filtering.events(ocel, tw[0], tw[1])
     perf_diff_dict = {}
@@ -211,7 +278,7 @@ def FPI(aim: ActionInterfaceModel, change: ActionChange, tw: Tuple[datetime.date
     return perf_diff_dict
 
 
-def OPI(aim: ActionInterfaceModel, change: ActionChange, tw: Tuple[datetime.datetime, datetime.datetime], ocel: OCEL, measure, agg, ot) -> ObjectWisePerformanceImpact:
+def OPA(change: ActionChange, tw: Tuple[datetime.datetime, datetime.datetime], ocel: OCEL, measure, agg, ot) -> ObjectWisePerformanceImpact:
     change_log = time_filtering.events(ocel, change.tw[0], change.tw[1])
     comp_log = time_filtering.events(ocel, tw[0], tw[1])
     perf_diff_dict = {}

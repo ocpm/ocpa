@@ -29,6 +29,9 @@ def apply(filepath, parameters=None):
     df_ocel["event_id"] = [str(i) for i in range(len(df))]
     df_ocel['event_activity'] = df[parameters['act_name']]
     df_ocel['event_timestamp'] = pd.to_datetime(df[parameters['time_name']])
+
+    df_ocel.sort_values(by='event_timestamp', inplace=True)
+
     if "start_timestamp" in parameters:
         df_ocel['event_start_timestamp'] = pd.to_datetime(
             df[parameters['start_timestamp']])

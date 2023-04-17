@@ -59,30 +59,34 @@ def evaluate_oa_edge(ocel, oa_edge):
         raise ValueError("Invalid label for the constraint graph edge")
     op = oa_edge.operator
     threshold = oa_edge.threshold
-    if label == 'exist':
-        metric = ocel.obj.existence_metric(ot, act)
+    try:
+        if label == 'exist':
+            metric = ocel.obj.existence_metric(ot, act)
 
-    elif label == 'non-exist':
-        metric = ocel.obj.non_existence_metric(ot, act)
+        elif label == 'absent':
+            metric = ocel.obj.object_absence_metric(ot, act)
 
-    elif label == 'absent':
-        metric = ocel.obj.object_absence_metric(ot, act)
+        elif label == 'singular':
+            metric = ocel.obj.object_singular_metric(ot, act)
 
-    elif label == 'singular':
-        metric = ocel.obj.object_singular_metric(ot, act)
+        elif label == 'multiple':
+            metric = ocel.obj.object_multiple_metric(ot, act)
 
-    elif label == 'multiple':
-        metric = ocel.obj.object_multiple_metric(ot, act)
+        elif label == 'present':
+            metric = ocel.obj.object_presence_metric(ot, act)
 
-    elif label == 'present':
-        metric = ocel.obj.object_presence_metric(ot, act)
+        elif label in ['pooling', 'lagging', 'readying']:
+            perf_parameters = {'measure': label,
+                            'activity': act, 'aggregation': agg}
+            metric = performance_factory.apply(
+                ocel, variant='event_object_graph_based', parameters=perf_parameters)
+        else:
+            raise ValueError(f'{label} is not defined.')
+    except Exception as e:
+        print(f'Error in evaluating {oa_edge} with {ocel.log.log}: {e}')
+        return False
 
-    elif label in ['pooling', 'lagging', 'readying']:
-        perf_parameters = {'measure': label,
-                           'activity': act, 'aggregation': agg}
-        metric = performance_factory.apply(
-            ocel, variant='event_object_graph_based', parameters=perf_parameters)
-
+    print(f'Evaluating {label} for ({ot},{act}): {metric}, {op}, {threshold}')
     if compare(metric, op, threshold):
         return True
     else:
@@ -94,20 +98,28 @@ def evaluate_aa_edge(ocel, aa_edge):
     op = aa_edge.operator
     threshold = aa_edge.threshold
     label = aa_edge.label.split("-")
-    if len(label) == 1:
-        label = label[0]
-    elif len(label) == 2:
-        agg = label[0]
-        if agg not in AGG_MAP:
-            raise ValueError(f'Aggregation {agg} is not supported')
-        label = label[1]
-    else:
-        raise ValueError("Invalid label for the constraint graph edge")
-    if label in ['flow', 'sojourn', 'sync']:
-        perf_parameters = {'measure': label,
-                           'activity': act, 'aggregation': agg}
-        metric = performance_factory.apply(
-            ocel, variant='event_object_graph_based', parameters=perf_parameters)
+    try:
+        if len(label) == 1:
+            label = label[0]
+        elif len(label) == 2:
+            agg = label[0]
+            if agg not in AGG_MAP:
+                raise ValueError(f'Aggregation {agg} is not supported')
+            label = label[1]
+        else:
+            raise ValueError("Invalid label for the constraint graph edge")
+        if label in ['flow', 'sojourn', 'sync']:
+            perf_parameters = {'measure': label,
+                            'activity': act, 'aggregation': agg}
+            metric = performance_factory.apply(
+                ocel, variant='event_object_graph_based', parameters=perf_parameters)
+        else:
+            raise ValueError(f'{label} is not defined.')
+    except Exception as e:
+        print(f'Error in evaluating {aa_edge} with {ocel.log.log}: {e}')
+        return False
+    
+    print(f'Evaluating {label} for ({act}): {metric}, {op}, {threshold}')
 
     if compare(metric, op, threshold):
         return True
@@ -122,29 +134,37 @@ def evaluate_aoa_edge(ocel, aoa_edge):
     label = aoa_edge.label
     op = aoa_edge.operator
     threshold = aoa_edge.threshold
-    if label == 'co-exist':
-        metric = ocel.obj.coexistence_metric(ot, act1, act2)
+    try:
+        if label == 'coexist':
+            metric = ocel.obj.coexistence_metric(ot, act1, act2)
 
-    elif label == 'exclusive':
-        metric = ocel.obj.exclusiveness_metric(ot, act1, act2)
+        elif label == 'exclusive':
+            metric = ocel.obj.exclusiveness_metric(ot, act1, act2)
 
-    elif label == 'choice':
-        metric = ocel.obj.choice_metric(ot, act1, act2)
+        elif label == 'choice':
+            metric = ocel.obj.choice_metric(ot, act1, act2)
 
-    elif label == 'xor-choice':
-        metric = ocel.obj.xor_choice_metric(ot, act1, act2)
+        elif label == 'xorChoice':
+            metric = ocel.obj.xor_choice_metric(ot, act1, act2)
 
-    elif label == 'followed_by':
-        metric = ocel.obj.followed_by_metric(ot, act1, act2)
+        elif label == 'cause':
+            metric = ocel.obj.followed_by_metric(ot, act1, act2)
 
-    elif label == 'directly_followed_by':
-        metric = ocel.obj.directly_followed_by_metric(ot, act1, act2)
+        elif label == 'directlyCause':
+            metric = ocel.obj.directly_followed_by_metric(ot, act1, act2)
 
-    elif label == 'precede':
-        metric = ocel.obj.precedence_metric(ot, act1, act2)
+        elif label == 'precede':
+            metric = ocel.obj.precedence_metric(ot, act1, act2)
 
-    elif label == 'block':
-        metric = ocel.obj.block_metric(ot, act1, act2)
+        elif label == 'block':
+            metric = ocel.obj.block_metric(ot, act1, act2)
+        else:
+            raise ValueError(f'{label} is not defined.')
+    except Exception as e:
+        print(f'Error in evaluating {aoa_edge} with {ocel.log.log}: {e}')
+        return False
+    
+    print(f'Evaluating {label} for ({act1, ot, act2}): {metric}, {op}, {threshold}')
 
     if compare(metric, op, threshold):
         return True

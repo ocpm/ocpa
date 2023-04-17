@@ -844,7 +844,6 @@ def apply_trace(trace, net, initial_marking, final_marking, trans_map, enable_pl
                     start = end
                 tvs.append([start_token_name, start, end])
                 my_mark['end'].remove(end_token)
-
     return [is_fit, trace_fitness, act_trans, transitions_with_problems, marking_before_cleaning,
             align_utils.get_visible_transitions_eventually_enabled_by_marking(
                 net, marking_before_cleaning), missing,
@@ -1075,11 +1074,11 @@ def run_timed_replay(log: EventLog, net: PetriNet, initial_marking: Marking, fin
     consider_remaining_in_fitness = exec_utils.get_param_value(Parameters.CONSIDER_REMAINING_IN_FITNESS, parameters,
                                                                True)
     try_to_reach_final_marking_through_hidden = exec_utils.get_param_value(
-        Parameters.TRY_TO_REACH_FINAL_MARKING_THROUGH_HIDDEN, parameters, True)
+        Parameters.TRY_TO_REACH_FINAL_MARKING_THROUGH_HIDDEN, parameters, False)
     stop_immediately_unfit = exec_utils.get_param_value(
         Parameters.STOP_IMMEDIATELY_UNFIT, parameters, False)
     walk_through_hidden_trans = exec_utils.get_param_value(
-        Parameters.WALK_THROUGH_HIDDEN_TRANS, parameters, True)
+        Parameters.WALK_THROUGH_HIDDEN_TRANS, parameters, False)
     is_reduction = exec_utils.get_param_value(
         Parameters.IS_REDUCTION, parameters, False)
     cleaning_token_flood = exec_utils.get_param_value(

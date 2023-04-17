@@ -9,6 +9,7 @@ def apply(df: pd.DataFrame) -> ObjectCentricEventLog:
     events = {}
     objects = {}
     acts = set()
+    df.sort_values(by='event_timestamp', inplace=True)
     obj_names = set([x for x in df.columns if not x.startswith("event_")])
     val_names = set([x for x in df.columns if x.startswith(
         "event_")]) - set(['event_activity', 'event_timestamp', 'event_start_timestamp'])
