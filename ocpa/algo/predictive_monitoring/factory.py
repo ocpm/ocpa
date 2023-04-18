@@ -101,7 +101,7 @@ def _apply_to_process_execution(args):
     case = ocel.process_executions[c_id]
     case_graph = ocel.graph.eog.subgraph(case)
     feature_graph = Feature_Storage.Feature_Graph(
-        case_id=c_id, graph=case_graph, ocel=ocel)
+        pexec_id=c_id, graph=case_graph, ocel=ocel)
     for execution_feature in execution_based_features:
         execution_function, params = execution_feature
         feature_graph.add_attribute(
