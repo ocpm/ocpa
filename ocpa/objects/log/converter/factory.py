@@ -5,9 +5,10 @@ from ocpa.objects.log.variants.obj import ObjectCentricEventLog
 JSONOCEL_TO_CSV = "json_to_csv"
 DF_TO_OCEL = "df_to_ocel"
 
-VERSIONS = {JSONOCEL_TO_CSV: jsonocel_to_csv.apply,
-            DF_TO_OCEL: df_to_ocel.apply}
+VERSIONS = {JSONOCEL_TO_CSV: jsonocel_to_csv.apply, DF_TO_OCEL: df_to_ocel.apply}
 
 
-def apply(ocel, variant=DF_TO_OCEL, parameters=None) -> ObjectCentricEventLog:
+def apply(
+    ocel: ObjectCentricEventLog, variant=DF_TO_OCEL, parameters=None
+) -> ObjectCentricEventLog:
     return VERSIONS[variant](ocel, parameters=parameters)

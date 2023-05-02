@@ -85,7 +85,7 @@ class Table:
 
     # Not guaranteed to keep everything consistent, only as quick helpers
 
-    def get_objects_of_variants(self, variants) -> Dict:
+    def get_objects_of_variants(self, variants) -> dict:
         obs = {}
         for ot in self.object_types:
             obs[ot] = set()
