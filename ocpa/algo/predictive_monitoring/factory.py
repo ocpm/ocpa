@@ -1,9 +1,14 @@
 import time
+from multiprocessing import Pool
+from multiprocessing.dummy import Pool as ThreadPool
+from random import shuffle
 
-from ocpa.objects.log.ocel import OCEL
+import tqdm
+
 import ocpa.algo.predictive_monitoring.event_based_features.extraction_functions as event_features
 import ocpa.algo.predictive_monitoring.execution_based_features.extraction_functions as execution_features
 from ocpa.algo.predictive_monitoring.obj import Feature_Storage
+from ocpa.objects.log.ocel import OCEL
 
 EVENT_BASED = "event_based"
 EXECUTION_BASED = "execution_based"
@@ -29,7 +34,6 @@ EVENT_OBJECTS = "event_objects"
 EVENT_EXECUTION_DURATION = "event_execution_time"
 EVENT_ELAPSED_TIME = "event_elapsed_time"
 EVENT_REMAINING_TIME = "event_remaining_time"
-EVENT_DURATION = "event_duration"
 EVENT_FLOW_TIME = "event_flow_time"
 EVENT_SYNCHRONIZATION_TIME = "event_synchronization_time"
 EVENT_SOJOURN_TIME = "event_sojourn_time"
@@ -73,7 +77,6 @@ VERSIONS = {
         EVENT_EXECUTION_DURATION: event_features.execution_duration,
         EVENT_ELAPSED_TIME: event_features.elapsed_time,
         EVENT_REMAINING_TIME: event_features.remaining_time,
-        EVENT_DURATION: event_features.event_duration,
         EVENT_LAGGING_TIME: event_features.lagging_time,
         EVENT_POOLING_TIME: event_features.pooling_time,
         EVENT_WAITING_TIME: event_features.waiting_time,
@@ -96,6 +99,52 @@ VERSIONS = {
 }
 
 
+def _apply_to_process_execution(args):
+    (
+        c_id,
+        ocel,
+        event_based_features,
+        execution_based_features,
+        event_attributes,
+        event_object_attributes,
+        execution_object_attributes,
+        multi_output_features,
+    ) = args
+    case = ocel.process_executions[c_id]
+    case_graph = ocel.graph.eog.subgraph(case)
+    feature_graph = Feature_Storage.Feature_Graph(
+        pexec_id=c_id, graph=case_graph, ocel=ocel
+    )
+    for execution_feature in execution_based_features:
+        execution_function, params = execution_feature
+        feature_graph.add_attribute(
+            execution_feature,
+            VERSIONS[EXECUTION_BASED][execution_function](case_graph, ocel, params),
+        )
+        for (object_type, attr, fun) in execution_object_attributes:
+            feature_graph.add_attribute(
+                object_type + "_" + attr + fun.__name__, fun([object_type[attr]])
+            )
+    for node in feature_graph.nodes:
+        for m_event_feature in multi_output_features:
+            event_function, params = m_event_feature
+            results = VERSIONS[EVENT_BASED][event_function](node, ocel, params)
+            for res in results.keys():
+                node.add_attribute((event_function, res), results[res])
+        for event_feature in event_based_features:
+            event_function, params = event_feature
+            node.add_attribute(
+                event_feature, VERSIONS[EVENT_BASED][event_function](node, ocel, params)
+            )
+        for attr in event_attributes:
+            node.add_attribute(attr, ocel.get_value(node.event_id, attr))
+        for (object_type, attr, fun) in event_object_attributes:
+            feature_graph.add_attribute(
+                object_type + "_" + attr + fun.__name__, fun([object_type[attr]])
+            )
+    return feature_graph
+
+
 def apply(
     ocel: OCEL,
     event_based_features=[],
@@ -103,6 +152,8 @@ def apply(
     event_attributes=[],
     event_object_attributes=[],
     execution_object_attributes=[],
+    workers=4,
+    multi_output_event_features=[],
 ):
     """
     Creates a :class:`Feature Storage object <ocpa.algo.predictive_monitoring.obj.Feature_Storage>` from the object-centric
@@ -128,12 +179,14 @@ def apply(
     :param event_object_attributes: To be added in future
     :param execution_object_attributes: To be added in future
 
+    :param workers: Number of threads to extract the features
+    :type workers: int
+
     :return: Feature Storage
     :rtype: :class:`Feature Storage <ocpa.algo.predictive_monitoring.obj.Feature_Storage>`
 
     """
 
-    s_time = time.time()
     ocel.log.log["event_objects"] = ocel.log.log.apply(
         lambda x: [(ot, o) for ot in ocel.object_types for o in x[ot]], axis=1
     )
@@ -143,63 +196,33 @@ def apply(
         execution_features=execution_based_features,
         ocel=ocel,
     )
-    object_f_time = time.time() - s_time
-    id = 0
-    subgraph_time = 0
-    execution_time = 0
-    nodes_time = 0
-    adding_time = 0
-    for case in ocel.process_executions:
-        s_time = time.time()
-        case_graph = ocel.graph.eog.subgraph(case)
-        feature_graph = Feature_Storage.Feature_Graph(
-            case_id=id, graph=case_graph, ocel=ocel
+
+    print("Applying feature extraction to process executions")
+    parameter_space = [
+        (
+            c_id,
+            ocel,
+            event_based_features,
+            execution_based_features,
+            event_attributes,
+            event_object_attributes,
+            execution_object_attributes,
+            multi_output_event_features,
         )
-        subgraph_time += time.time() - s_time
-        s_time = time.time()
-        for execution_feature in execution_based_features:
-            execution_function, params = execution_feature
-            feature_graph.add_attribute(
-                execution_feature,
-                VERSIONS[EXECUTION_BASED][execution_function](case_graph, ocel, params),
-            )
-            for object_type, attr, fun in execution_object_attributes:
-                # TODO add object frame
-                feature_graph.add_attribute(
-                    object_type + "_" + attr + fun.__name__, fun([object_type[attr]])
-                )
-        execution_time += time.time() - s_time
-        s_time = time.time()
-        for node in feature_graph.nodes:
-            for event_feature in event_based_features:
-                event_function, params = event_feature
-                node.add_attribute(
-                    event_feature,
-                    VERSIONS[EVENT_BASED][event_function](node, ocel, params),
-                )
-            for attr in event_attributes:
-                node.add_attribute(attr, ocel.get_value(node.event_id, attr))
-                # node.add_attribute(attr,ocel.log.loc[node.event_id][attr])
-            for object_type, attr, fun in event_object_attributes:
-                # TODO add object frame
-                feature_graph.add_attribute(
-                    object_type + "_" + attr + fun.__name__, fun([object_type[attr]])
-                )
-        nodes_time += time.time() - s_time
-        s_time = time.time()
-        feature_storage.add_feature_graph(feature_graph)
-        adding_time += time.time() - s_time
-        id += 1
+        for c_id in range(0, len(ocel.process_executions))
+    ]
+    # Shuffle parameter space to avoid that one process gets only very long-running cases
+    shuffle(parameter_space)
+    chunksize, extra = divmod(len(parameter_space), workers * 16)
+    if extra:
+        chunksize += 1
+    with Pool(workers) as pool:
+        for f_g in tqdm.tqdm(
+            pool.imap_unordered(
+                _apply_to_process_execution, parameter_space, chunksize=chunksize
+            ),
+            total=len(parameter_space),
+        ):
+            feature_storage.add_feature_graph(f_g)
     del ocel.log.log["event_objects"]
-
-    # pprint_table = [
-    #     ("Execution time", execution_time),
-    #     ("Node features", nodes_time),
-    #     ("Adding features", adding_time),
-    #     ("Subgraph features", subgraph_time),
-    #     ("Preparation time", object_f_time),
-    # ]
-    # for measure, measurement in pprint_table:
-    #     print(f"    | {measure:17} | {measurement:8.5f} |")
-
     return feature_storage

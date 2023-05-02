@@ -1,7 +1,9 @@
-from warnings import warn
 import random
+from warnings import warn
+
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
+
 from ocpa.objects.log.ocel import OCEL
 
 
@@ -14,11 +16,12 @@ class Feature_Storage:
 
     class Feature_Graph:
         class Node:
-            def __init__(self, event_id, objects):
+            def __init__(self, event_id, objects, pexec_id):
                 """Initializes a Node object"""
                 self._event = event_id
                 self._attributes = {}
                 self._objects = objects
+                self._pexec_id = pexec_id
 
             def add_attribute(self, key, value) -> None:
                 self._attributes[key] = value
@@ -32,9 +35,13 @@ class Feature_Storage:
             def _get_event_id(self):
                 return self._event
 
+            def _get_pexec_id(self):
+                return self._pexec_id
+
             event_id = property(_get_event_id)
             attributes = property(_get_attributes)
             objects = property(_get_objects)
+            pexec_id = property(_get_pexec_id)
 
         class Edge:
             def __init__(self, source, target, objects):
@@ -64,15 +71,10 @@ class Feature_Storage:
             target = property(_get_target)
             objects = property(_get_objects)
 
-        def __init__(self, case_id, graph, ocel: OCEL):
-            """Initializes a Feature_Graph object"""
-            self._case_id = case_id
-            self._nodes = [
-                Feature_Storage.Feature_Graph.Node(
-                    e_id, ocel.get_value(e_id, "event_objects")
-                )
-                for e_id in graph.nodes
-            ]
+        def __init__(self, pexec_id, graph, ocel):
+            self._pexec_id = pexec_id
+            self._nodes = [Feature_Storage.Feature_Graph.Node(e_id, ocel.get_value(e_id, "event_objects"),pexec_id) for e_id in
+                           graph.nodes]
             self._node_mapping = {node.event_id: node for node in self._nodes}
             self._objects = {
                 (source, target): set(
@@ -93,6 +95,9 @@ class Feature_Storage:
 
         def _get_nodes(self) -> list[Node]:
             return self._nodes
+        
+        def _get_pexec_id(self):
+            return self._pexec_id
 
         def _get_edges(self) -> list[Edge]:
             return self._edges
@@ -128,6 +133,7 @@ class Feature_Storage:
         objects: dict[tuple, set] = property(_get_objects)
         attributes: dict = property(_get_attributes)
         size: int = property(_get_size)
+        pexec_id: int = property(_get_pexec_id)
 
     def __init__(
         self,
@@ -389,9 +395,9 @@ class Feature_Storage:
         random.Random(state).shuffle(graph_indices)
         ################################################
         ##       VISUALIZATION OF THE SPLITTING       ##
-        ##  @@@@@@@@@@@@@@@@@@ $$$$$$$$ &&&&&&&&&&&&  ##
         ##        train          val        test      ##
         ##         50%           20%        30%       ##
+        ##  @@@@@@@@@@@@@@@@@@ $$$$$$$$ &&&&&&&&&&&&  ##
         ##                    |        |              ##
         ##                    v        v              ##
         ##             train_spl_idx  val_spl_idx     ##
