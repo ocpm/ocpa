@@ -13,11 +13,10 @@ def construct_table(feature_storage, index_list = "all"):
     :return: List of sequential encodings: Each sequential encoding is a sequence of feature dicts.
     :rtype: list(list(dict))
     '''
-    if index_list == "all":
-        index_list = list(range(0,len(feature_storage.feature_graphs)))
     dict_list = []
-    for g in [feature_storage.feature_graphs[i] for i in index_list]:
-        for node in g.nodes:
-            dict_list.append(node.attributes)
+    for g in feature_storage.feature_graphs:
+        if index_list == "all" or g.pexec_id in index_list:
+            for node in g.nodes:
+                dict_list.append(node.attributes)
     df = pd.DataFrame(dict_list)
     return df
