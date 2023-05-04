@@ -228,11 +228,13 @@ class Feature_Storage:
         test_mapper = self._create_mapper(test_table)
         # change original values!
         for g in self.feature_graphs:
-            for node in g.nodes:
-                for att in node.attributes.keys():
-                    if g.pexec_id in self._training_indices:
+            if g.pexec_id in self._training_indices:
+                for node in g.nodes:
+                    for att in node.attributes.keys():
                         node.attributes[att] = train_mapper[node.event_id][att]
-                    elif g.pexec_id in self._test_indices:
+            elif g.pexec_id in self._test_indices:
+                for node in g.nodes:
+                    for att in node.attributes.keys():
                         node.attributes[att] = test_mapper[node.event_id][att]
-                    else:
-                        raise Exception("Graph not in training or test set")
+            else:
+                raise Exception("Graph not in training or test set")
