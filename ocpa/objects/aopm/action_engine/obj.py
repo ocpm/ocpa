@@ -1,6 +1,7 @@
+from dataclasses import dataclass, field
 from typing import List, Dict, Set, Any, Optional, Union, Tuple
 import networkx as nx
-import itertools
+import datetime
 
 class ConstraintInstance:
     def __init__(self, name, start, end):
@@ -24,7 +25,8 @@ class ConstraintInstance:
         return not (self.end < other.start or other.end < self.start)
 
 class ConstraintPattern:
-    def __init__(self):
+    def __init__(self, name):
+        self.name = name
         self.tree = nx.DiGraph()
         self.root = None
         self.labels = {}
@@ -52,34 +54,65 @@ class ConstraintPattern:
         else:
             raise ValueError("Root already exists")
 
+    # def add_left_child(self, parent, node_id, label):
+    #     if self.tree.has_node(parent):
+    #         children = list(self.tree.successors(parent))
+    #         if len(children) < 2:
+    #             self.tree.add_node(node_id)
+    #             self.tree.add_edge(parent, node_id)
+    #             self.labels[node_id] = label
+    #         else:
+    #             raise ValueError("Parent already has two children")
+    #     else:
+    #         self.tree.add_node(node_id)
+    #         raise ValueError("Parent not found in the tree")
+
+    # def add_right_child(self, parent, node_id, label):
+    #     if self.tree.has_node(parent):
+    #         children = list(self.tree.successors(parent))
+    #         if len(children) < 1:
+    #             self.tree.add_node(node_id)
+    #             self.tree.add_edge(parent, node_id)
+    #             self.labels[node_id] = label
+    #         elif len(children) < 2:
+    #             self.tree.add_node(node_id)
+    #             self.tree.add_edge(parent, node_id)
+    #             self.labels[node_id] = label
+    #         else:
+    #             raise ValueError("Parent already has two children")
+    #     else:
+    #         raise ValueError(f"Parent {parent} not found in the tree: {self.tree.nodes()}")
+
     def add_left_child(self, parent, node_id, label):
-        if self.tree.has_node(parent):
-            children = list(self.tree.successors(parent))
-            if len(children) < 2:
-                self.tree.add_node(node_id)
-                self.tree.add_edge(parent, node_id)
-                self.labels[node_id] = label
-            else:
-                raise ValueError("Parent already has two children")
-        else:
+        if not self.tree.has_node(parent):
+            self.tree.add_node(parent)
+            self.labels[parent] = None
+
+        children = list(self.tree.successors(parent))
+        if len(children) < 2:
             self.tree.add_node(node_id)
-            raise ValueError("Parent not found in the tree")
+            self.tree.add_edge(parent, node_id)
+            self.labels[node_id] = label
+        else:
+            raise ValueError("Parent already has two children")
 
     def add_right_child(self, parent, node_id, label):
-        if self.tree.has_node(parent):
-            children = list(self.tree.successors(parent))
-            if len(children) < 1:
-                self.tree.add_node(node_id)
-                self.tree.add_edge(parent, node_id)
-                self.labels[node_id] = label
-            elif len(children) < 2:
-                self.tree.add_node(node_id)
-                self.tree.add_edge(parent, node_id)
-                self.labels[node_id] = label
-            else:
-                raise ValueError("Parent already has two children")
+        if not self.tree.has_node(parent):
+            self.tree.add_node(parent)
+            self.labels[parent] = None
+
+        children = list(self.tree.successors(parent))
+        if len(children) < 1:
+            self.tree.add_node(node_id)
+            self.tree.add_edge(parent, node_id)
+            self.labels[node_id] = label
+        elif len(children) < 2:
+            self.tree.add_node(node_id)
+            self.tree.add_edge(parent, node_id)
+            self.labels[node_id] = label
         else:
-            raise ValueError("Parent not found in the tree")
+            raise ValueError("Parent already has two children")
+
 
     def in_order_traversal(self, node, collector):
         if node is not None:
@@ -154,58 +187,27 @@ class ConstraintPattern:
         return leaves
 
         
-        
+@dataclass()
+class ActionGraph:
+    pattern: ConstraintPattern
+    action: str
+    duration: int
 
-    # possible_mappings: List[Dict[str,ConstraintInstance]] = []
 
-    # def get_mappings_with_nodes(mappings:List[Dict[str,ConstraintInstance]], nodes:List[str]):
-    #     mappings_with_nodes = []
-    #     for mapping in mappings:
-    #         if all([node in mapping for node in nodes]):
-    #             mappings_with_nodes.append(mapping)
-    #     return mappings_with_nodes
+@dataclass()
+class ActionInstance:
+    action: str
+    start: datetime.datetime
+    end: datetime.datetime
 
-    # for i in range(len(eval_inner_nodes)):
-    #     eval_node = eval_inner_nodes[i]
-    #     if i == 0:
-    #         left_leaves = cp.get_left_leaves(eval_node)
-    #         if len(left_leaves) != 1:
-    #             raise ValueError("Left leaves should be one")
-    #         else:
-    #             left_leaf = left_leaves[0]
-    #             for ci in cis:
-    #                 if ci.label == cp.labels[left_leaf]:
-    #                     possible_mappings.append({left_leaf:ci})
-    #         right_leaves = cp.get_right_leaves(eval_node)
-    #         if len(right_leaves) != 1:
-    #             raise ValueError("Right leaves should be one")
-    #         else:
-    #             right_leaf = right_leaves[0]
-    #             for ci in cis:
-    #                 if ci.label == cp.labels[right_leaf]:
-    #                     for mapping in possible_mappings:
-    #                         if allens_relation(mapping[left_leaf].interval, ci.interval, cp.labels[eval_node]):
-    #                             mapping[right_leaf] = ci
-    #     else:
-    #         left_leaves = cp.get_left_leaves(eval_node)
-    #         left_valid_mappings = get_mappings_with_nodes(possible_mappings, left_leaves)
-            
-            
-    #         right_leaves = cp.get_right_leaves(eval_node)
-    #         right_leaf = right_leaves[0]
-    #         for ci in cis:
-    #             if ci.label == cp.labels[right_leaf]:
-    #                 for mapping in possible_mappings:
-    #                     if allens_relation(mapping[left_leaf].interval, ci.interval, cp.labels[eval_node]):
-    #                         mapping[right_leaf] = ci
 
-    # for eval_node in eval_inner_nodes:
-    #     left_leaves = cp.get_left_leaves(eval_node)
-    #     right_leaves = cp.get_right_leaves(eval_node)
+@dataclass(unsafe_hash=True)
+class ActionCandidate:
+    action: str
+    duration: int
 
-    #     for leaf in left_leaves:
-    #         if leaf in mappings:
-    #         print(cp.labels[leaf])
+    def __repr__(self) -> str:
+        return self.action
 
 
 

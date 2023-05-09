@@ -1,6 +1,6 @@
-from typing import List
+from typing import List, Tuple
 from ocpa.algo.util.aopm.action_engine.versions import temporal_pattern_based
-from ocpa.objects.aopm.action_engine.obj import ConstraintInstance, ConstraintPattern
+from ocpa.objects.aopm.action_engine.obj import ConstraintInstance, ActionGraph
 
 
 TEMPORAL_PATTERN_BASED = "temporal_pattern_based"
@@ -9,5 +9,5 @@ VERSIONS = {
 }
 
 
-def apply(cis:List[ConstraintInstance], cp:ConstraintPattern, variant=TEMPORAL_PATTERN_BASED):
-    return VERSIONS[variant](cis, cp)
+def apply(cis:List[ConstraintInstance], action_graph:List[ActionGraph], action_conflicts:List[Tuple[str,str]], time_scale: str="hour", variant=TEMPORAL_PATTERN_BASED):
+    return VERSIONS[variant](cis, action_graph, action_conflicts, time_scale)

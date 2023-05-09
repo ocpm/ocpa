@@ -13,63 +13,65 @@ from ocpa.algo.util.filtering.log import time_filtering
 from ocpa.algo.enhancement.ocpn_analysis.projection import algorithm as projection_factory
 
 
-def apply(ai: ActionInstance, config: Configuration, ocel: OCEL, tw: Tuple[datetime.datetime, datetime.datetime], parameters):
-    if parameters is None:
-        parameters = {}
-    # ac = detect_change(ai, config)
-    # object_types = config.aim.ocpn.object_types
-    # for ot in object_types:
-    #     print(type_specific_FSA(ac, ot))
-    # print(backward_pass_FSA(ai.aim, ac))
-    # print(forward_pass_FSA(ai.aim, ac))
-    # print(direct_OSA(ai.aim, ac))
-    # print(backward_pass_OSA(ai.aim, ac))
-    # print(forward_pass_OSA(ai.aim, ac))
-    # marking = new_compute_marking(ocel, ai.aim.ocpn)
-    # os = OperationalState(ai.aim, marking, {})
-    # print(preceding_OIA(ai.aim, ac, os))
-    # print(following_OIA(ai.aim, ac, os))
-    # print(backward_pass_OIA(ai.aim, ac, os))
-    # print(forward_pass_OIA(ai.aim, ac, os))
-    # for measure in ['flow', 'sojourn', 'syncronization']:
-    #     agg = 'avg'
-    #     print(measure, agg)
-    #     print(FPI(ai.aim, ac, tw, ocel, measure, agg))
+# def apply(ai: ActionInstance, config: Configuration, ocel: OCEL, tw: Tuple[datetime.datetime, datetime.datetime], parameters):
+#     if parameters is None:
+#         parameters = {}
+#     # ac = detect_change(ai, config)
+#     # object_types = config.aim.ocpn.object_types
+#     # for ot in object_types:
+#     #     print(type_specific_FSA(ac, ot))
+#     # print(backward_pass_FSA(ai.aim, ac))
+#     # print(forward_pass_FSA(ai.aim, ac))
+#     # print(direct_OSA(ai.aim, ac))
+#     # print(backward_pass_OSA(ai.aim, ac))
+#     # print(forward_pass_OSA(ai.aim, ac))
+#     # marking = new_compute_marking(ocel, ai.aim.ocpn)
+#     # os = OperationalState(ai.aim, marking, {})
+#     # print(preceding_OIA(ai.aim, ac, os))
+#     # print(following_OIA(ai.aim, ac, os))
+#     # print(backward_pass_OIA(ai.aim, ac, os))
+#     # print(forward_pass_OIA(ai.aim, ac, os))
+#     # for measure in ['flow', 'sojourn', 'syncronization']:
+#     #     agg = 'avg'
+#     #     print(measure, agg)
+#     #     print(FPI(ai.aim, ac, tw, ocel, measure, agg))
 
-    # for ot in object_types:
-    #     for measure in ['pooling', 'lagging', 'readying', 'elapsed', 'remaining']:
-    #         agg = 'avg'
-    #         print(measure, agg, ot)
-    #         print(FPI(ai.aim, ac, tw, ocel, measure, agg, ot))
+#     # for ot in object_types:
+#     #     for measure in ['pooling', 'lagging', 'readying', 'elapsed', 'remaining']:
+#     #         agg = 'avg'
+#     #         print(measure, agg, ot)
+#     #         print(FPI(ai.aim, ac, tw, ocel, measure, agg, ot))
 
-    # for ot in object_types:
-    #     for measure in ['elapsed', 'remaining']:
-    #         agg = 'avg'
-    #         print(measure, agg, ot)
-    #         print(OPI(ai.aim, ac, tw, ocel, measure, agg, ot))
+#     # for ot in object_types:
+#     #     for measure in ['elapsed', 'remaining']:
+#     #         agg = 'avg'
+#     #         print(measure, agg, ot)
+#     #         print(OPI(ai.aim, ac, tw, ocel, measure, agg, ot))
 
 
-def apply_v2(ac: ActionChange, ocel: OCEL, tw: Tuple[datetime.datetime, datetime.datetime], parameters=None):
-    if parameters is None:
-        parameters = {}
+def apply(ac: ActionChange, ocel: OCEL, comp_tw: Tuple[datetime.datetime, datetime.datetime]):
     results = {}
     object_types = ac.aim.ocpn.object_types
 
-    # results['BP-FSA'] = {}
+    results['SA'] = {}
+    results['SA']['Function'] = {}
+    results['SA']['Function']['Prior'] = {}
     for ot in object_types:
         # print(ot, 'BP_FSA', backward_pass_FSA(ac, ot).quantify())
-        results[f'BP-FSA-{ot}'] = backward_pass_FSA(ac, ot).quantify()
+        results['SA']['Function']['Prior'][ot] = backward_pass_FSA(ac, ot).quantify()
 
+    results['SA']['Function']['Posterior'] = {}
     for ot in object_types:
         # print(ot, 'FP_FSA', forward_pass_FSA(ac, ot).quantify())
-        results[f'FP-FSA-{ot}'] = forward_pass_FSA(ac, ot).quantify()
+        results['SA']['Function']['Posterior'][ot] = forward_pass_FSA(ac, ot).quantify()
 
+    results['SA']['Object'] = {}
     # print('direct_OSA', direct_OSA(ac).quantify())
-    results['D-OSA'] = direct_OSA(ac).quantify()
+    results['SA']['Object']['Direct'] = direct_OSA(ac).quantify()
     # print('BP_OSA', backward_pass_OSA(ac).quantify())
-    results['BP-OSA'] = backward_pass_OSA(ac).quantify()
+    results['SA']['Object']['Prior'] = backward_pass_OSA(ac).quantify()
     # print('FP_OSA', forward_pass_OSA(ac).quantify())
-    results['FP-OSA'] = forward_pass_OSA(ac).quantify()
+    results['SA']['Object']['Posterior'] = forward_pass_OSA(ac).quantify()
 
     filtered_ocel = time_filtering.events(ocel, ac.tw[0], ac.tw[1])
     filtered_ocel.log.log.to_csv('./filtered_log.csv')
@@ -77,35 +79,41 @@ def apply_v2(ac: ActionChange, ocel: OCEL, tw: Tuple[datetime.datetime, datetime
     # print(marking)
     os = OperationalState(ac.aim, marking, {})
 
+    results['OIA'] = {}
+    results['OIA']['Posterior'] = {}
     for ot in object_types:
-        results[f'BP-OIA-{ot}'] = backward_pass_OIA(
+        results['OIA']['Posterior'][ot] = forward_pass_OIA(
             ac, os, ot).quantify()
         # print(ot, 'BP_OIA', backward_pass_OIA(ac, os, ot).quantify())
 
-    # results['FP-OIA'] = {}
+    results['OIA']['Prior'] = {}
     for ot in object_types:
-        results[f'FP-OIA-{ot}'] = forward_pass_OIA(
+        results['OIA']['Prior'][ot] = backward_pass_OIA(
             ac, os, ot).quantify()
         # print(ot, 'FP_OIA', forward_pass_OIA(ac, os, ot).quantify())
 
-    # results['FPA'] = {}
-    # for ot in object_types:
-    #     results['FPA'][ot] = {}
-    #     for measure in ['pooling', 'lagging', 'readying', 'elapsed', 'remaining']:
-    #         agg = 'avg'
-    #         results['FPA'][ot][measure] = FPA(ac, tw, ocel, measure, agg, ot)
-    #         # print(measure, agg, ot)
-    #         # print(FPA(ac.aim, ac, tw, ocel, measure, agg, ot))
+    results['FPA'] = {}
+    results['OPA'] = {}
+    for t in ac.transitions:
+        results['FPA'][t.label] = {}
+        for measure in ['flow', 'sojourn', 'syncronization']:
+            agg = 'avg'
+            results['FPA'][t.label][measure] = FPA(t.label, ac.tw, comp_tw, ocel, measure, agg)
+        for measure in ['pooling', 'lagging', 'readying']:
+            agg = 'avg'
+            results['FPA'][t.label][measure] = {}
+            for ot in object_types:
+                results['FPA'][t.label][measure][ot] = FPA(t.label, ac.tw, comp_tw, ocel, measure, agg, ot)
 
-    # results['OPA'] = {}
-    # for ot in object_types:
-    #     results['OPA'][ot] = {}
-    #     for measure in ['elapsed', 'remaining']:
-    #         agg = 'avg'
-    #         results['OPA'][ot][measure] = OPA(ac, tw, ocel, measure, agg, ot)
-    #         # print(measure, agg, ot)
-    #         # print(OPA(ac.aim, ac, tw, ocel, measure, agg, ot))
-
+        results['OPA'][t.label] = {}
+        for ot in object_types:
+            results['OPA'][t.label][ot] = {}
+            for measure in ['object_freq']:
+                agg = 'sum'
+                results['OPA'][t.label][ot][measure] = OPA(t.label, ac.tw, comp_tw, ocel, measure, agg, ot)
+            for measure in ['elapsed', 'remaining']:
+                agg = 'avg'
+                results['OPA'][t.label][ot][measure] = OPA(t.label, ac.tw, comp_tw, ocel, measure, agg, ot)
     return results
 
 
@@ -245,6 +253,7 @@ def new_compute_marking(ocel: OCEL, ocpn: ObjectCentricPetriNet):
     token_history = {}
     for persp in ocpn.object_types:
         net, im, fm = ocpn.nets[persp]
+        print(df)
         log = project_log(df, persp)
         replay_results = run_timed_replay(log, net, im, fm)
         for result in replay_results:
@@ -260,37 +269,33 @@ def new_compute_marking(ocel: OCEL, ocpn: ObjectCentricPetriNet):
     return marking, token_history
 
 
-def FPA(change: ActionChange, tw: Tuple[datetime.datetime, datetime.datetime], ocel: OCEL, measure, agg, ot=None) -> FunctionWisePerformanceImpact:
-    change_log = time_filtering.events(ocel, change.tw[0], change.tw[1])
-    comp_log = time_filtering.events(ocel, tw[0], tw[1])
+def FPA(activity_name: str, change_tw: Tuple[datetime.datetime, datetime.datetime], comp_tw: Tuple[datetime.datetime, datetime.datetime], ocel: OCEL, measure, agg, ot=None) -> FunctionWisePerformanceImpact:
+    change_log = time_filtering.events(ocel, change_tw[0], change_tw[1])
+    comp_log = time_filtering.events(ocel, comp_tw[0], comp_tw[1])
     perf_diff_dict = {}
-    for t in change.transitions:
-        try:
-            perf_parameters = {'measure': measure,
-                               'activity': t.name, 'aggregation': agg, 'object_type': ot}
-            change_metric = performance_factory.apply(
-                change_log, variant='event_object_graph_based', parameters=perf_parameters)
-            comp_metric = performance_factory.apply(
-                comp_log, variant='event_object_graph_based', parameters=perf_parameters)
-            perf_diff_dict[t] = change_metric - comp_metric
-        except:
-            perf_diff_dict[t] = None
-    return perf_diff_dict
+    try:
+        perf_parameters = {'measure': measure,
+                        'activity': activity_name, 'aggregation': agg, 'object_type': ot}
+        change_metric = performance_factory.apply(
+            change_log, variant='event_object_graph_based', parameters=perf_parameters)
+        comp_metric = performance_factory.apply(
+            comp_log, variant='event_object_graph_based', parameters=perf_parameters)
+        return change_metric - comp_metric
+    except:
+        return None
+        
 
 
-def OPA(change: ActionChange, tw: Tuple[datetime.datetime, datetime.datetime], ocel: OCEL, measure, agg, ot) -> ObjectWisePerformanceImpact:
-    change_log = time_filtering.events(ocel, change.tw[0], change.tw[1])
-    comp_log = time_filtering.events(ocel, tw[0], tw[1])
-    perf_diff_dict = {}
-    for t in change.transitions:
-        try:
-            perf_parameters = {'measure': measure,
-                               'activity': t.name, 'aggregation': agg, 'object_type': ot}
-            change_metric = performance_factory.apply(
-                change_log, variant='event_object_graph_based', parameters=perf_parameters)
-            comp_metric = performance_factory.apply(
-                comp_log, variant='event_object_graph_based', parameters=perf_parameters)
-            perf_diff_dict[t] = change_metric - comp_metric
-        except:
-            perf_diff_dict[t] = None
-    return perf_diff_dict
+def OPA(activity_name: str, change_tw: Tuple[datetime.datetime, datetime.datetime], comp_tw: Tuple[datetime.datetime, datetime.datetime], ocel: OCEL, measure, agg, ot) -> ObjectWisePerformanceImpact:
+    change_log = time_filtering.events(ocel, change_tw[0], change_tw[1])
+    comp_log = time_filtering.events(ocel, comp_tw[0], comp_tw[1])
+    try:
+        perf_parameters = {'measure': measure,
+                            'activity': activity_name, 'aggregation': agg, 'object_type': ot}
+        change_metric = performance_factory.apply(
+            change_log, variant='event_object_graph_based', parameters=perf_parameters)
+        comp_metric = performance_factory.apply(
+            comp_log, variant='event_object_graph_based', parameters=perf_parameters)
+        return change_metric - comp_metric
+    except:
+        return  None

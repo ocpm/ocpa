@@ -34,7 +34,7 @@ class OperationalImpact(object):
     elements: Dict[ObjectCentricPetriNet.Transition, Set[str]]
 
     def quantify(self):
-        return {k: len(v) for k, v in self.elements.items()}
+        return {k.label: len(v) for k, v in self.elements.items()}
 
 
 @dataclass
@@ -42,7 +42,7 @@ class FunctionWisePerformanceImpact(object):
     elements: Dict[ObjectCentricPetriNet.Transition, float]
 
     def quantify(self):
-        return {k: len(v) for k, v in self.elements.items()}
+        return {k.label: len(v) for k, v in self.elements.items()}
 
 
 @dataclass

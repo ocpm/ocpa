@@ -2,66 +2,57 @@ from ocpa.algo.util.util import AGG_MAP
 
 
 def apply(ocel, parameters):
-    if 'measure' in parameters:
-        measure = parameters['measure']
-    else:
+    """
+    Apply performance measure and aggregation function on the given ocel object and parameters.
+
+    :param ocel: ocel object
+    :param parameters: dict with keys 'measure', 'activity', 'object_type', and 'aggregation'
+    :return: aggregated performance measure
+    """
+    measure = parameters.get('measure')
+    if not measure:
         raise ValueError('Specify a performance measure in parameters')
-    if 'activity' in parameters:
-        act = parameters['activity']
-    else:
+
+    act = parameters.get('activity')
+    if not act:
         raise ValueError('Specify an activity in parameters')
 
-    if 'object_type' in parameters:
-        ot = parameters['object_type']
-    else:
-        ot = None
+    ot = parameters.get('object_type')
 
-    if 'aggregation' in parameters:
-        agg = parameters['aggregation']
-    else:
+    agg = parameters.get('aggregation')
+    if not agg:
         raise ValueError('Specify an aggregation function in parameters')
 
-    if measure == 'flow':
-        return AGG_MAP[agg](flow_time(ocel, act))
+    measure_function_mapping = {
+        'flow': flow_time,
+        'sojourn': sojourn_time,
+        'synchronization': synchronization_time,
+        'pooling': pooling_time,
+        'lagging': lagging_time,
+        'readying': readying_time,
+        'elapsed': elapsed_time,
+        'remaining': remaining_time,
+        'object_freq': object_freq
+    }
 
-    if measure == 'sojourn':
-        return AGG_MAP[agg](sojourn_time(ocel, act))
+    function = measure_function_mapping.get(measure)
+    if not function:
+        raise ValueError(f"Unknown performance measure: {measure}")
 
-    if measure == 'syncronization':
-        return AGG_MAP[agg](synchronization_time(ocel, act))
+    if measure in {'pooling', 'lagging', 'readying', 'object_freq', 'elapsed', 'remaining'} and ot is None:
+        raise ValueError('Specify an object type in parameters')
 
-    if measure == 'pooling':
-        if ot is None:
-            raise ValueError('Specify an object type in parameters')
-        return AGG_MAP[agg](pooling_time(ocel, act, ot))
-
-    if measure == 'lagging':
-        if ot is None:
-            raise ValueError('Specify an object type in parameters')
-        return AGG_MAP[agg](lagging_time(ocel, act, ot))
-
-    if measure == 'readying':
-        if ot is None:
-            raise ValueError('Specify an object type in parameters')
-        return AGG_MAP[agg](readying_time(ocel, act, ot))
-
-    if measure == 'object_freq':
-        if ot is None:
-            raise ValueError('Specify an object type in parameters')
-        return AGG_MAP[agg](object_freq(ocel, act, ot))
-
-    if measure == 'elapsed':
-        if ot is None:
-            raise ValueError('Specify an object type in parameters')
-        return AGG_MAP[agg](elapsed_time(ocel, act, ot))
-
-    if measure == 'remaining':
-        if ot is None:
-            raise ValueError('Specify an object type in parameters')
-        return AGG_MAP[agg](remaining_time(ocel, act, ot))
+    return AGG_MAP[agg](function(ocel, act, ot))
 
 
-def flow_time(ocel, act):
+def flow_time(ocel, act, ot=None):
+    """
+    Calculate flow times for a given activity in the ocel object.
+
+    :param ocel: ocel object
+    :param act: activity name
+    :return: list of flow times
+    """
     flow_times = []
     for node in ocel.graph.eog.nodes:
         if ocel.get_value(node, "event_activity") == act:
@@ -78,24 +69,14 @@ def flow_time(ocel, act):
     return flow_times
 
 
-def synchronization_time(ocel, act):
-    sync_times = []
-    for node in ocel.graph.eog.nodes:
-        if ocel.get_value(node, "event_activity") == act:
-            in_edges = ocel.graph.eog.in_edges(node)
-            preset = [source for (source, target) in in_edges]
-            end_timestamps = [ocel.get_value(
-                e, "event_timestamp") for e in preset]
-            if len(end_timestamps) == 0:
-                duration = 0
-            else:
-                duration = (max(end_timestamps) -
-                            min(end_timestamps)).total_seconds()
-            sync_times.append(duration)
-    return sync_times
+def sojourn_time(ocel, act, ot=None):
+    """
+    Calculate sojourn times for a given activity in the ocel object.
 
-
-def sojourn_time(ocel, act):
+    :param ocel: ocel object
+    :param act: activity name
+    :return: list of sojourn times
+    """
     sojourn_times = []
     for node in ocel.graph.eog.nodes:
         if ocel.get_value(node, "event_activity") == act:
@@ -112,7 +93,38 @@ def sojourn_time(ocel, act):
     return sojourn_times
 
 
+def synchronization_time(ocel, act, ot=None):
+    """
+    Calculate synchronization times for a given activity in the ocel object.
+     :param ocel: ocel object
+    :param act: activity name
+    :return: list of synchronization times
+    """
+    sync_times = []
+    for node in ocel.graph.eog.nodes:
+        if ocel.get_value(node, "event_activity") == act:
+            in_edges = ocel.graph.eog.in_edges(node)
+            preset = [source for (source, target) in in_edges]
+            end_timestamps = [ocel.get_value(
+                e, "event_timestamp") for e in preset]
+            if len(end_timestamps) == 0:
+                duration = 0
+            else:
+                duration = (max(end_timestamps) -
+                            min(end_timestamps)).total_seconds()
+            sync_times.append(duration)
+    return sync_times
+
+
 def pooling_time(ocel, act, ot):
+    """
+    Calculate pooling times for a given activity and object type in the ocel object.
+
+    :param ocel: ocel object
+    :param act: activity name
+    :param ot: object type
+    :return: list of pooling times
+    """
     pooling_times = []
     for node in ocel.graph.eog.nodes:
         if ocel.get_value(node, "event_activity") == act:
@@ -132,6 +144,14 @@ def pooling_time(ocel, act, ot):
 
 
 def lagging_time(ocel, act, ot):
+    """
+    Calculate lagging times for a given activity and object type in the ocel object.
+
+    :param ocel: ocel object
+    :param act: activity name
+    :param ot: object type
+    :return: list of lagging times
+    """
     lagging_times = []
     for node in ocel.graph.eog.nodes:
         if ocel.get_value(node, "event_activity") == act:
@@ -151,73 +171,83 @@ def lagging_time(ocel, act, ot):
 
 
 def readying_time(ocel, act, ot):
+    """
+    Calculate readying times for a given activity and object type in the ocel object.
+
+    :param ocel: ocel object
+    :param act: activity name
+    :param ot: object type
+    :return: list of readying times
+    """
     readying_times = []
     for node in ocel.graph.eog.nodes:
         if ocel.get_value(node, "event_activity") == act:
             in_edges = ocel.graph.eog.in_edges(node)
-            preset = [source for (source, target) in in_edges]
-            end_timestamps = [ocel.get_value(
-                e, "event_timestamp") for e in preset]
-            if len(end_timestamps) == 0:
-                duration = 0
-            else:
-                ot_end_timestamps = [ocel.get_value(
-                    e, "event_timestamp") for e in preset if ocel.get_value(e, ot)]
-                duration = (max(end_timestamps) -
-                            max(ot_end_timestamps)).total_seconds()
-            readying_times.append(duration)
+        preset = [source for (source, target) in in_edges]
+        end_timestamps = [ocel.get_value(
+        e, "event_timestamp") for e in preset]
+        if len(end_timestamps) == 0:
+            duration = 0
+        else:
+            ot_end_timestamps = [ocel.get_value(
+            e, "event_timestamp") for e in preset if len(ocel.get_value(e, ot)) > 0]
+            duration = (min(ot_end_timestamps) - min(end_timestamps)).total_seconds()
+        readying_times.append(duration)
     return readying_times
 
-
 def object_freq(ocel, act, ot):
-    object_freqs = []
-    for eid in ocel.obj.act_events[act]:
-        object_freqs.append(len(ocel.obj.eve_ot_objects(eid, ot)))
-    return object_freqs
-
-
-def get_recent_events(event, case_index, ocel):
-    case = ocel.process_executions[case_index]
-    subset_events = []
-    for e in case:
-        if ocel.get_value(e, "event_timestamp") <= ocel.get_value(event, "event_timestamp"):
-            subset_events.append(e)
-    return subset_events
-
-
-def elapsed_time(ocel, act, ot):
-    elapsed_times = []
+    """
+    Calculate object frequencies for a given activity and object type in the ocel object.
+    :param ocel: ocel object
+    :param act: activity name
+    :param ot: object type
+    :return: list of object frequencies
+    """
+    obj_freqs = []
     for node in ocel.graph.eog.nodes:
         if ocel.get_value(node, "event_activity") == act:
-            cases = ocel.process_execution_mappings[node]
-            value_array = []
-            for case in cases:
-                c_res = 0
-                events = get_recent_events(node, case, ocel)
-                timestamps = [ocel.get_value(
-                    e, "event_timestamp") for e in events if len(ocel.get_value(e, ot)) != 0]
-                duration = (max(timestamps) - min(timestamps)).total_seconds()
-                value_array.append(duration)
+            obj_freq = len(ocel.get_value(node, ot))
+            obj_freqs.append(obj_freq)
+    return obj_freqs
 
-            elapsed_times.append(sum(value_array) / len(value_array))
-    return elapsed_times
-
+def elapsed_time(ocel, act, ot):
+    """
+    Calculate elapsed times for a given activity and object type in the ocel object.
+    :param ocel: ocel object
+    :param act: activity name
+    :param ot: object type
+    :return: list of elapsed times
+    """
+    elapsed_time = []
+    for node in ocel.graph.eog.nodes:
+        if ocel.get_value(node, "event_activity") == act:
+            in_edges = ocel.graph.eog.in_edges(node)
+            preset = [source for (source, target) in in_edges]
+            if len(preset) == 0:
+                duration = 0
+            else:
+                duration = (ocel.get_value(node, "event_timestamp") - max([ocel.get_value(
+                    e, "event_timestamp") for e in preset])).total_seconds()
+            elapsed_time.append(duration)
+    return elapsed_time
 
 def remaining_time(ocel, act, ot):
+    """
+    Calculate remaining times for a given activity and object type in the ocel object.
+    :param ocel: ocel object
+    :param act: activity name
+    :param ot: object type
+    :return: list of remaining times
+    """
     remaining_times = []
     for node in ocel.graph.eog.nodes:
         if ocel.get_value(node, "event_activity") == act:
-            cases = ocel.process_execution_mappings[node]
-            value_array = []
-            for case in cases:
-                prev_events = get_recent_events(node, case, ocel)
-                following_events = [
-                    e for e in ocel.process_executions[case] if (e not in prev_events) and (len(ocel.get_value(e, ot)) != 0)]
-                following_events.append(node)
-                timestamps = [ocel.get_value(e, "event_timestamp")
-                              for e in following_events]
-                duration = (max(timestamps) - min(timestamps)).total_seconds()
-                value_array.append(duration)
-
-            remaining_times.append(sum(value_array) / len(value_array))
+            out_edges = ocel.graph.eog.out_edges(node)
+            postset = [target for (source, target) in out_edges]
+            if len(postset) == 0:
+                duration = 0
+            else:
+                duration = (max([ocel.get_value(
+                    e, "event_timestamp") for e in postset]) - ocel.get_value(node, "event_timestamp")).total_seconds()
+            remaining_times.append(duration)
     return remaining_times

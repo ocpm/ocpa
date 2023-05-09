@@ -97,6 +97,16 @@ class ObjectCentricPetriNet(object):
         in_arcs = property(__get_in_arcs, __set_in_arcs)
         name = property(__get_name, __set_name)
 
+        def to_dict(self):
+            return {
+                "name": self.name,
+                "object_type": self.object_type,
+                "initial": self.initial,
+                "final": self.final,
+                "in_arcs": [arc.to_dict() for arc in self.__in_arcs],
+                "out_arcs": [arc.to_dict() for arc in self.__out_arcs],
+            }
+
     class Transition(object):
         def __init__(self, name, label=None, in_arcs=None, out_arcs=None, properties=None, silent=False):
             self.__name = name
@@ -186,6 +196,16 @@ class ObjectCentricPetriNet(object):
                 new_trans.out_arcs.add(new_arc)
             return new_trans
 
+        def to_dict(self):
+            return {
+                "name": self.name,
+                "label": self.label,
+                "in_arcs": [arc.to_dict() for arc in self.__in_arcs],
+                "out_arcs": [arc.to_dict() for arc in self.__out_arcs],
+                "properties": self.__properties,
+                "silent": self.__silent,
+            }
+
         name = property(__get_name, __set_name)
         label = property(__get_label, __set_label)
         in_arcs = property(__get_in_arcs, __set_in_arcs)
@@ -261,6 +281,15 @@ class ObjectCentricPetriNet(object):
                 new_source, new_target, weight=self.weight, properties=self.properties)
             memodict[id(self)] = new_arc
             return new_arc
+        
+        def to_dict(self):
+            return {
+                "source": self.source.name,
+                "target": self.target.name,
+                "weight": self.weight,
+                "variable": self.variable,
+                "properties": self.__properties,
+            }
 
         source = property(__get_source, __set_source)
         target = property(__get_target, __set_target)
@@ -560,6 +589,32 @@ class ObjectCentricPetriNet(object):
         net, im, fm = self.nets[ot]
         return project_net_on_matrix(net, [
             source_t, target_t])
+    
+    def to_dict(self):
+        places_dicts = []
+        for place in self.__places:
+            print(place)
+            places_dicts.append(place.to_dict())
+
+        transitions_dicts = []
+        for transition in self.__transitions:
+            transitions_dicts.append(transition.to_dict())
+
+        arcs_dicts = []
+        for arc in self.__arcs:
+            arcs_dicts.append(arc.to_dict())
+
+        return {
+            "name": self.__name,
+            "places": places_dicts,
+            "transitions": transitions_dicts,
+            "arcs": arcs_dicts,
+            "properties": self.__properties,
+            "nets": self.__nets,
+            "place_mapping": self.__place_mapping,
+            "transition_mapping": self.__transition_mapping,
+            "arc_mapping": self.__arc_mapping,
+        }
 
 
 @ dataclass

@@ -11,5 +11,5 @@ VERSIONS = {
 }
 
 
-def apply(ai: ActionInstance, config: Configuration, ocel: OCEL, tw: Tuple[datetime.datetime, datetime.datetime], variant=AIM_BASED, parameters=None):
-    return VERSIONS[variant](ai, config, ocel, tw, parameters=parameters)
+def apply(ai: ActionInstance, ocel: OCEL, tw: Tuple[datetime.datetime, datetime.datetime], variant=AIM_BASED):
+    return VERSIONS[variant](ai, ocel, tw)
