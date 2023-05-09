@@ -26,9 +26,9 @@ class OCEL:
     log: Table
     obj: ObjectCentricEventLog
     graph: EventGraph
-    o2o_graph: ObjectGraph
-    change_table: ObjectChangeTable
-    parameters: Dict
+    o2o_graph: ObjectGraph = None
+    change_table: ObjectChangeTable = None
+    parameters: Dict = None
 
     def __post_init__(self):
         '''
