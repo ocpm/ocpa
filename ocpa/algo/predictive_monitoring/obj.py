@@ -204,8 +204,14 @@ class Feature_Storage:
         # print(split_index)
         self._training_indices = graphs_indices[:split_index]
         self._test_indices = graphs_indices[split_index:]
-        train_graphs, test_graphs = [self.feature_graphs[i] for i in self._training_indices], [
-            self.feature_graphs[i] for i in self._test_indices]
+        train_graphs, test_graphs = [], []
+        for g in self.feature_graphs:
+            if g.pexec_id in self._training_indices:
+                train_graphs.append(g)
+            elif g.pexec_id in self._test_indices:
+                test_graphs.append(g)
+            else:
+                raise Exception("Graph not in training or test set")
         # Normalize
         features = self.event_features
         train_table = self._event_id_table(train_graphs)
@@ -221,11 +227,14 @@ class Feature_Storage:
         train_mapper = self._create_mapper(train_table)
         test_mapper = self._create_mapper(test_table)
         # change original values!
-        for g in [self.feature_graphs[i] for i in self.training_indices]:
-            for node in g.nodes:
-                for att in node.attributes.keys():
-                    node.attributes[att] = train_mapper[node.event_id][att]
-        for g in [self.feature_graphs[i] for i in self.test_indices]:
-            for node in g.nodes:
-                for att in node.attributes.keys():
-                    node.attributes[att] = test_mapper[node.event_id][att]
+        for g in self.feature_graphs:
+            if g.pexec_id in self._training_indices:
+                for node in g.nodes:
+                    for att in node.attributes.keys():
+                        node.attributes[att] = train_mapper[node.event_id][att]
+            elif g.pexec_id in self._test_indices:
+                for node in g.nodes:
+                    for att in node.attributes.keys():
+                        node.attributes[att] = test_mapper[node.event_id][att]
+            else:
+                raise Exception("Graph not in training or test set")
