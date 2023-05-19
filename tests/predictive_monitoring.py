@@ -1,0 +1,39 @@
+import unittest
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_absolute_error
+
+from ocpa.objects.log.importer.ocel import factory as ocel_import_factory
+from ocpa.algo.predictive_monitoring import factory as predictive_monitoring
+from ocpa.algo.predictive_monitoring import tabular
+class PredictiveMonitoringTests(unittest.TestCase):
+
+    def test_process_execution_extraction(self):
+        filename = "../sample_logs/jsonocel/p2p-normal.jsonocel"
+        ocel = ocel_import_factory.apply(filename)
+        activities = list(set(ocel.log.log["event_activity"].tolist()))
+        feature_set = [(predictive_monitoring.EVENT_REMAINING_TIME, ()),
+                       (predictive_monitoring.EVENT_PREVIOUS_TYPE_COUNT, ("GDSRCPT",)),
+                       (predictive_monitoring.EVENT_ELAPSED_TIME, ())] + \
+                      [(predictive_monitoring.EVENT_PRECEDING_ACTIVITES, (act,))
+                       for act in activities]
+        feature_storage = predictive_monitoring.apply(ocel, feature_set, [])
+        feature_storage.extract_normalized_train_test_split(0.3, state=3395)
+        train_table = tabular.construct_table(
+            feature_storage, index_list=feature_storage.training_indices)
+        test_table = tabular.construct_table(
+            feature_storage, index_list=feature_storage.test_indices)
+        y_train, y_test = train_table[feature_set[0]], test_table[feature_set[0]]
+        x_train, x_test = train_table.drop(
+            feature_set[0], axis=1), test_table.drop(feature_set[0], axis=1)
+        model = LinearRegression()
+        model.fit(x_train, y_train)
+        y_pred = model.predict(x_test)
+        avg_rem = sum(y_train) / len(y_train)
+        MAE_base = mean_absolute_error(
+            y_test, [avg_rem for elem in y_test])
+        MAE = mean_absolute_error(y_test, y_pred)
+        self.assertTrue(0.899 < MAE_base < 0.9,  f"Baseline MAE {MAE} is not within the range 0.899-0.9. Please check the example script.")
+        self.assertTrue(0.065 < MAE < 0.0655, f"MAE {MAE} is not within the range 0.065-0.0655. Please check the example script.")
+
+if __name__ == '__main__':
+    unittest.main()
