@@ -4,7 +4,7 @@ from ocpa.objects.log.importer.ocel import factory as ocel_import_factory
 # Define a test method to check if the process executions are correctly extracted from the event log.
 def test_process_execution_extraction():
     # Path to the OCEl log file
-    filename = "../sample_logs/jsonocel/p2p-normal.jsonocel"
+    filename = "sample_logs/jsonocel/p2p-normal.jsonocel"
 
     # Use the OCEl import factory to import the log
     ocel = ocel_import_factory.apply(filename)
@@ -14,7 +14,7 @@ def test_process_execution_extraction():
 
 # Define a test method to check if the process variants are correctly identified in the event log.
 def test_variants():
-    filename = "../sample_logs/jsonocel/p2p-normal.jsonocel"
+    filename = "sample_logs/jsonocel/p2p-normal.jsonocel"
     ocel = ocel_import_factory.apply(filename)
 
     # Assert that the number of process variants in the log is 20
@@ -22,7 +22,7 @@ def test_variants():
 
 # Define a test method to check if process executions are correctly extracted by leading event type.
 def test_process_execution_extraction__by_leading_type():
-    filename = "../sample_logs/jsonocel/p2p-normal.jsonocel"
+    filename = "sample_logs/jsonocel/p2p-normal.jsonocel"
 
     # Various parameters used for execution extraction and variant calculation
     parameters = {

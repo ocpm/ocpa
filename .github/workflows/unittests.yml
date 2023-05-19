@@ -1,4 +1,4 @@
-name: OCPA Unittests
+name: Testing
 
 on:
   push:

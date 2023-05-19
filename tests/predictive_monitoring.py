@@ -1,13 +1,11 @@
-
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error
-
 from ocpa.objects.log.importer.ocel import factory as ocel_import_factory
 from ocpa.algo.predictive_monitoring import factory as predictive_monitoring
 from ocpa.algo.predictive_monitoring import tabular
 
 def test_process_execution_extraction():
-    filename = "../sample_logs/jsonocel/p2p-normal.jsonocel"
+    filename = "sample_logs/jsonocel/p2p-normal.jsonocel"
     ocel = ocel_import_factory.apply(filename)
     activities = list(set(ocel.log.log["event_activity"].tolist()))
     feature_set = [(predictive_monitoring.EVENT_REMAINING_TIME, ()),
