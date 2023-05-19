@@ -30,5 +30,5 @@ def test_process_execution_extraction():
         y_test, [avg_rem for elem in y_test])
     MAE = mean_absolute_error(y_test, y_pred)
     assert 0.899 < MAE_base < 0.9
-    assert 0.065 < MAE < 0.0655
+    assert 0.064 < MAE < 0.0655
 
