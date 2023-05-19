@@ -34,7 +34,7 @@ def apply(filepath, parameters: Dict, file_path_object_attribute_table=None) -> 
     # print(table_parameters)
     log = Table(df, parameters=table_parameters, object_attributes=obj_df)
     graph = EventGraph(table_utils.eog_from_log(log))
-    ocel = OCEL(log, obj, graph, table_parameters)
+    ocel = OCEL(log, obj, graph, parameters=table_parameters)
     return ocel
 
 

@@ -14,11 +14,11 @@ def apply(df: pd.DataFrame) -> ObjectCentricEventLog:
         "event_")]) - set(['event_activity', 'event_timestamp', 'event_start_timestamp'])
     obj_event_mapping = {}
     start = time.time()
-    for index, row in enumerate(df.itertuples(), 1):
+    for index, row in df.iterrows():
         add_event(events, index, row, obj_names, val_names)
         add_obj(objects, index, [(o, obj)
-                for obj in obj_names for o in getattr(row, obj)], obj_event_mapping)
-        acts.add(getattr(row, 'event_activity'))
+                for obj in obj_names for o in row[obj]], obj_event_mapping)
+        acts.add(row['event_activity'])
     end = time.time()
     attr_typ = {attr: name_type(str(df.dtypes[attr]))
                 for attr in val_names}
@@ -43,17 +43,16 @@ def add_event(events: Dict[str, Event], index, row, obj_names, val_names) -> Non
     start = time.time()
     events[str(index)] = Event(
         id=str(index),
-        act=getattr(row, 'event_activity'),
-        time=to_datetime(getattr(row, 'event_timestamp')),
-        omap=[o for obj in obj_names for o in getattr(row, obj)],
-        vmap={attr: getattr(row, attr) for attr in val_names})
+        act=row['event_activity'],
+        time=to_datetime(row['event_timestamp']),
+        omap=[o for obj in obj_names for o in row[obj]],
+        vmap={attr: row[attr] for attr in val_names})
     # add start time if exists, otherwise None for performance analysis
     if "event_start_timestamp" in val_names:
         events[str(index)].vmap["start_timestamp"] = to_datetime(
-            getattr(row, 'event_start_timestamp'))
+            row['event_start_timestamp'])
     else:
-        events[str(index)].vmap["start_timestamp"] = to_datetime(
-            getattr(row, 'event_timestamp'))
+        events[str(index)].vmap["start_timestamp"] = to_datetime(row['event_timestamp'])
     end = time.time()
     # print(f'Add event: f{end - start}')
 
