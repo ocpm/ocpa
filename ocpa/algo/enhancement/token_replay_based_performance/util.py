@@ -19,6 +19,7 @@ from pm4py.statistics.variants.log import get as variants_module
 from pm4py.util import xes_constants as xes_util
 from ocpa.util import constants as ocpa_constants
 from pm4py.objects.petri_net import semantics
+import pm4py.evaluation.replay_fitness.variants.token_replay as tb_replay
 from pm4py.objects.petri_net.obj import Marking
 from pm4py.objects.petri_net.utils.petri_utils import get_places_shortest_path_by_hidden, get_s_components_from_petri
 from pm4py.objects.log import obj as log_implementation
@@ -1126,7 +1127,7 @@ def apply_variants_list(variants_list, net, initial_marking, final_marking, para
 
         log.append(trace)
 
-    return apply(log, net, initial_marking, final_marking, parameters=parameters)
+    return tb_replay.apply(log, net, initial_marking, final_marking, parameters=parameters)
 
 
 def apply_variants_dictionary(variants, net, initial_marking, final_marking, parameters=None):

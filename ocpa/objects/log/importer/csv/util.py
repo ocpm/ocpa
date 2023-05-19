@@ -1,8 +1,8 @@
 import pandas as pd
 from copy import deepcopy
-from pm4py.util.constants import PARAMETER_CONSTANT_CASEID_KEY, PARAMETER_CONSTANT_ATTRIBUTE_KEY
+from pm4py.util.constants import PARAMETER_CONSTANT_CASEID_KEY, PARAMETER_CONSTANT_ATTRIBUTE_KEY, CASE_CONCEPT_NAME
 from pm4py.algo.discovery.dfg.adapters.pandas import df_statistics
-
+DEFAULT_NAME_KEY = "default name key"
 
 def filter_by_timestamp(df, start_timestamp=None, end_timestamp=None):
     if start_timestamp is not None:
