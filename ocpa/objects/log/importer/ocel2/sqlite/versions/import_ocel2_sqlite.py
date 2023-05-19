@@ -115,8 +115,8 @@ def apply(filepath, parameters: Dict = {}) -> OCEL:
 
     # Set the table_df variable
     #event_df["event_id"] = list(range(0,len(event_df)))
-    print(event_df)
-
+    #print(event_df)
+    event_df['event_timestamp'] = pd.to_datetime(event_df['event_timestamp'])
     if "obj_names" not in parameters:
         parameters["obj_names"] = [c for c in event_df.columns if not c.startswith("event_")]
 
