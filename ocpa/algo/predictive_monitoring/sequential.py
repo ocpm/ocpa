@@ -12,19 +12,18 @@ def construct_sequence(feature_storage, index_list = "all"):
     :rtype: list(list(dict))
 
     '''
-    if index_list == "all":
-        index_list = list(range(0, len(feature_storage.feature_graphs)))
     sequences = []
-    for g in [feature_storage.feature_graphs[i] for i in index_list]:
-        sequence = []
-        #sort nodes on event time (through the event id)
-        event_ids = [n.event_id for n in g.nodes]
-        event_ids.sort()
-        for e_id in event_ids:
-            for node in g.nodes:
-                if e_id == node.event_id:
-                    sequence.append(node.attributes)
-        sequences.append(sequence)
+    for g in feature_storage.feature_graphs:
+        if index_list == "all" or g.pexec_id in index_list:
+            sequence = []
+            #sort nodes on event time (through the event id)
+            event_ids = [n.event_id for n in g.nodes]
+            event_ids.sort()
+            for e_id in event_ids:
+                for node in g.nodes:
+                    if e_id == node.event_id:
+                        sequence.append(node.attributes)
+            sequences.append(sequence)
     return sequences
 
 def construct_k_dataset(sequences, k, features, target):
