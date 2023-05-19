@@ -5,4 +5,4 @@ parameters = {"execution_extraction": "leading_type",
               "leading_type": "GDSRCPT",
               "variant_calculation": "two_phase",
               "exact_variant_calculation": True}
-ocel = ocel_import_factory.apply(filename)
+ocel = ocel_import_factory.apply(filename,parameters=parameters)
