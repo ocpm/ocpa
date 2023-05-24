@@ -1,11 +1,12 @@
 # from setuptools import setup
 import setuptools
 
-from ocpa import __name__ as ocpa_name
-from ocpa import __version__ as ocpa_version
-from ocpa import __doc__ as ocpa_doc
 from ocpa import __author__ as ocpa_author
 from ocpa import __author_email__ as ocpa_authormail
+from ocpa import __doc__ as ocpa_doc
+from ocpa import __name__ as ocpa_name
+from ocpa import __version__ as ocpa_version
+
 setuptools.setup(
     name=ocpa_name,
     packages=setuptools.find_packages(),
@@ -18,7 +19,7 @@ setuptools.setup(
     author=ocpa_author,
     author_email=ocpa_authormail,
     # Provide either the link to your github or to your website
-    url='https://github.com/ocpm/ocpa',
+    url='https://github.com/TKForgeron/ocpa',
     install_requires=[            # I get to this in a second
             "pm4py<2.3.0",
             "scikit-learn<=0.24.2",
@@ -30,7 +31,7 @@ setuptools.setup(
     # 'Intended Audience :: Developers',      # Define that your audience are developers
     # 'Topic :: Software Development :: Build Tools',
     # 'License :: OSI Approved :: MIT License',   # Again, pick a license
-    # 'Programming Language :: Python :: 3',      #Specify which pyhton versions that you want to support
+    # 'Programming Language :: Python :: 3',      #Specify which python versions that you want to support
     # 'Programming Language :: Python :: 3.4',
     # 'Programming Language :: Python :: 3.5',
     # 'Programming Language :: Python :: 3.6',
