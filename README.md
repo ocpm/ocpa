@@ -1,6 +1,6 @@
 Object-Centric Process Analysis
 ===========================
-
+![Testing](https://github.com/ocpm/ocpa/actions/workflows/unittests.yml/badge.svg)
 [![Read the Docs](https://img.shields.io/readthedocs/ocpa/latest)](https://ocpa.readthedocs.io/en/latest/index.html)
 [![GitHub Clones](https://img.shields.io/badge/dynamic/json?color=success&label=Clone&query=count&url=https://gist.githubusercontent.com/ocpm/14f03deaf32d51b785ee31e71447857a/raw/clone.json&logo=github)](https://github.com/MShawon/github-clone-count-badge)
 ![ViewCount](https://views.whatilearened.today/views/github/ocpm/ocpa.svg)

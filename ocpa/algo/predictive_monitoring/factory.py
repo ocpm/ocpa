@@ -1,7 +1,5 @@
 import time
-from multiprocessing import Pool
 from multiprocessing.dummy import Pool as ThreadPool
-from random import shuffle
 
 import tqdm
 
@@ -192,37 +190,12 @@ def apply(
     )
     ocel.log.create_efficiency_objects()
     feature_storage = Feature_Storage(
-        event_features=event_based_features,
-        execution_features=execution_based_features,
-        ocel=ocel,
-    )
-
+        event_features=event_based_features, execution_features=execution_based_features, ocel=ocel)
+    pool = ThreadPool(workers)
+    parameter_space = [(c_id,ocel,event_based_features, execution_based_features, event_attributes, event_object_attributes, execution_object_attributes, multi_output_event_features ) for c_id in range(0,len(ocel.process_executions))]
     print("Applying feature extraction to process executions")
-    parameter_space = [
-        (
-            c_id,
-            ocel,
-            event_based_features,
-            execution_based_features,
-            event_attributes,
-            event_object_attributes,
-            execution_object_attributes,
-            multi_output_event_features,
-        )
-        for c_id in range(0, len(ocel.process_executions))
-    ]
-    # Shuffle parameter space to avoid that one process gets only very long-running cases
-    shuffle(parameter_space)
-    chunksize, extra = divmod(len(parameter_space), workers * 16)
-    if extra:
-        chunksize += 1
-    with Pool(workers) as pool:
-        for f_g in tqdm.tqdm(
-            pool.imap_unordered(
-                _apply_to_process_execution, parameter_space, chunksize=chunksize
-            ),
-            total=len(parameter_space),
-        ):
-            feature_storage.add_feature_graph(f_g)
+    results = list(tqdm.tqdm(pool.imap(_apply_to_process_execution, parameter_space), total=len(parameter_space)))
+    for f_g in results:
+        feature_storage.add_feature_graph(f_g)
     del ocel.log.log["event_objects"]
     return feature_storage
