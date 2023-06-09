@@ -1,6 +1,4 @@
-from ocpa.objects.log.importer.csv.versions import to_df
-from ocpa.objects.log.importer.csv.versions import to_obj
-from ocpa.objects.log.importer.csv.versions import to_ocel
+from ocpa.objects.log.importer.csv.versions import to_df, to_obj, to_ocel
 from ocpa.objects.log.ocel import OCEL
 
 TO_DF = "to_df"
@@ -46,5 +44,7 @@ def apply(
     """
 
     return VERSIONS[variant](
-        file_path, parameters=parameters, file_path_object_attribute_table=None
+        file_path,
+        parameters=parameters,
+        file_path_object_attribute_table=file_path_object_attribute_table,
     )

@@ -1,5 +1,5 @@
 import pandas as pd
-from ast import literal_eval
+import ast
 import math
 
 
@@ -17,7 +17,7 @@ def apply(
         elif type(x) == float and math.isnan(x):
             return []
         else:
-            return literal_eval(x)
+            return ast.literal_eval(x)
 
     df_ocel = pd.DataFrame()
 
