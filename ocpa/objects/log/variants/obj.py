@@ -1,16 +1,16 @@
 from dataclasses import dataclass, field
-from typing import List, Dict, Set, Any
+from typing import Any
 from datetime import datetime
 import time
 
-
+# TODO: set use __slots__ for the dataclasses for performance improvements of ~15%
 @dataclass
 class Event:
     id: str
     act: str
     time: datetime
-    omap: List[str]
-    vmap: Dict[str, Any]
+    omap: list[str]
+    vmap: dict[str, Any]
 
     def __hash__(self):
         # keep the ID for now in places
@@ -24,7 +24,7 @@ class Event:
 class Obj:
     id: str
     type: str
-    ovmap: Dict
+    ovmap: dict
 
     def __repr__(self):
         return f'Object {self.id} - Type: {self.type}, OVMAP: {str(self.ovmap)}'
@@ -32,18 +32,18 @@ class Obj:
 
 @dataclass
 class MetaObjectCentricData:
-    attr_names: List[str]  # AN
-    attr_types: List[str]  # AT
-    attr_typ: Dict  # pi_typ
+    attr_names: list[str]  # AN
+    attr_types: list[str]  # AT
+    attr_typ: dict  # pi_typ
 
-    obj_types: List[str]  # OT
+    obj_types: list[str]  # OT
 
-    act_attr: Dict[str, List[str]]  # allowed attr per act
-    # act_obj: Dict[str, List[str]]  # allowed ot per act
+    act_attr: dict[str, list[str]]  # allowed attr per act
+    # act_obj: dict[str, list[str]]  # allowed ot per act
 
-    # acts: Set[str] = field(init=False)  # TODO: change to list for json
+    # acts: set[str] = field(init=False)  # TODO: change to list for json
     # Used for OCEL json data to simplify UI on homepage
-    attr_events: List[str] = field(default_factory=lambda: [])
+    attr_events: list[str] = field(default_factory=lambda: [])
 
     # def __post_init__(self):
     #     self.acts = {act for act in self.act_attr}
@@ -51,12 +51,12 @@ class MetaObjectCentricData:
 
 @dataclass
 class RawObjectCentricData:
-    events: Dict[str, Event]
-    objects: Dict[str, Obj]
-    obj_event_mapping: Dict[str, List[str]]
+    events: dict[str, Event]
+    objects: dict[str, Obj]
+    obj_event_mapping: dict[str, list[str]]
 
     @property
-    def obj_ids(self) -> List[str]:
+    def obj_ids(self) -> list[str]:
         return list(self.objects.keys())
 
 
@@ -97,17 +97,17 @@ class ObjectCentricEventLog:
             self.trace[oid] = [e.act for e in self.sequence[oid]]
 
     # @property
-    # def activities(self) -> Set[str]:
+    # def activities(self) -> set[str]:
     #     return set([self.raw.events[e].act for e in self.raw.events])
 
-    # def act_events(self, act: str) -> List[str]:
+    # def act_events(self, act: str) -> list[str]:
     #     return [e for e in self.raw.events if self.raw.events[e].act == act]
 
     # @property
-    # def types(self) -> Set[str]:
+    # def types(self) -> set[str]:
     #     return set(self.meta.obj_types)
 
-    # def ot_objects(self, ot: str) -> List[str]:
+    # def ot_objects(self, ot: str) -> list[str]:
     #     start = time.time()
     #     O = [oid for oid in self.raw.objects if self.raw.objects[oid].type == ot]
     #     end = time.time()
@@ -115,25 +115,25 @@ class ObjectCentricEventLog:
     #     return O
 
     # replaced by obj_event_mapping of ocel
-    # def obj_events(self, oid: str) -> List[str]:
+    # def obj_events(self, oid: str) -> list[str]:
     #     return [e for e in self.raw.events if oid in self.raw.events[e].omap]
 
-    # def eve_objects(self, eid: str) -> List[str]:
+    # def eve_objects(self, eid: str) -> list[str]:
     #     return self.raw.events[eid].omap
 
-    def eve_ot_objects(self, eid: str, ot: str) -> List[str]:
+    def eve_ot_objects(self, eid: str, ot: str) -> list[str]:
         return [oid for oid in self.eve_objects[eid] if self.raw.objects[oid].type == ot]
 
-    # def sequence(self, oid: str) -> List[Event]:
+    # def sequence(self, oid: str) -> list[Event]:
     #     events = [self.raw.events[e] for e in self.raw.obj_event_mapping[oid]]
     #     events.sort(key=lambda x: x.time)
     #     return events
 
-    # def trace(self, oid: str) -> List[str]:
+    # def trace(self, oid: str) -> list[str]:
     #     trace = [e.act for e in self.sequence(oid)]
     #     return trace
 
-    # def ot_events(self, ot: str) -> List[str]:
+    # def ot_events(self, ot: str) -> list[str]:
     #     events = []
     #     for e in self.raw.events:
     #         if any(ot == self.raw.objects[oid].type for oid in self.raw.events[e].omap):
@@ -249,7 +249,7 @@ class ObjectCentricEventLog:
     def block_metric(self, ot: str, act1: str, act2: str):
         return len(self.block(ot, act1, act2))/len(self.ot_objects[ot])
 
-    def object_absence(self, ot: str, act: str) -> List[str]:
+    def object_absence(self, ot: str, act: str) -> list[str]:
         O = []
         for eid in self.act_events[act]:
             if len([oid for oid in self.eve_objects[eid] if self.raw.objects[oid].type == ot]) == 0:
@@ -259,7 +259,7 @@ class ObjectCentricEventLog:
     def object_absence_metric(self, ot: str, act: str) -> int:
         return len(self.object_absence(ot, act))/len(self.act_events[act])
 
-    def object_singular(self, ot: str, act: str) -> List[str]:
+    def object_singular(self, ot: str, act: str) -> list[str]:
         O = []
         for eid in self.act_events[act]:
             if len([oid for oid in self.eve_objects[eid] if self.raw.objects[oid].type == ot]) == 1:
@@ -269,7 +269,7 @@ class ObjectCentricEventLog:
     def object_singular_metric(self, ot: str, act: str) -> int:
         return len(self.object_singular(ot, act))/len(self.act_events[act])
 
-    def object_multiple(self, ot: str, act: str) -> List[str]:
+    def object_multiple(self, ot: str, act: str) -> list[str]:
         O = []
         for eid in self.act_events[act]:
             if len([oid for oid in self.eve_objects[eid] if self.raw.objects[oid].type == ot]) > 1:
@@ -282,10 +282,10 @@ class ObjectCentricEventLog:
     def object_presence_metric(self, ot: str, act: str) -> int:
         return (len(self.object_singular(ot, act))+len(self.object_multiple(ot, act)))/len(self.act_events[act])
 
-    def ot_objects_of_an_event(self, eid: str, ot: str) -> List[str]:
+    def ot_objects_of_an_event(self, eid: str, ot: str) -> list[str]:
         return [oid for oid in self.raw.events[eid].omap if self.raw.objects[oid].type == ot]
 
-    def num_ot_objects_containing_acts(self, ot: str, acts: List[str]) -> int:
+    def num_ot_objects_containing_acts(self, ot: str, acts: list[str]) -> int:
         objects = []
         for oid in self.ot_objects[ot]:
             trace = self.trace[oid]

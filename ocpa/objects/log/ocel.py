@@ -158,7 +158,6 @@ class OCEL:
         return self._variants
 
     # _get_variant_frequency
-
     @property
     def variant_frequencies(self) -> list[float]:
         """

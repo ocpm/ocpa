@@ -1,12 +1,9 @@
-# import time
-# import networkx as nx
-# import itertools
-import pickle
-from numbers import Number
-from dataclasses import dataclass, field
+import logging
 import random
+from dataclasses import dataclass, field
+from numbers import Number
+
 import pandas as pd
-from typing import Dict
 
 
 @dataclass
@@ -62,22 +59,16 @@ class Table:
             c: dict(zip(self._log["event_id"], self._log[c]))
             for c in self._log.columns.values
         }
-        if self._object_attributes:
-            self._object_attributes = {
-                c: dict(
-                    zip(
-                        self._object_attributes["object_id"], self._object_attributes[c]
-                    )
-                )
-                for c in self._object_attributes.columns.values
-            }
+        if type(self._object_attributes) == pd.DataFrame:
+            efficiency_dict = self._object_attributes.set_index("object_id").to_dict()
+            efficiency_dict["object_id"] = {
+                x: x for x in self._object_attributes["object_id"]
+            }  # 2023-06-07 15:23:54 Not sure if this is required, but including this we have the same result as the old code
+            self._object_attributes = efficiency_dict
         else:
             self._object_attributes = {}
 
     def get_value(self, e_id, attribute):
-        # if attribute == "event_RequestedAmount":
-        #     with open("debug/ocel.log", "wb") as file:
-        #         pickle.dump(self, file)
         return self._mapping[attribute][e_id]
 
     def get_object_attribute_value(self, o_id, attribute):
