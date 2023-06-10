@@ -2,13 +2,14 @@
 
 from dataclasses import dataclass
 from typing import Any
+
 import networkx as nx
 
-from ocpa.objects.log.variants.obj import ObjectCentricEventLog
-from ocpa.objects.log.variants.graph import EventGraph
-from ocpa.objects.log.variants.table import Table
 from ocpa.algo.util.process_executions import factory as process_execution_factory
 from ocpa.algo.util.variants import factory as variant_factory
+from ocpa.objects.log.variants.graph import EventGraph
+from ocpa.objects.log.variants.obj import ObjectCentricEventLog
+from ocpa.objects.log.variants.table import Table
 
 
 @dataclass
@@ -24,9 +25,10 @@ class OCEL:
     Properties are lazily instantiated upon calling their getter functions.
     """
 
-    # Use slots for faster attribute access and memory saving
-    # 16.57% performance improvement for get/set/del operations (on my machine)
-    # Using slots disables dynamically adding class attributes after instantiation
+    # Using slots for memory saving (and possibly faster attribute access)
+    # Using slots disables:
+    #   - dynamically adding class attributes after instantiation
+    #   - multiple inheritance (mixins)
     # Slots are available via dataclass as decorator parameter from Python 3.10
     __slots__ = (
         "log",

@@ -3,6 +3,7 @@ import random
 from typing import Any
 
 import pandas as pd
+
 from ocpa.objects.log.variants.obj import (
     Event,
     MetaObjectCentricData,
@@ -71,22 +72,26 @@ def df_to_objs_dict(objects_df: pd.DataFrame) -> dict[str, Obj]:
 
 
 def add_obj_attributes(
-    objects: dict[str, Obj], objects_table: pd.DataFrame
+    objects_found_in_event_references: dict[str, Obj], objects_table: pd.DataFrame
 ) -> dict[str, Obj]:
     # select only rows from objects table that occur in the OCEL
-    objects_table = objects_table.loc[objects_table["object_id"].isin(objects.keys())]
+    objects_table = objects_table.loc[
+        objects_table["object_id"].isin(objects_found_in_event_references.keys())
+    ]
     # """
     # in vectorized manner or via apply or via set_index().to_dict() (with multi index maybe):
     # instantiate dict/set of Obj at once
     # """
 
-    for i, oid in enumerate(objects):
+    for oid in objects_found_in_event_references:
         # obj_attrs is a pd.DataFrame (with objects and their attributes) filtered on object id
         obj_attrs = objects_table.loc[objects_table["object_id"] == oid]
         if not obj_attrs.empty:
-            objects[oid].ovmap = obj_attrs.iloc[0, 1:].to_dict()
+            objects_found_in_event_references[oid].ovmap = obj_attrs.iloc[
+                0, 1:
+            ].to_dict()
 
-    return objects
+    return objects_found_in_event_references
 
 
 def add_event(
