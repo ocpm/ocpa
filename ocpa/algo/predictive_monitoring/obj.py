@@ -73,8 +73,12 @@ class Feature_Storage:
 
         def __init__(self, pexec_id, graph, ocel):
             self._pexec_id = pexec_id
-            self._nodes = [Feature_Storage.Feature_Graph.Node(e_id, ocel.get_value(e_id, "event_objects"),pexec_id) for e_id in
-                           graph.nodes]
+            self._nodes = [
+                Feature_Storage.Feature_Graph.Node(
+                    e_id, ocel.get_value(e_id, "event_objects"), pexec_id
+                )
+                for e_id in graph.nodes
+            ]
             self._node_mapping = {node.event_id: node for node in self._nodes}
             self._objects = {
                 (source, target): set(
@@ -95,7 +99,7 @@ class Feature_Storage:
 
         def _get_nodes(self) -> list[Node]:
             return self._nodes
-        
+
         def _get_pexec_id(self):
             return self._pexec_id
 
@@ -128,12 +132,12 @@ class Feature_Storage:
         def add_attribute(self, key, value) -> None:
             self._attributes[key] = value
 
-        nodes: list[Node] = property(_get_nodes)
-        edges: list[Edge] = property(_get_edges)
-        objects: dict[tuple, set] = property(_get_objects)
-        attributes: dict = property(_get_attributes)
-        size: int = property(_get_size)
-        pexec_id: int = property(_get_pexec_id)
+        nodes = property(_get_nodes)  # : list[Node]
+        edges = property(_get_edges)  # : list[Edge]
+        objects = property(_get_objects)  # : dict[tuple, set]
+        attributes = property(_get_attributes)  # : dict
+        size = property(_get_size)  # : int
+        pexec_id = property(_get_pexec_id)  # : int
 
     def __init__(
         self,
@@ -148,9 +152,9 @@ class Feature_Storage:
         self._feature_graphs: list[self.Feature_Graph] = []
         self._scaler = None
         self._scaling_exempt_features: list[tuple] = []
-        self._train_indices: list[int] = None
-        self._validation_indices: list[int] = None
-        self._test_indices: list[int] = None
+        self._train_indices: list[int] = []
+        self._validation_indices: list[int] = []
+        self._test_indices: list[int] = []
 
     def _get_event_features(self):
         return self._event_features
@@ -207,18 +211,18 @@ class Feature_Storage:
 
     event_features = property(_get_event_features, _set_event_features)
     execution_features = property(_get_execution_features, _set_execution_features)
-    feature_graphs: list[Feature_Graph] = property(
+    feature_graphs = property(
         _get_feature_graphs, _set_feature_graphs
-    )
+    )  # : list[Feature_Graph]
     scaler = property(_get_scaler, _set_scaler)
-    train_indices: list[int] = property(_get_train_indices, _set_train_indices)
-    validation_indices: list[int] = property(
+    train_indices = property(_get_train_indices, _set_train_indices)  # : list[int]
+    validation_indices = property(
         _get_validation_indices, _set_validation_indices
-    )
-    test_indices: list[int] = property(_get_test_indices, _set_test_indices)
-    scaling_exempt_features: list[tuple] = property(
+    )  # : list[int]
+    test_indices = property(_get_test_indices, _set_test_indices)  # : list[int]
+    scaling_exempt_features = property(
         _get_scaling_exempt_features, _set_scaling_exempt_features
-    )
+    )  # : list[tuple]
 
     def _event_id_table(self, feature_graphs: list[Feature_Graph]) -> pd.DataFrame:
         # features = self.event_features
@@ -261,7 +265,7 @@ class Feature_Storage:
     ) -> None:
         """
         Private method (impure) that, given a list of graphs and an initialized scaler object,
-        normalizes the given graphs in an impure fashion (in_place).
+        normalizes the given graphs in an impure fashion (inplace).
 
         :param train: Mandatory. To prevent data leakage by using information from train set to
          normalize the validation or test set.
@@ -394,7 +398,7 @@ class Feature_Storage:
         graph_indices = list(range(0, len(self.feature_graphs)))
         random.Random(state).shuffle(graph_indices)
         ################################################
-        ##       VISUALIZATION OF THE SPLITTING       ##
+        ##      VISUALIZATION OF THE SPLITTING :)     ##
         ##        train          val        test      ##
         ##         50%           20%        30%       ##
         ##  @@@@@@@@@@@@@@@@@@ $$$$$$$$ &&&&&&&&&&&&  ##
