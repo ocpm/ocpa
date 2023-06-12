@@ -56,7 +56,9 @@ def apply(df: pd.DataFrame, parameters: dict = None) -> ObjectCentricEventLog:
         obj_types=obj_names,
         act_attr=act_attr,
     )
-    objects = add_obj_attributes(objects=objects, objects_table=obj_df)
+    objects = add_obj_attributes(
+        objects_found_in_event_references=objects, objects_table=obj_df
+    )
     logging.debug("*" * 128)
     logging.debug(type(objects))
     logging.debug(_sample_dict(5, objects))
@@ -74,22 +76,51 @@ def df_to_objs_dict(objects_df: pd.DataFrame) -> dict[str, Obj]:
 def add_obj_attributes(
     objects_found_in_event_references: dict[str, Obj], objects_table: pd.DataFrame
 ) -> dict[str, Obj]:
+    """
+    This function adds object attributes to an already existing dict of objects (of type Obj).
+    Therefore it isn't efficient, as all Obj in the Obj dict are replaced by newly instantiated Obj objects
+    that do have object attributes (Obj.ovmap is filled)
+    """
+
     # select only rows from objects table that occur in the OCEL
     objects_table = objects_table.loc[
         objects_table["object_id"].isin(objects_found_in_event_references.keys())
     ]
-    # """
-    # in vectorized manner or via apply or via set_index().to_dict() (with multi index maybe):
-    # instantiate dict/set of Obj at once
-    # """
 
-    for oid in objects_found_in_event_references:
-        # obj_attrs is a pd.DataFrame (with objects and their attributes) filtered on object id
-        obj_attrs = objects_table.loc[objects_table["object_id"] == oid]
-        if not obj_attrs.empty:
-            objects_found_in_event_references[oid].ovmap = obj_attrs.iloc[
-                0, 1:
-            ].to_dict()
+    # 20% faster (wrt the bottom code, but not 100% tested for correctness)
+    # get a dataframe that retrieves from previously instantiated Obj-list the object type for each object_id
+    object_types = pd.DataFrame(
+        {oid: [obj.type] for oid, obj in objects_found_in_event_references.items()}
+    ).T.rename(columns={"index": "object_id", 0: "object_type"})
+    # make join that adds an object type column to the objects (incl. attributes) table/dataframe
+    objects_table = (
+        objects_table.set_index("object_id")
+        .join(object_types, on="object_id")
+        .reset_index()
+    )
+    # object attribute columns/names
+    oa_cols = objects_table.columns[1:-1]
+
+    def get_ovmap(oa_values):
+        # impure utility function (uses oa_cols from outside the function)
+        return {k: v for (k, v) in zip(oa_cols, oa_values)}
+
+    def create_obj(row):
+        ovmap = get_ovmap(row[1:-1])
+        return Obj(id=row[0], type=row[-1], ovmap=ovmap)
+
+    objects_found_in_event_references = {
+        row[0]: create_obj(row) for row in objects_table.values.tolist()
+    }
+
+    # # 20% slower version:
+    # for oid in objects_found_in_event_references:
+    #     # obj_attrs is a pd.DataFrame (with objects and their attributes) filtered on object id
+    #     obj_attrs = objects_table.loc[objects_table["object_id"] == oid]
+    #     if not obj_attrs.empty:
+    #         objects_found_in_event_references[oid].ovmap = obj_attrs.iloc[
+    #             0, 1:
+    #         ].to_dict()
 
     return objects_found_in_event_references
 

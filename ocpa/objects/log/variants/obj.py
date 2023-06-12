@@ -39,14 +39,6 @@ class Obj:
 
 @dataclass
 class MetaObjectCentricData:
-    # __slots__ = (
-    #     "attr_names",
-    #     "attr_types",
-    #     "attr_typ",
-    #     "obj_types",
-    #     "act_attr",
-    #     "attr_events",
-    # )
     attr_names: list[str]  # AN
     attr_types: list[str]  # AT
     attr_typ: dict  # pi_typ
@@ -58,11 +50,10 @@ class MetaObjectCentricData:
 
     # acts: set[str] = field(init=False)  # TODO: change to list for json
     # Used for OCEL json data to simplify UI on homepage
-    attr_events: list[str]
+    attr_events: list[str] = field(default_factory=list)
 
-    def __post_init__(self):
-        #     self.acts = {act for act in self.act_attr}
-        self.attr_events = field(default_factory=list)
+    # def __post_init__(self):
+    #     self.acts = {act for act in self.act_attr}
 
 
 @dataclass
