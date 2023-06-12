@@ -1,5 +1,5 @@
-import pandas as pd
 from ocpa.objects.log.variants.obj import ObjectCentricEventLog
+import pandas as pd
 
 # import logging
 # import pickle
