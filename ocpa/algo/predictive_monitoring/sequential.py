@@ -14,12 +14,12 @@ def construct_sequence(feature_storage: Feature_Storage, index_list: list[int] =
     :return: List of sequential encodings: Each sequential encoding is a sequence of feature dicts.
     :rtype: list(list(dict))
 
-    '''
+    """
     sequences = []
     for g in feature_storage.feature_graphs:
         if index_list == "all" or g.pexec_id in index_list:
             sequence = []
-            #sort nodes on event time (through the event id)
+            # sort nodes on event time (through the event id)
             event_ids = [n.event_id for n in g.nodes]
             event_ids.sort()
             for e_id in event_ids:
