@@ -14,12 +14,12 @@ setuptools.setup(
     include_package_data=True,
     version=ocpa_version,
     # Chose a license from here: https://help.github.com/articles/licensing-a-repository
-    license="MIT",
+    license='MIT',
     description=ocpa_doc.strip(),
     author=ocpa_author,
     author_email=ocpa_authormail,
     # Provide either the link to your github or to your website
-    url="https://github.com/TKForgeron/ocpa",
+    url='https://github.com/TKForgeron/ocpa',
     install_requires=[  # I get to this in a second
         "pm4py<2.3.0",
         "scikit-learn<=0.24.2",
