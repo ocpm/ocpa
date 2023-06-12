@@ -35,7 +35,7 @@ def main():
         act="Test Speed",
         time=datetime.today(),
         omap=["o1", "i1"],
-        vmap={"resource": "Tim"},
+        vmap={"resource": "Forgeron"},
     )
     obj = Obj(id="o1", type="order", ovmap={"price": 30.0})
 

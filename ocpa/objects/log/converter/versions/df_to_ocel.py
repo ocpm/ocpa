@@ -36,9 +36,7 @@ def apply(df: pd.DataFrame, parameters: dict = None) -> ObjectCentricEventLog:
 
     for index, row in enumerate(df.itertuples(), 1):
         add_event(events, index, row, obj_names, val_names)
-        objs = [
-            (oid, ot) for ot in obj_names for oid in getattr(row, ot)
-        ]  # maybe it should be getattr(row, oid)... do test!
+        objs = [(oid, ot) for ot in obj_names for oid in getattr(row, ot)]
         add_obj(
             objects=objects,
             index=index,
