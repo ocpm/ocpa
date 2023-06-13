@@ -3,6 +3,7 @@ import random
 from typing import Any
 
 import pandas as pd
+import math
 
 from ocpa.objects.log.variants.obj import (
     Event,
@@ -13,11 +14,11 @@ from ocpa.objects.log.variants.obj import (
 )
 
 
-def _sample_dict(n: int, d: dict, seed: int = None) -> dict:
+def _sample_dict(n: int, dy: dict, seed: int = 42) -> dict:
     """only exists for logging purposes"""
     random.seed(seed)
-    keys = random.sample(list(d.keys()), n)
-    return {k: d[k] for k in keys}
+    keys = random.sample(list(dy.keys()), n)
+    return {k: dy[k] for k in keys}
 
 
 def apply(df: pd.DataFrame, parameters: dict = None) -> ObjectCentricEventLog:
@@ -57,9 +58,9 @@ def apply(df: pd.DataFrame, parameters: dict = None) -> ObjectCentricEventLog:
     objects = add_obj_attributes(
         objects_found_in_event_references=objects, objects_table=obj_df
     )
-    # logging.debug("*" * 128)
-    # logging.debug(type(objects))
-    # logging.debug(_sample_dict(5, objects))
+    logging.debug("*" * 128)
+    logging.debug(type(objects))
+    logging.debug(_sample_dict(3, objects))
     raw = RawObjectCentricData(
         events=events, objects=objects, obj_event_mapping=obj_event_mapping
     )
@@ -71,8 +72,8 @@ def add_obj_attributes(
 ) -> dict[str, Obj]:
     """
     This function adds object attributes to an already existing dict of objects (of type Obj).
-    Therefore it isn't optimally efficient, as all Obj in the Obj dict are replaced by newly 
-    instantiated Obj objects that do have object attributes (Obj.ovmap is filled)
+    Therefore it might not be optimally efficient, as all Obj in the Obj dict are replaced by 
+    newly instantiated Obj objects that do have object attributes (Obj.ovmap is filled)
     """
 
     # select only rows from objects table that occur in the OCEL
@@ -93,15 +94,30 @@ def add_obj_attributes(
     # object attribute columns/names
     oa_cols = objects_table.columns[1:-1]
 
+    def safe_isnan(x:Any)->bool:
+        if type(x)==float:
+            return math.isnan(x)
+        return False
+
     def get_ovmap(object_attribute_values: list[Any]) -> dict[str,Any]:
-        # impure utility function (uses oa_cols from outside the function)
-        return {k: v for (k, v) in zip(oa_cols, object_attribute_values)}
+        """
+        Impure utility function (uses oa_cols from outside the function)
+        that returns the ovmap given a list of object attribute values.
+        It only includes non-nan values (implying that each object type receives its own attributes*)
+        
+        * Issue with this method is that if an object has a NULL/None/nan value for an attribute 
+        that it should have, this attribute will be excluded from its OVMAP 
+        """
+        
+        return {k: v for (k, v) in zip(oa_cols, object_attribute_values) if not safe_isnan(v)}
 
     def create_obj(row: list[Any]) -> Obj:
         ovmap = get_ovmap(object_attribute_values=row[1:-1])
         return Obj(id=row[0], type=row[-1], ovmap=ovmap)
 
-    objects_found_in_event_references = {
+    # create dict with filled with Obj found in objects_table (incl obj attributes),
+    # and merge it with the already existing dict of Obj objects (found in the events table)
+    objects_found_in_event_references |= {
         row[0]: create_obj(row) for row in objects_table.values.tolist()
     }
 
@@ -160,4 +176,3 @@ def name_type(typ: str) -> str:
         return "string"
     else:
         return typ
-
