@@ -1,10 +1,9 @@
 import logging
+import math
 import random
 from typing import Any
 
 import pandas as pd
-import math
-
 from ocpa.objects.log.variants.obj import (
     Event,
     MetaObjectCentricData,
@@ -21,8 +20,8 @@ def _sample_dict(n: int, dy: dict, seed: int = 42) -> dict:
     return {k: dy[k] for k in keys}
 
 
-def apply(df: pd.DataFrame, parameters: dict = None) -> ObjectCentricEventLog:
-    obj_df = pd.DataFrame({"object_id": []})
+def apply(df: pd.DataFrame, parameters: dict = {}) -> ObjectCentricEventLog:
+    obj_df = pd.DataFrame()
     if "objects_table" in parameters:
         obj_df = parameters["objects_table"]
 
@@ -72,9 +71,12 @@ def add_obj_attributes(
 ) -> dict[str, Obj]:
     """
     This function adds object attributes to an already existing dict of objects (of type Obj).
-    Therefore it might not be optimally efficient, as all Obj in the Obj dict are replaced by 
+    Therefore it might not be optimally efficient, as all Obj in the Obj dict are replaced by
     newly instantiated Obj objects that do have object attributes (Obj.ovmap is filled)
     """
+    if objects_table.empty:
+        # if objects_table not passed in parameters dict of apply()
+        return objects_found_in_event_references
 
     # select only rows from objects table that occur in the OCEL
     objects_table = objects_table.loc[
@@ -94,22 +96,26 @@ def add_obj_attributes(
     # object attribute columns/names
     oa_cols = objects_table.columns[1:-1]
 
-    def safe_isnan(x:Any)->bool:
-        if type(x)==float:
+    def safe_isnan(x: Any) -> bool:
+        if type(x) == float:
             return math.isnan(x)
         return False
 
-    def get_ovmap(object_attribute_values: list[Any]) -> dict[str,Any]:
+    def get_ovmap(object_attribute_values: list[Any]) -> dict[str, Any]:
         """
         Impure utility function (uses oa_cols from outside the function)
         that returns the ovmap given a list of object attribute values.
         It only includes non-nan values (implying that each object type receives its own attributes*)
-        
-        * Issue with this method is that if an object has a NULL/None/nan value for an attribute 
-        that it should have, this attribute will be excluded from its OVMAP 
+
+        * Issue with this method is that if an object has a NULL/None/nan value for an attribute
+        that it should have, this attribute will be excluded from its OVMAP
         """
-        
-        return {k: v for (k, v) in zip(oa_cols, object_attribute_values) if not safe_isnan(v)}
+
+        return {
+            k: v
+            for (k, v) in zip(oa_cols, object_attribute_values)
+            if not safe_isnan(v)
+        }
 
     def create_obj(row: list[Any]) -> Obj:
         ovmap = get_ovmap(object_attribute_values=row[1:-1])

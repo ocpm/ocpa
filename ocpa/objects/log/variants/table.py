@@ -2,6 +2,7 @@ import logging
 import random
 from dataclasses import dataclass, field
 from numbers import Number
+from typing import Union
 
 import pandas as pd
 
@@ -26,7 +27,10 @@ class Table:
     # )
 
     def __init__(
-        self, log: pd.DataFrame, parameters: dict, object_attributes: dict = None
+        self,
+        log: pd.DataFrame,
+        parameters: dict,
+        object_attributes: Union[pd.DataFrame, dict] = {},
     ):
         self._log = log
         self._log["event_id"] = self._log["event_id"].astype(int)
@@ -65,7 +69,7 @@ class Table:
                 x: x for x in self._object_attributes["object_id"]
             }  # 2023-06-07 15:23:54 Not sure if this is required, but including this we have the same result as the old code
             self._object_attributes = efficiency_dict
-        else:
+        elif self._object_attributes is None:
             self._object_attributes = {}
 
     def get_value(self, e_id, attribute):
