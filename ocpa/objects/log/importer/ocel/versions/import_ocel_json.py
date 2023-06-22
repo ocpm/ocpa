@@ -17,15 +17,15 @@ import ocpa.objects.log.variants.util.table as table_utils
 def apply(filepath, parameters: Dict, file_path_object_attribute_table=None) -> OCEL:
     if parameters is None:
         parameters = {}
-    obj = import_jsonocel(filepath)
-    df, _ = convert_factory.apply(obj, variant='json_to_csv')
+    obj = import_jsonocel(filepath, parameters)
+    df, _ = convert_factory.apply(obj, variant='json_to_mdl')
     obj_df = None
     if(file_path_object_attribute_table):
         obj_df = pd.read_csv(file_path_object_attribute_table)
     table_parameters = {"obj_names": obj.meta.obj_types,
                         # TODO check this in a future release
                         # "val_names": obj.meta.attr_types,
-                        "val_names": ['event_'.join(name) for name in obj.meta.attr_events],
+                        "val_names": [],
                         "act_name": "event_activity",
                         "time_name": "event_timestamp",
                         "sep": ","}
@@ -39,6 +39,8 @@ def apply(filepath, parameters: Dict, file_path_object_attribute_table=None) -> 
 
 
 def import_jsonocel(file_path, parameters=None) -> ObjectCentricEventLog:
+    if parameters is None:
+        parameters = {}
     F = open(file_path, "rb")
     obj = json.load(F)
     F.close()
@@ -48,8 +50,7 @@ def import_jsonocel(file_path, parameters=None) -> ObjectCentricEventLog:
 def parse_json(data: Dict[str, Any]) -> ObjectCentricEventLog:
     cfg = JsonParseParameters()
     # parses the given dict
-    events, obj_event_mapping = parse_events(
-        data[cfg.log_params['events']], cfg)
+    events = parse_events(data[cfg.log_params['events']], cfg)
     objects = parse_objects(data[cfg.log_params['objects']], cfg)
     # Uses the last found value type
     attr_events = {v:
@@ -79,8 +80,15 @@ def parse_json(data: Dict[str, Any]) -> ObjectCentricEventLog:
                                  act_attr=act_attr,
                                  attr_events=list(attr_events.keys()))
     data = ObjectCentricEventLog(
-        meta, RawObjectCentricData(events, objects, obj_event_mapping))
+        meta, RawObjectCentricData(events, objects))
     return data
+
+
+# CHANGED
+def parse_timestamp(t: str) -> datetime:
+    if t.endswith("Z"):
+        t = t[:-1]
+    return datetime.fromisoformat(t)
 
 
 def parse_events(data: Dict[str, Any], cfg: JsonParseParameters) -> Dict[str, Event]:
@@ -90,30 +98,22 @@ def parse_events(data: Dict[str, Any], cfg: JsonParseParameters) -> Dict[str, Ev
     vmap_name = cfg.event_params['vmap']
     time_name = cfg.event_params['time']
     events = {}
-    obj_event_mapping = {}
-    eid = 0
-    for item in data.items():
-        events[eid] = Event(id=eid,
-                            act=item[1][act_name],
-                            omap=item[1][omap_name],
-                            vmap=item[1][vmap_name],
-                            time=datetime.fromisoformat(item[1][time_name]))
+    # CHANGED
+    # for item in data.items():
+    #     events[item[0]] = Event(id=item[0],
+    # (replaced item[0] by id in the following)
+    for id, item in enumerate(data.items()):
+        events[id] = Event(id=id,
+                                act=item[1][act_name],
+                                omap=item[1][omap_name],
+                                vmap=item[1][vmap_name],
+                                time=parse_timestamp(item[1][time_name]))
         if "start_timestamp" not in item[1][vmap_name]:
-            events[eid].vmap["start_timestamp"] = datetime.fromisoformat(
-                item[1][time_name])
+            events[id].vmap["start_timestamp"] = parse_timestamp(item[1][time_name])
         else:
-            events[eid].vmap["start_timestamp"] = datetime.fromisoformat(
-                events[eid].vmap["start_timestamp"])
-
-        for oid in item[1][omap_name]:
-            if oid in obj_event_mapping:
-                obj_event_mapping[oid].append(eid)
-            else:
-                obj_event_mapping[oid] = [eid]
-        eid += 1
-
+            events[id].vmap["start_timestamp"] = parse_timestamp(events[id].vmap["start_timestamp"])
     sorted_events = sorted(events.items(), key=lambda kv: kv[1].time)
-    return OrderedDict(sorted_events), obj_event_mapping
+    return OrderedDict(sorted_events)
 
 
 def parse_objects(data: Dict[str, Any], cfg: JsonParseParameters) -> Dict[str, Obj]:
