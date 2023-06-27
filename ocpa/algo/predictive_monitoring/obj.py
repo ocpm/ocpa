@@ -1,7 +1,7 @@
 import pandas as pd
-from sklearn.preprocessing import StandardScaler
+# from sklearn.preprocessing import StandardScaler
+from ocpa.util.util import StandardScaler
 import random
-
 
 class Feature_Storage:
     '''
