@@ -234,6 +234,3 @@ if __name__ == "__main__":
     ci2 = ConstraintInstance(name="G2", start=5, end=15)
     ci3 = ConstraintInstance(name="G3", start=10, end=20)
     cis2 = [ci1, ci2, ci3]
-
-    apply(cis1,bt)
-    apply(cis2,bt)
