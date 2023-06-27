@@ -3,9 +3,30 @@ import tempfile
 from graphviz import Digraph
 from ocpa.objects.oc_petri_net.obj import ObjectCentricPetriNet
 
-COLORS = ["#05B202", "#A13CCD", "#BA0D39", "#39F6C0", "#E90638", "#07B423", "#306A8A", "#678225", "#2742FE", "#4C9A75",
-          "#4C36E9", "#7DB022", "#EDAC54", "#EAC439", "#EAC439", "#1A9C45", "#8A51C4", "#496A63", "#FB9543", "#2B49DD",
-          "#13ADA5", "#2DD8C1", "#2E53D7", "#EF9B77", "#06924F", "#AC2C4D", "#82193F", "#0140D3"]
+# COLORS = ["#05B202", "#A13CCD", "#BA0D39", "#39F6C0", "#E90638", "#07B423", "#306A8A", "#678225", "#2742FE", "#4C9A75",
+#           "#4C36E9", "#7DB022", "#EDAC54", "#EAC439", "#EAC439", "#1A9C45", "#8A51C4", "#496A63", "#FB9543", "#2B49DD",
+#           "#13ADA5", "#2DD8C1", "#2E53D7", "#EF9B77", "#06924F", "#AC2C4D", "#82193F", "#0140D3"]
+
+COLORS = ['#7f66ff',
+          '#ff3399',
+          '#f58b55',
+          '#f25e65',
+          '#261926',
+          '#ddb14d',
+          '#5387d5',
+          '#1c3474',
+          '#a37554',
+          '#8bc34a',
+          '#cddc39',
+          '#ffeb3b',
+          '#ffc107',
+          '#ff9800',
+          '#ff5722',
+          '#795548',
+          '#9e9e9e',
+          '#607d8b',
+          '#9affff',
+          '#000000']
 
 
 def apply(obj, parameters=None):
@@ -41,16 +62,17 @@ def apply(obj, parameters=None):
         # this_uuid = str(uuid.uuid4())
         this_uuid = "p%d" % (pl_count)
         # pl_str = this_uuid
+        pl_label = ''.join(w[0].upper() for w in pl.name.split())
         pl_count += 1
         color = color_mapping[pl.object_type]
         if pl.initial == True:
-            g.node(pl.name, pl.name, shape="circle", style="filled", fillcolor=color, color=color,
+            g.node(pl.name, pl_label, shape="circle", style="filled", fillcolor=color, color=color,
                    fontsize="13.0", labelfontsize="13.0")
         elif pl.final == True:
-            g.node(pl.name, pl.name, shape="circle", style="filled", color=color, fillcolor=color,
+            g.node(pl.name, pl_label, shape="circle", style="filled", color=color, fillcolor=color,
                    fontsize="13.0", labelfontsize="13.0")
         else:
-            g.node(pl.name, pl.name, shape="circle", color=color,
+            g.node(pl.name, pl_label, shape="circle", color=color,
                    fontsize="13.0", labelfontsize="13.0")
         all_objs[pl] = pl.name
 
@@ -62,13 +84,13 @@ def apply(obj, parameters=None):
             # g.node(this_uuid, this_uuid, fontcolor="#FFFFFF", shape="box",
             #       fillcolor="#000000", style="filled", xlabel="Test", labelfontsize="18.0")
             g.node(tr.name, this_uuid, fontcolor="#FFFFFF", shape="box",
-                   fillcolor="#000000", style="filled", xlabel="Test", labelfontsize="18.0")
+                   fillcolor="#000000", style="filled", xlabel="Test", labelfontsize="13.0")
             all_objs[tr] = tr.name  # this_uuid
         elif tr.name not in trans_names:
             # g.node(this_uuid, "%s \n (%s)" % (tr.name, this_uuid), shape="box", fontsize="36.0",
             #       labelfontsize="36.0")
-            g.node(tr.name, tr.name, shape="box", fontsize="36.0",
-                   labelfontsize="36.0")
+            g.node(tr.name, tr.name, shape="box", fontsize="13.0",
+                   labelfontsize="13.0")
             trans_names[tr.name] = tr.name  # this_uuid
             all_objs[tr] = tr.name  # this_uuid
         else:

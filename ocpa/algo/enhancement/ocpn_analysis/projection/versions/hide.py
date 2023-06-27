@@ -1,5 +1,5 @@
 from ocpa.objects.oc_petri_net.obj import ObjectCentricPetriNet
-from ocpa.algo.reduction import algorithm as ocpn_reduction_factory
+from ocpa.algo.enhancement.ocpn_analysis.reduction import algorithm as ocpn_reduction_factory
 
 
 def apply(ocpn: ObjectCentricPetriNet, parameters):
@@ -9,7 +9,7 @@ def apply(ocpn: ObjectCentricPetriNet, parameters):
         selected_transitions = set()
         for l in selected_transition_labels:
             for t in ocpn.transitions:
-                if t.name == l:
+                if t.label == l:
                     selected_transitions.add(t)
         # selected_transitions = set(
         #     [t for t in ocpn.transitions for l in selected_transition_labels if t.label == l])

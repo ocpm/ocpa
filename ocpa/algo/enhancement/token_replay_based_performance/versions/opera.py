@@ -1,13 +1,10 @@
 from operator import attrgetter
-import ocpa.objects.log.converter.factory as convert_factory
-from typing import List, Dict, Set, Any, Optional, Union, Tuple
+from typing import Set, Any, Tuple
 from dataclasses import dataclass
-from ocpa.util.vis_util import human_readable_stat
 from statistics import median, mean
 from ocpa.util import constants as ocpa_constants
 import pandas as pd
 from statistics import stdev
-from ocpa.objects.oc_petri_net.obj import ObjectCentricPetriNet
 from pm4py.objects.petri_net.obj import PetriNet
 from ocpa.algo.enhancement.token_replay_based_performance.util import run_timed_replay, apply_trace, single_element_statistics
 from ocpa.objects.log.importer.csv.util import succint_mdl_to_exploded_mdl, clean_frequency, clean_arc_frequency

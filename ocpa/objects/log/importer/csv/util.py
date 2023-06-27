@@ -46,7 +46,7 @@ def succint_stream_to_exploded_stream(stream):
 
 
 def succint_mdl_to_exploded_mdl(df):
-    stream = df.to_dict('r')
+    stream = df.to_dict('records')
 
     exploded_stream = succint_stream_to_exploded_stream(stream)
 

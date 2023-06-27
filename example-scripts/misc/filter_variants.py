@@ -13,6 +13,3 @@ parameters = {"obj_names": object_types,
               "variant_calculation": ocpa.algo.util.variants.factory.TWO_PHASE}
 ocel = ocel_import_factory.apply(file_path=filename, parameters=parameters)
 filtered = filter_infrequent_variants(ocel, 0.1)
-print(filtered.log.log)
-filtered.log.log.to_csv("./filter_variant.csv")
-

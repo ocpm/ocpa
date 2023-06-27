@@ -1,6 +1,13 @@
 from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import List, Dict, Set, Tuple, Any
+import time
+from copy import deepcopy
+from pm4py.objects.petri_net.obj import PetriNet
+from pm4py.objects.petri_net.utils.networkx_graph import create_networkx_directed_graph_ret_dict_both_ways
+from pm4py.objects.petri_net.utils.projection import project_net_on_matrix
+import networkx as nx
+from collections import Counter
 
 
 class ObjectCentricPetriNet(object):
@@ -74,7 +81,7 @@ class ObjectCentricPetriNet(object):
             if id(self) in memodict:
                 return memodict[id(self)]
             new_place = ObjectCentricPetriNet.Place(
-                self.name, properties=self.properties)
+                self.name, self.object_type)
             memodict[id(self)] = new_place
             for arc in self.in_arcs:
                 new_arc = deepcopy(arc, memo=memodict)
@@ -90,6 +97,16 @@ class ObjectCentricPetriNet(object):
         out_arcs = property(__get_out_arcs, __set_out_arcs)
         in_arcs = property(__get_in_arcs, __set_in_arcs)
         name = property(__get_name, __set_name)
+
+        def to_dict(self):
+            return {
+                "name": self.name,
+                "object_type": self.object_type,
+                "initial": self.initial,
+                "final": self.final,
+                "in_arcs": [arc.to_dict() for arc in self.__in_arcs],
+                "out_arcs": [arc.to_dict() for arc in self.__out_arcs],
+            }
 
     class Transition(object):
         def __init__(self, name, label=None, in_arcs=None, out_arcs=None, properties=None, silent=False):
@@ -180,6 +197,16 @@ class ObjectCentricPetriNet(object):
                 new_trans.out_arcs.add(new_arc)
             return new_trans
 
+        def to_dict(self):
+            return {
+                "name": self.name,
+                "label": self.label,
+                "in_arcs": [arc.to_dict() for arc in self.__in_arcs],
+                "out_arcs": [arc.to_dict() for arc in self.__out_arcs],
+                "properties": self.__properties,
+                "silent": self.__silent,
+            }
+
         name = property(__get_name, __set_name)
         label = property(__get_label, __set_label)
         in_arcs = property(__get_in_arcs, __set_in_arcs)
@@ -255,6 +282,15 @@ class ObjectCentricPetriNet(object):
                 new_source, new_target, weight=self.weight, properties=self.properties)
             memodict[id(self)] = new_arc
             return new_arc
+        
+        def to_dict(self):
+            return {
+                "source": self.source.name,
+                "target": self.target.name,
+                "weight": self.weight,
+                "variable": self.variable,
+                "properties": self.__properties,
+            }
 
         source = property(__get_source, __set_source)
         target = property(__get_target, __set_target)
@@ -262,12 +298,15 @@ class ObjectCentricPetriNet(object):
         weight = property(__get_weight, __set_weight)
         properties = property(__get_properties, __set_properties)
 
-    def __init__(self, name=None, places=None, transitions=None, arcs=None, properties=None, nets=None):
+    def __init__(self, name=None, places=None, transitions=None, arcs=None, properties=None, nets=None, place_mapping=None, transition_mapping=None, arc_mapping=None):
         self.__name = "" if name is None else name
         self.__places = places if places != None else set()
         self.__transitions = transitions if transitions != None else set()
         self.__arcs = arcs if arcs != None else set()
         self.__properties = dict() if properties is None else properties
+        self.__place_mapping = place_mapping if place_mapping is not None else dict()
+        self.__transition_mapping = transition_mapping if transition_mapping is not None else dict()
+        self.__arc_mapping = arc_mapping if arc_mapping is not None else dict()
         self.__nets = nets if nets is not None else dict()
 
     @property
@@ -325,6 +364,18 @@ class ObjectCentricPetriNet(object):
     @property
     def nets(self):
         return self.__nets
+
+    @property
+    def place_mapping(self):
+        return self.__place_mapping
+
+    @property
+    def transition_mapping(self):
+        return self.__transition_mapping
+
+    @property
+    def arc_mapping(self):
+        return self.__arc_mapping
 
     def add_arc(self, arc):
         '''
@@ -447,7 +498,23 @@ class ObjectCentricPetriNet(object):
                 return arc
         return None
 
-    def find_transition(self, name):
+    def find_transition(self, label):
+        '''
+        finds a transition by the label of the transition.
+        Parameters
+        ----------
+        name: string
+
+        Returns
+        -------
+        None
+        '''
+        for transition in self.__transitions:
+            if transition.label == label:
+                return transition
+        return None
+
+    def find_place(self, name):
         '''
         finds a transition by name of the transition.
         Parameters
@@ -458,53 +525,159 @@ class ObjectCentricPetriNet(object):
         -------
         None
         '''
-        for transition in self.__transitions:
-            if transition.name == name:
-                return transition
+        for place in self.__places:
+            if place.name == name:
+                return place
         return None
 
+    def ancestor_transitions(self, t, ot):
+        ancestors = set()
+        net, im, fm = self.nets[ot]
+        graph, dictionary, inv_dictionary = create_networkx_directed_graph_ret_dict_both_ways(
+            net)
+        for tr in net.transitions:
+            if tr.label == t.label:
+                connected_nodes = nx.ancestors(graph, dictionary[tr])
+                for node in [node for node in connected_nodes if type(inv_dictionary[node]) == PetriNet.Transition]:
+                    connected_transition = self.transition_mapping[inv_dictionary[node]]
+                    ancestors.add(connected_transition)
+        return ancestors
 
-@dataclass
-class Marking(object):
+    def ancestor_places(self, t, ot):
+        ancestors = set()
+        net, im, fm = self.nets[ot]
+        graph, dictionary, inv_dictionary = create_networkx_directed_graph_ret_dict_both_ways(
+            net)
+        for tr in net.transitions:
+            if tr.label == t.label:
+                connected_nodes = nx.ancestors(graph, dictionary[tr])
+                for node in [node for node in connected_nodes if type(inv_dictionary[node]) == PetriNet.Place]:
+                    connected_place = self.place_mapping[
+                        inv_dictionary[node]]
+                    if connected_place is not None:
+                        ancestors.add(connected_place)
+        return ancestors
+
+    def descendant_transitions(self, t, ot):
+        descendants = set()
+        net, im, fm = self.nets[ot]
+        graph, dictionary, inv_dictionary = create_networkx_directed_graph_ret_dict_both_ways(
+            net)
+        for tr in net.transitions:
+            if tr.label == t.label:
+                connected_nodes = nx.descendants(graph, dictionary[tr])
+                for node in [node for node in connected_nodes if type(inv_dictionary[node]) == PetriNet.Transition]:
+                    connected_transition = self.transition_mapping[inv_dictionary[node]]
+                    descendants.add(connected_transition)
+        return descendants
+
+    def descendant_places(self, t, ot):
+        descendants = set()
+        net, im, fm = self.nets[ot]
+        graph, dictionary, inv_dictionary = create_networkx_directed_graph_ret_dict_both_ways(
+            net)
+        for tr in net.transitions:
+            if tr.label == t.label:
+                connected_nodes = nx.descendants(graph, dictionary[tr])
+                for node in [node for node in connected_nodes if type(inv_dictionary[node]) == PetriNet.Place]:
+                    connected_place = self.place_mapping[
+                        inv_dictionary[node]]
+                    if connected_place is not None:
+                        descendants.add(connected_place)
+        return descendants
+
+    def subnet(self, source_t, target_t, ot):
+        net, im, fm = self.nets[ot]
+        return project_net_on_matrix(net, [
+            source_t, target_t])
+    
+    def to_dict(self):
+        places_dicts = []
+        for place in self.__places:
+            print(place)
+            places_dicts.append(place.to_dict())
+
+        transitions_dicts = []
+        for transition in self.__transitions:
+            transitions_dicts.append(transition.to_dict())
+
+        arcs_dicts = []
+        for arc in self.__arcs:
+            arcs_dicts.append(arc.to_dict())
+
+        return {
+            "name": self.__name,
+            "places": places_dicts,
+            "transitions": transitions_dicts,
+            "arcs": arcs_dicts,
+            "properties": self.__properties,
+            "nets": self.__nets,
+            "place_mapping": self.__place_mapping,
+            "transition_mapping": self.__transition_mapping,
+            "arc_mapping": self.__arc_mapping,
+        }
+
+
+@ dataclass
+class Marking(Counter):
     '''
     Representing a Marking of an Object-Centric Petri Net.
 
     ...
 
     Attributes
-    tokens: set(Tuple)
 
     Methods
     -------
-    add_token(pl, obj):
-        adds an object obj to a place pl
     '''
-    _tokens: Set[Tuple[ObjectCentricPetriNet.Place, str]
-                 ] = field(default_factory=set)
 
-    @property
-    def tokens(self) -> Set[Tuple[ObjectCentricPetriNet.Place, str]]:
-        return self._tokens
+    def __hash__(self):
+        r = 0
+        for token in self.items():
+            r += 31 * hash(token[0]) * token[1]
+        return r
 
-    def add_token(self, pl, obj):
-        '''
-        Add a token to a place in a marking.
-        Parameters
-        ----------
-        pl: Place
-        obj: string
+    def __eq__(self, other):
+        if not self.keys() == other.keys():
+            return False
+        for token in self.keys():
+            if other.get(token) != self.get(token):
+                return False
+        return True
 
-        Returns
-        -------
-        None
+    def __le__(self, other):
+        if not self.keys() <= other.keys():
+            return False
+        for token in self.keys():
+            if sum(other.get(token)) < sum(self.get(token)):
+                return False
+        return True
 
-        '''
-        temp_tokens = set([(pl, oi) for (pl, oi) in self._tokens if oi == obj])
-        self._tokens -= temp_tokens
-        self._tokens.add((pl, obj))
+    def __add__(self, other):
+        m = Marking()
+        for token in self.items():
+            m[token[0]] = token[1]
+        for token in other.items():
+            m[token[0]] += token[1]
+        return m
+
+    def __sub__(self, other):
+        m = Marking()
+        for token in self.items():
+            m[token[0]] = token[1]
+        for token in other.items():
+            m[token[0]] -= token[1]
+            if m[token[0]] == 0:
+                del m[token[0]]
+        return m
+
+    def __repr__(self):
+        # return str([str(p.name) + ":" + str(self.get(p)) for p in self.keys()])
+        # The previous representation had a bug, it took into account the order of the places with tokens
+        return str([f'({str(token[0].name)},{str(token[1])}):' + str(self.get(token)) for token in sorted(list(self.keys()), key=lambda x: x[0].name)])
 
 
-@dataclass
+@ dataclass
 class Subprocess(object):
     _ocpn: ObjectCentricPetriNet
     _object_types: Set[str] = field(default_factory=set)
@@ -514,15 +687,15 @@ class Subprocess(object):
         default_factory=set)
     _sound: Any = False
 
-    @property
+    @ property
     def object_types(self) -> Set[str]:
         return self._object_types
 
-    @property
+    @ property
     def transitions(self) -> Set[ObjectCentricPetriNet.Transition]:
         return self._transitions
 
-    @property
+    @ property
     def sound(self):
         return self._sound
 
@@ -554,7 +727,7 @@ class Subprocess(object):
             self._sound = True
 
 
-@dataclass
+@ dataclass
 class EnhancedObjectCentricPetriNet(object):
     ocpn: ObjectCentricPetriNet
     behavior: List[str]
