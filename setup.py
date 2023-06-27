@@ -21,7 +21,6 @@ setuptools.setup(
     url='https://github.com/ocpm/ocpa',
     install_requires=[            # I get to this in a second
             "pm4py<2.3.0",
-            "scikit-learn<=0.24.2",
             "setuptools",
             "jsonschema",
     ],
