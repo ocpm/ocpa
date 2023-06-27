@@ -98,6 +98,8 @@ def apply(ocpn, ocel, parameters=None):
         replay_results = run_timed_replay(log, net, im, fm)
 
         token_visits = [y for x in replay_results for y in x['token_visits']]
+        if persp == 'purchase_order':
+            print(token_visits)
 
         for tv in token_visits:
             tvs.append(TokenVisit(tv[0], tv[1], tv[2]))
