@@ -9,5 +9,5 @@ VERSIONS = {
 }
 
 
-def apply(cis:List[ConstraintInstance], action_graph:List[ActionGraph], action_conflicts:List[Tuple[str,str]], time_scale: str="hour", variant=TEMPORAL_PATTERN_BASED):
-    return VERSIONS[variant](cis, action_graph, action_conflicts, time_scale)
+def apply(cis:List[ConstraintInstance], action_graph:List[ActionGraph], action_conflicts:List[Tuple[str,str]], variant=TEMPORAL_PATTERN_BASED):
+    return VERSIONS[variant](cis, action_graph, action_conflicts)

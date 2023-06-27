@@ -37,7 +37,7 @@ from ocpa.algo.enhancement.ocpn_analysis.projection import algorithm as projecti
 #     #     print(FPI(ai.aim, ac, tw, ocel, measure, agg))
 
 #     # for ot in object_types:
-#     #     for measure in ['pooling', 'lagging', 'readying', 'elapsed', 'remaining']:
+#     #     for measure in ['pooling', 'lagging', 'rediness', 'elapsed', 'remaining']:
 #     #         agg = 'avg'
 #     #         print(measure, agg, ot)
 #     #         print(FPI(ai.aim, ac, tw, ocel, measure, agg, ot))
@@ -74,7 +74,6 @@ def apply(ac: ActionChange, ocel: OCEL, comp_tw: Tuple[datetime.datetime, dateti
     results['SA']['Object']['Posterior'] = forward_pass_OSA(ac).quantify()
 
     filtered_ocel = time_filtering.events(ocel, ac.tw[0], ac.tw[1])
-    filtered_ocel.log.log.to_csv('./filtered_log.csv')
     marking, token_history = new_compute_marking(filtered_ocel, ac.aim.ocpn)
     # print(marking)
     os = OperationalState(ac.aim, marking, {})
@@ -99,7 +98,7 @@ def apply(ac: ActionChange, ocel: OCEL, comp_tw: Tuple[datetime.datetime, dateti
         for measure in ['flow', 'sojourn', 'syncronization']:
             agg = 'avg'
             results['FPA'][t.label][measure] = FPA(t.label, ac.tw, comp_tw, ocel, measure, agg)
-        for measure in ['pooling', 'lagging', 'readying']:
+        for measure in ['pooling', 'lagging', 'rediness']:
             agg = 'avg'
             results['FPA'][t.label][measure] = {}
             for ot in object_types:
@@ -280,7 +279,7 @@ def FPA(activity_name: str, change_tw: Tuple[datetime.datetime, datetime.datetim
             change_log, variant='event_object_graph_based', parameters=perf_parameters)
         comp_metric = performance_factory.apply(
             comp_log, variant='event_object_graph_based', parameters=perf_parameters)
-        return change_metric - comp_metric
+        return comp_metric - change_metric
     except:
         return None
         

@@ -5,16 +5,42 @@ import networkx as nx
 import time
 from datetime import datetime, timedelta
 from dateutil.parser import parse
+from dateutil.relativedelta import relativedelta
 
-def apply(cis:List[ConstraintInstance], action_graph:List[ActionGraph], precedence_relations: List[Tuple[str,str]], time_scale: str = "hour") -> List[ActionInstance]:
+def apply(cis:List[ConstraintInstance], action_graph:List[ActionGraph], precedence_relations: List[Tuple[str,str]]) -> List[ActionInstance]:
     default_action_date = latest_end_date(cis)
     action_candidates = []
+
+    def convert_to_hours(value: int, time_unit: str) -> int:
+        time_unit = time_unit.lower()
+
+        if time_unit == "seconds":
+            return value / 3600
+        elif time_unit == "minutes":
+            return value / 60
+        elif time_unit == "hours":
+            return value
+        elif time_unit == "days":
+            return value * 24
+        elif time_unit == "weeks":
+            return value * 24 * 7
+        elif time_unit == "months":
+            # Here we approximate a month to have 30 days
+            return value * 24 * 30
+        elif time_unit == "years":
+            # Here we approximate a year to have 365 days
+            return value * 24 * 365
+        else:
+            raise ValueError(f"Unsupported time unit: {time_unit}")
+
+
     for ag in action_graph:
-        cp,action,dur = ag.pattern, ag.action, ag.duration
+        cp,action,dur,time_scale = ag.pattern, ag.action, ag.duration, ag.time_scale
+        action_dur = convert_to_hours(dur, time_scale)
         mappings = generate_all_possible_mappings(cp,cis)
         eval_inner_nodes = [x for x in cp.post_order_traversal(cp.root, []) if x in cp.get_inner_nodes()]
-        is_valid = True
         for mapping in mappings:
+            is_valid = True
             for eval_node in eval_inner_nodes:
                 left_leaves = cp.get_left_leaves(eval_node)
                 left_cis = [mapping[leaf] for leaf in left_leaves]
@@ -22,6 +48,7 @@ def apply(cis:List[ConstraintInstance], action_graph:List[ActionGraph], preceden
                 right_leaves = cp.get_right_leaves(eval_node)
                 right_cis = [mapping[leaf] for leaf in right_leaves]
                 right_merged_ci = merge(right_cis)
+                print(f'left: {left_merged_ci.name}, right: {right_merged_ci.name}, label: {cp.labels[eval_node]}, eval: {allens_relation(left_merged_ci, right_merged_ci, cp.labels[eval_node])}')
                 if allens_relation(left_merged_ci, right_merged_ci, cp.labels[eval_node]) == False:
                     is_valid = False
                     # once any relation does not fit, we can stop evaluating this mapping
@@ -31,7 +58,7 @@ def apply(cis:List[ConstraintInstance], action_graph:List[ActionGraph], preceden
                 # once we find a valid mapping, we can stop evaluating other mappings
                 break
         if is_valid:
-            action_candidates.append(ActionCandidate(action,dur))
+            action_candidates.append(ActionCandidate(action,action_dur))
     
     def filter_longest_duration_candidates(candidates):
         longest_duration_per_action = {}
@@ -47,7 +74,7 @@ def apply(cis:List[ConstraintInstance], action_graph:List[ActionGraph], preceden
     action_conflict = create_action_conflict(precedence_relations)
     
     action_instances, time_performance, makespan, total_waiting_time, total_flow_time = plan_actions(filtered_candidates, action_conflict)
-    action_instances_with_default_date = enhance_to_absolute_time(action_instances, default_action_date, time_scale)
+    action_instances_with_default_date = enhance_to_absolute_time(action_instances, default_action_date, "hours")
     return action_instances_with_default_date
 
 def latest_end_date(constraint_instances):
@@ -98,11 +125,11 @@ def complete_allens_relation(interval, other, relation:str):
 
 def allens_relation(interval, other, relation:str):
         if relation == "before":
-            return interval.end < other.start
+            return interval.end <= other.start
         elif relation == "equal":
             return interval.start == other.start and interval.end == other.end
         elif relation == "overlaps":
-            return interval.start <= other.start and interval.end < other.end
+            return interval.start <= other.start and interval.end <= other.end
         elif relation == "during":
             return other.start <= interval.start and other.end >= interval.end
         else: 
@@ -180,19 +207,27 @@ def compute_total_waiting_time(action_instances: List[ActionInstance]):
 def compute_total_flow_time(action_instances: List[ActionInstance]):
     return sum([ai.end-1 for ai in action_instances])
 
-def enhance_to_absolute_time(action_instances, date, time_scale):
-    time_scale = time_scale.lower()
+def enhance_to_absolute_time(action_instances: List[ActionInstance], date:datetime, time_scale:str):
 
     for action_instance in action_instances:
-        if time_scale == "hour":
+        if time_scale == "seconds":
+            action_instance.start = date + timedelta(seconds=action_instance.start)
+            action_instance.end = date + timedelta(seconds=action_instance.end)
+        elif time_scale == "minutes":
+            action_instance.start = date + timedelta(minutes=action_instance.start)
+            action_instance.end = date + timedelta(minutes=action_instance.end)
+        elif time_scale == "hours":
             action_instance.start = date + timedelta(hours=action_instance.start)
             action_instance.end = date + timedelta(hours=action_instance.end)
-        elif time_scale == "day":
+        elif time_scale == "days":
             action_instance.start = date + timedelta(days=action_instance.start)
             action_instance.end = date + timedelta(days=action_instance.end)
-        elif time_scale == "month":
-            action_instance.start = date + timedelta(days=30 * action_instance.start)
-            action_instance.end = date + timedelta(days=30 * action_instance.end)
+        elif time_scale == "months":
+            action_instance.start = date + relativedelta(months=action_instance.start)
+            action_instance.end = date + relativedelta(months=action_instance.end)
+        elif time_scale == "years":
+            action_instance.start = date + relativedelta(years=action_instance.start)
+            action_instance.end = date + relativedelta(years=action_instance.end)
         else:
             raise ValueError("Unsupported time scale")
 

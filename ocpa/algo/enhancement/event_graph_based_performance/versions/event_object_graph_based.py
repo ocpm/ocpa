@@ -1,6 +1,7 @@
 from ocpa.algo.util.util import AGG_MAP
 
 
+
 def apply(ocel, parameters):
     """
     Apply performance measure and aggregation function on the given ocel object and parameters.
@@ -29,20 +30,24 @@ def apply(ocel, parameters):
         'synchronization': synchronization_time,
         'pooling': pooling_time,
         'lagging': lagging_time,
-        'readying': readying_time,
+        'rediness': rediness_time,
         'elapsed': elapsed_time,
         'remaining': remaining_time,
-        'object_freq': object_freq
+        'object_freq': object_freq,
+        'act_freq': act_freq
     }
 
     function = measure_function_mapping.get(measure)
     if not function:
         raise ValueError(f"Unknown performance measure: {measure}")
 
-    if measure in {'pooling', 'lagging', 'readying', 'object_freq', 'elapsed', 'remaining'} and ot is None:
+    if measure in {'pooling', 'lagging', 'rediness', 'object_freq', 'elapsed', 'remaining'} and ot is None:
         raise ValueError('Specify an object type in parameters')
-
-    return AGG_MAP[agg](function(ocel, act, ot))
+    measurements = function(ocel, act, ot)
+    if len(measurements) > 0:
+        return AGG_MAP[agg](measurements)
+    else:
+        return 0
 
 
 def flow_time(ocel, act, ot=None):
@@ -170,16 +175,16 @@ def lagging_time(ocel, act, ot):
     return lagging_times
 
 
-def readying_time(ocel, act, ot):
+def rediness_time(ocel, act, ot):
     """
-    Calculate readying times for a given activity and object type in the ocel object.
+    Calculate rediness times for a given activity and object type in the ocel object.
 
     :param ocel: ocel object
     :param act: activity name
     :param ot: object type
-    :return: list of readying times
+    :return: list of rediness times
     """
-    readying_times = []
+    rediness_times = []
     for node in ocel.graph.eog.nodes:
         if ocel.get_value(node, "event_activity") == act:
             in_edges = ocel.graph.eog.in_edges(node)
@@ -192,8 +197,8 @@ def readying_time(ocel, act, ot):
             ot_end_timestamps = [ocel.get_value(
             e, "event_timestamp") for e in preset if len(ocel.get_value(e, ot)) > 0]
             duration = (min(ot_end_timestamps) - min(end_timestamps)).total_seconds()
-        readying_times.append(duration)
-    return readying_times
+        rediness_times.append(duration)
+    return rediness_times
 
 def object_freq(ocel, act, ot):
     """
@@ -209,6 +214,20 @@ def object_freq(ocel, act, ot):
             obj_freq = len(ocel.get_value(node, ot))
             obj_freqs.append(obj_freq)
     return obj_freqs
+
+def act_freq(ocel, act, ot):
+    """
+    Calculate object frequencies for a given activity and object type in the ocel object.
+    :param ocel: ocel object
+    :param act: activity name
+    :param ot: object type
+    :return: list of object frequencies
+    """
+    act_freqs = []
+    for o in ocel.obj.ot_objects[ot]:
+        act_freq = len([e for e in ocel.obj.sequence[o] if e.act == act])
+        act_freqs.append(act_freq)
+    return act_freqs
 
 def elapsed_time(ocel, act, ot):
     """

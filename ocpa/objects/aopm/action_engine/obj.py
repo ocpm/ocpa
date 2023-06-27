@@ -192,6 +192,7 @@ class ActionGraph:
     pattern: ConstraintPattern
     action: str
     duration: int
+    time_scale: str = "hours"
 
 
 @dataclass()
