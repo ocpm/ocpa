@@ -6,7 +6,7 @@ from ocpa.util import constants as ocpa_constants
 import pandas as pd
 from statistics import stdev
 from pm4py.objects.petri_net.obj import PetriNet
-from ocpa.algo.enhancement.token_replay_based_performance.util import run_timed_replay, apply_trace, single_element_statistics
+from ocpa.algo.enhancement.token_replay_based_performance.util import run_timed_replay, single_element_statistics
 from ocpa.objects.log.importer.csv.util import succint_mdl_to_exploded_mdl, clean_frequency, clean_arc_frequency
 from ocpa.algo.util.util import project_log
 
@@ -90,29 +90,19 @@ def apply(ocpn, ocel, parameters=None):
         object_map[persp] = {x for x in object_map[persp] if x == x}
         log = project_log(df, persp, parameters=parameters)
 
-        # # Diagonstics - Activity Counting
-        # activ_count = projection_factory.apply(
-        #     df, persp, variant="activity_occurrence", parameters=parameters)
-        # replay_diag["act_freq"][persp] = activ_count
-
         replay_results = run_timed_replay(log, net, im, fm)
 
         token_visits = [y for x in replay_results for y in x['token_visits']]
-        if persp == 'purchase_order':
-            print(token_visits)
 
         for tv in token_visits:
             tvs.append(TokenVisit(tv[0], tv[1], tv[2]))
-        # for eo in event_occurrences:
-        #     eos.append(EventOccurrence(eo[0], eo[1]))
-        # variants_idx = variants_module.get_variants_from_log_trace_idx(log)
+
         element_statistics = single_element_statistics(
             log, net, im, replay_results)
 
         agg_statistics = aggregate_frequencies(element_statistics)
         replay_diag["arc_freq_persps"][persp] = agg_statistics
 
-    # replay_diag["act_freq"] = merge_act_freq(replay_diag["act_freq"])
     replay_diag["arc_freq"] = merge_replay(ocpn,
                                            replay_diag["arc_freq_persps"])
     replay_diag['agg_object_freq'] = {}
@@ -125,7 +115,6 @@ def apply(ocpn, ocel, parameters=None):
     replay_diag["object_count"] = replay_diag['agg_object_freq']
 
     tvs = list(set(tvs))
-    # eos = list(set(eos))
     pa = PerformanceAnalysis(object_map, ocpn.place_mapping)
     perf_diag = pa.analyze(eos, tvs, persps, parameters)
 
@@ -651,15 +640,6 @@ def transform_diagnostics(ocpn, diag, parameters):
 
     return transformed_diag
 
-
-# def merge_agg_performance(agg_performance):
-#     merged_agg_performance = dict()
-#     for persp in agg_performance:
-#         for el in agg_performance[persp]:
-#             merged_agg_performance[repr(el)] = agg_performance[persp][el]
-#     return merged_agg_performance
-
-
 def merge_replay(ocpn, replay):
     merged_replay = dict()
     arcs = [a for a in ocpn.arcs]
@@ -763,118 +743,3 @@ def agg_merged_object_count(merged_object_count):
                 merged_object_count[act][persp])
 
     return agg_merged_object_count
-
-
-def textualize_waiting_time(tr_name, aggs, waiting_time):
-    record = {}
-    text = "Waiting time: {"
-    for agg in aggs:
-        text += f' {agg}: '
-        if agg in waiting_time[tr_name]:
-            record[agg] = waiting_time[tr_name][agg]
-            text += f'{waiting_time[tr_name][agg]}'
-    text += '}'
-    return record
-
-
-def textualize_service_time(tr_name, aggs, service_time):
-    record = {}
-    text = "Service time: {"
-    for agg in aggs:
-        text += f' {agg}: '
-        if agg in service_time[tr_name]:
-            record[agg] = service_time[tr_name][agg]
-            text += f'{service_time[tr_name][agg]}'
-    text += '}'
-    return record
-
-
-def textualize_sojourn_time(tr_name, aggs, sojourn_time):
-    record = {}
-    text = "sojourn time: {"
-    for agg in aggs:
-        text += f' {agg}: '
-        if agg in sojourn_time[tr_name]:
-            record[agg] = sojourn_time[tr_name][agg]
-            text += f'{sojourn_time[tr_name][agg]}'
-    text += '}'
-    return record
-
-
-def textualize_synchronization_time(tr_name, aggs, synchronization_time):
-    record = {}
-    text = "synchronization time: {"
-    for agg in aggs:
-        text += f' {agg}: '
-        if agg in synchronization_time[tr_name]:
-            record[agg] = synchronization_time[tr_name][agg]
-            text += f'{synchronization_time[tr_name][agg]}'
-    text += '}'
-    return record
-
-
-def textualize_object_count(tr_name, obj_types, aggs, object_count):
-    record = {}
-    text = "Number of objects: { "
-    for obj_type in obj_types:
-        record[obj_type] = {}
-        if tr_name in object_count[obj_type]:
-            text += f'{obj_type}: {{'
-            for agg in aggs:
-                if agg in object_count[obj_type][tr_name]:
-                    record[obj_type][agg] = object_count[obj_type][tr_name][agg]
-                    text += f'{agg}: {{'
-                    text += f" {obj_type}={object_count[obj_type][tr_name][agg]} "
-                    text += '} '
-            text += '} '
-    text += '}'
-    return record
-
-
-def textualize_lagging_time(tr_name, obj_types, aggs, lagging_time):
-    record = {}
-    text = "lagging time: { "
-    for obj_type in obj_types:
-        record[obj_type] = {}
-        if tr_name in lagging_time[obj_type]:
-            text += f'{obj_type}: {{'
-            for agg in aggs:
-                if agg in lagging_time[obj_type][tr_name]:
-                    record[obj_type][agg] = lagging_time[obj_type][tr_name][agg]
-                    text += f'{agg}: {{'
-                    text += f" {obj_type}={lagging_time[obj_type][tr_name][agg]} "
-                    text += '} '
-            text += '} '
-    text += '}'
-    return record
-
-
-def textualize_pooling_time(tr_name, obj_types, aggs, pooling_time):
-    record = {}
-    text = "Pooling time: { "
-    for obj_type in obj_types:
-        record[obj_type] = {}
-        if tr_name in pooling_time[obj_type]:
-            text += f'{obj_type}: {{'
-            for agg in aggs:
-                if agg in pooling_time[obj_type][tr_name]:
-                    record[obj_type][agg] = pooling_time[obj_type][tr_name][agg]
-                    text += f'{agg}: {{'
-                    text += f" {obj_type}={pooling_time[obj_type][tr_name][agg]} "
-                    text += '} '
-            text += '} '
-    text += '}'
-
-    return record
-
-
-def textualize_flow_time(tr_name, aggs, flow_time):
-    record = {}
-    text = "flow time: {"
-    for agg in aggs:
-        text += f' {agg}: '
-        if agg in flow_time[tr_name]:
-            record[agg] = flow_time[tr_name][agg]
-            text += f'{flow_time[tr_name][agg]}'
-    text += '}'
-    return record
