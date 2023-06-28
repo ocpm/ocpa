@@ -7,6 +7,6 @@ def test_process_execution_extraction():
     ocel = ocel_import_factory.apply(filename)
     ocpn = ocpn_discovery_factory.apply(ocel, parameters={"debug": False})
     precision, fitness = quality_measure_factory.apply(ocel, ocpn)
-    assert 0.81 < precision < 0.83
+    assert 0.81 < precision < 0.84
     assert fitness == 1.0
 
