@@ -1,8 +1,8 @@
 from ocpa.objects.graph.extensive_constraint_graph.obj import ExtensiveConstraintGraph
-from ocpa.objects.log.ocel import OCEL
+from ocpa.objects.log.obj import OCEL
 from typing import List, Dict
 from ocpa.algo.enhancement.event_graph_based_performance import algorithm as performance_factory
-from ocpa.algo.util.util import AGG_MAP
+from ocpa.util.util import AGG_MAP
 import logging
 
 logging.basicConfig(level=logging.INFO)

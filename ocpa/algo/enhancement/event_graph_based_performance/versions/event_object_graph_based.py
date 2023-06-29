@@ -1,4 +1,4 @@
-from ocpa.algo.util.util import AGG_MAP
+from ocpa.util.util import AGG_MAP
 
 
 

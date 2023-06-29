@@ -1,7 +1,7 @@
 import datetime
 from ocpa.objects.aopm.action_interface_model.obj import Configuration, ActionInstance
 from ocpa.algo.util.aopm.impact_analysis.versions import action_interface_model_based
-from ocpa.objects.log.ocel import OCEL
+from ocpa.objects.log.obj import OCEL
 from typing import Tuple
 
 

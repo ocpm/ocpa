@@ -1,7 +1,7 @@
 # from ocpa.objects.oc_petri_net.obj import EnhancedObjectCentricPetriNet
 from ocpa.algo.conformance.constraint_monitoring.versions import log_based
 from ocpa.algo.conformance.constraint_monitoring.versions import extensive_log_based
-from ocpa.objects.log.ocel import OCEL
+from ocpa.objects.log.obj import OCEL
 from typing import Dict
 
 

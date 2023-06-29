@@ -3,7 +3,7 @@ import pickle
 from ocpa.objects.log.variants.obj import Event, Obj, ObjectCentricEventLog
 from ocpa.objects.log.util.param import JsonParseParameters
 import json
-from ocpa.objects.log.ocel import OCEL
+from ocpa.objects.log.obj import OCEL
 
 
 def apply(ocel: OCEL, file_path: str, parameters=None):

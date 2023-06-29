@@ -1,55 +1,18 @@
 import datetime
 import pandas as pd
-from ocpa.objects.aopm.action_interface_model.obj import ActionInterfaceModel, Configuration, ActionInstance, IntegrityRuleBasedAction, ReactionRuleBasedAction, OperationalState
+from ocpa.objects.aopm.action_interface_model.obj import OperationalState
 from ocpa.objects.aopm.impact.obj import ActionChange, FunctionWiseStructuralImpact, ObjectWiseStructuralImpact, OperationalImpact, FunctionWisePerformanceImpact, ObjectWisePerformanceImpact
 from ocpa.objects.oc_petri_net.obj import ObjectCentricPetriNet, Marking
-from ocpa.objects.log.ocel import OCEL
+
 from typing import List, Dict, Any, Optional, Set, Tuple, Union
 from ocpa.objects.log.importer.csv.util import succint_mdl_to_exploded_mdl
-from ocpa.algo.enhancement.token_replay_based_performance.util import run_timed_replay, apply_trace, single_element_statistics
+from ocpa.algo.enhancement.token_replay_based_performance.util import run_timed_replay
 from ocpa.algo.util.util import project_log
 from ocpa.algo.enhancement.event_graph_based_performance import algorithm as performance_factory
 from ocpa.algo.util.filtering.log import time_filtering
 from ocpa.algo.enhancement.ocpn_analysis.projection import algorithm as projection_factory
 
-
-# def apply(ai: ActionInstance, config: Configuration, ocel: OCEL, tw: Tuple[datetime.datetime, datetime.datetime], parameters):
-#     if parameters is None:
-#         parameters = {}
-#     # ac = detect_change(ai, config)
-#     # object_types = config.aim.ocpn.object_types
-#     # for ot in object_types:
-#     #     print(type_specific_FSA(ac, ot))
-#     # print(backward_pass_FSA(ai.aim, ac))
-#     # print(forward_pass_FSA(ai.aim, ac))
-#     # print(direct_OSA(ai.aim, ac))
-#     # print(backward_pass_OSA(ai.aim, ac))
-#     # print(forward_pass_OSA(ai.aim, ac))
-#     # marking = new_compute_marking(ocel, ai.aim.ocpn)
-#     # os = OperationalState(ai.aim, marking, {})
-#     # print(preceding_OIA(ai.aim, ac, os))
-#     # print(following_OIA(ai.aim, ac, os))
-#     # print(backward_pass_OIA(ai.aim, ac, os))
-#     # print(forward_pass_OIA(ai.aim, ac, os))
-#     # for measure in ['flow', 'sojourn', 'syncronization']:
-#     #     agg = 'avg'
-#     #     print(measure, agg)
-#     #     print(FPI(ai.aim, ac, tw, ocel, measure, agg))
-
-#     # for ot in object_types:
-#     #     for measure in ['pooling', 'lagging', 'rediness', 'elapsed', 'remaining']:
-#     #         agg = 'avg'
-#     #         print(measure, agg, ot)
-#     #         print(FPI(ai.aim, ac, tw, ocel, measure, agg, ot))
-
-#     # for ot in object_types:
-#     #     for measure in ['elapsed', 'remaining']:
-#     #         agg = 'avg'
-#     #         print(measure, agg, ot)
-#     #         print(OPI(ai.aim, ac, tw, ocel, measure, agg, ot))
-
-
-def apply(ac: ActionChange, ocel: OCEL, comp_tw: Tuple[datetime.datetime, datetime.datetime]):
+def apply(ac: ActionChange, ocel, comp_tw: Tuple[datetime.datetime, datetime.datetime]):
     results = {}
     object_types = ac.aim.ocpn.object_types
 
@@ -114,27 +77,6 @@ def apply(ac: ActionChange, ocel: OCEL, comp_tw: Tuple[datetime.datetime, dateti
                 agg = 'avg'
                 results['OPA'][t.label][ot][measure] = OPA(t.label, ac.tw, comp_tw, ocel, measure, agg, ot)
     return results
-
-
-def detect_change(ai: ActionInstance, config: Configuration):
-    new_config = ai.action.apply(config)
-    if type(ai.action) == IntegrityRuleBasedAction:
-        T = []
-        for t in config.integrity_rule_assignment:
-            if t not in new_config.integrity_rule_assignment:
-                T.append(t)
-            elif config.integrity_rule_assignment[t] != new_config.integrity_rule_assignment[t]:
-                T.append(t)
-            else:
-                continue
-        for t in new_config.integrity_rule_assignment:
-            if t not in config.integrity_rule_assignment:
-                T.append(t)
-            elif new_config.integrity_rule_assignment[t] != config.integrity_rule_assignment[t]:
-                T.append(t)
-            else:
-                continue
-        return ActionChange(ai.aim, set(T), ai.time_window)
 
 
 def type_specific_FSA(change: ActionChange, ot: str) -> FunctionWiseStructuralImpact:
@@ -230,7 +172,7 @@ def forward_pass_OIA(change: ActionChange, os: OperationalState, ot: str) -> Ope
     return OperationalImpact(objects)
 
 
-def compute_marking(ocel: OCEL, ocpn: ObjectCentricPetriNet):
+def compute_marking(ocel, ocpn: ObjectCentricPetriNet):
     marking = Marking()
     for i, row in ocel.log.log.iterrows():
         activity = row["event_activity"]
@@ -246,7 +188,7 @@ def compute_marking(ocel: OCEL, ocpn: ObjectCentricPetriNet):
     return marking, '_'
 
 
-def new_compute_marking(ocel: OCEL, ocpn: ObjectCentricPetriNet):
+def new_compute_marking(ocel, ocpn: ObjectCentricPetriNet):
     df = succint_mdl_to_exploded_mdl(ocel.log.log)
     marking = Marking()
     token_history = {}
@@ -268,7 +210,7 @@ def new_compute_marking(ocel: OCEL, ocpn: ObjectCentricPetriNet):
     return marking, token_history
 
 
-def FPA(activity_name: str, change_tw: Tuple[datetime.datetime, datetime.datetime], comp_tw: Tuple[datetime.datetime, datetime.datetime], ocel: OCEL, measure, agg, ot=None) -> FunctionWisePerformanceImpact:
+def FPA(activity_name: str, change_tw: Tuple[datetime.datetime, datetime.datetime], comp_tw: Tuple[datetime.datetime, datetime.datetime], ocel, measure, agg, ot=None) -> FunctionWisePerformanceImpact:
     change_log = time_filtering.events(ocel, change_tw[0], change_tw[1])
     comp_log = time_filtering.events(ocel, comp_tw[0], comp_tw[1])
     perf_diff_dict = {}
@@ -285,7 +227,7 @@ def FPA(activity_name: str, change_tw: Tuple[datetime.datetime, datetime.datetim
         
 
 
-def OPA(activity_name: str, change_tw: Tuple[datetime.datetime, datetime.datetime], comp_tw: Tuple[datetime.datetime, datetime.datetime], ocel: OCEL, measure, agg, ot) -> ObjectWisePerformanceImpact:
+def OPA(activity_name: str, change_tw: Tuple[datetime.datetime, datetime.datetime], comp_tw: Tuple[datetime.datetime, datetime.datetime], ocel, measure, agg, ot) -> ObjectWisePerformanceImpact:
     change_log = time_filtering.events(ocel, change_tw[0], change_tw[1])
     comp_log = time_filtering.events(ocel, comp_tw[0], comp_tw[1])
     try:

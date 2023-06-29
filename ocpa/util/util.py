@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import datetime
 import numpy as np
+import statistics
 
 
 @dataclass
@@ -92,3 +93,13 @@ def mean_absolute_error(y_true, y_pred):
     y_pred = np.array(y_pred)
     mae = np.mean(np.abs(y_true - y_pred))
     return mae
+
+
+AGG_MAP = {
+    'avg': statistics.mean,
+    'med': statistics.median,
+    'std': statistics.stdev,
+    'sum': sum,
+    'min': min,
+    'max': max
+}
