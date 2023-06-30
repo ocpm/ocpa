@@ -8,7 +8,7 @@ from typing import Dict
 
 
 def apply(filepath, parameters: Dict, file_path_object_attribute_table=None):
-    from ocpa.objects.log.obj import OCEL
+    from ocpa.objects.log.ocel import OCEL
     df = df_importer.apply(filepath, parameters)
     obj_df = None
     if file_path_object_attribute_table:

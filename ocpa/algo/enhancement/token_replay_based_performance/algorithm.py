@@ -1,6 +1,6 @@
 from ocpa.algo.enhancement.token_replay_based_performance.versions import opera
 from ocpa.objects.oc_petri_net.obj import ObjectCentricPetriNet
-from ocpa.objects.log.obj import OCEL
+from ocpa.objects.log.ocel import OCEL
 OPERA = "opera"
 
 VERSIONS = {OPERA: opera.apply}

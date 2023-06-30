@@ -146,6 +146,8 @@ example-scripts/event-log-management/import_csv.py
 example-scripts/event-log-management/import_ocel.py
 example-scripts/event-log-management/import_with_parameters.py
 example-scripts/event-log-management/process_execution_extraction.py
+example-scripts/event-log-management/misc/filter_process_executions.py
+example-scripts/event-log-management/misc/filter_variants.py
 example-scripts/ocel2/discovery.py
 example-scripts/ocel2/e2o_qualifiers.py
 example-scripts/ocel2/example_analysis.py
@@ -289,7 +291,7 @@ ocpa/objects/graph/event_graph/retrieval/algorithm.py
 ocpa/objects/graph/extensive_constraint_graph/__init__.py
 ocpa/objects/graph/extensive_constraint_graph/obj.py
 ocpa/objects/log/__init__.py
-ocpa/objects/log/obj.py
+ocpa/objects/log/ocel.py
 ocpa/objects/log/converter/__init__.py
 ocpa/objects/log/converter/factory.py
 ocpa/objects/log/converter/versions/__init__.py

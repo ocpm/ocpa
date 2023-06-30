@@ -4,7 +4,7 @@ import jsonschema
 
 from ocpa.objects.log.importer.ocel.versions import import_ocel_json
 from ocpa.objects.log.importer.ocel.versions import import_ocel_xml
-from ocpa.objects.log.obj import OCEL
+from ocpa.objects.log.ocel import OCEL
 
 OCEL_JSON = "ocel_json"
 OCEL_XML = "ocel_xml"

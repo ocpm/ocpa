@@ -12,7 +12,7 @@ def remove_object_references(df, object_types, to_keep):
 
 
 def copy_log(ocel):
-    from ocpa.objects.log.obj import OCEL
+    from ocpa.objects.log.ocel import OCEL
     df = ocel.log.log
     log = Table(df, parameters=ocel.parameters)
     obj = obj_converter.apply(df)
@@ -22,7 +22,7 @@ def copy_log(ocel):
 
 
 def copy_log_from_df(df, parameters):
-    from ocpa.objects.log.obj import OCEL
+    from ocpa.objects.log.ocel import OCEL
     log = Table(df, parameters=parameters)
     obj = obj_converter.apply(df)
     graph = EventGraph(table_utils.eog_from_log(log))

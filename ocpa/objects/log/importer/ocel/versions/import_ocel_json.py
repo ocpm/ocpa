@@ -7,7 +7,7 @@ from collections import OrderedDict
 
 from ocpa.objects.log.importer.ocel.parameters import JsonParseParameters
 from ocpa.objects.log.variants.obj import Event, Obj, ObjectCentricEventLog, MetaObjectCentricData, RawObjectCentricData
-from ocpa.objects.log.obj import OCEL
+from ocpa.objects.log.ocel import OCEL
 import ocpa.objects.log.converter.factory as convert_factory
 from ocpa.objects.log.variants.table import Table
 from ocpa.objects.log.variants.graph import EventGraph

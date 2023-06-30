@@ -1,6 +1,6 @@
 from ocpa.objects.graph.constraint_graph.obj import ConstraintGraph
 from ocpa.objects.log.variants.obj import ObjectCentricEventLog
-from ocpa.objects.log.obj import OCEL
+from ocpa.objects.log.ocel import OCEL
 from typing import List, Dict
 
 
