@@ -74,8 +74,8 @@ ___________
 
 .. code-block:: python
 
-    from sklearn.linear_model import LinearRegression
-    from sklearn.metrics import mean_absolute_error
+    from ocpa.util.util import LinearRegression
+    from ocpa.util.util import mean_absolute_error
     from ocpa.objects.log.importer.ocel import factory as ocel_import_factory
     from ocpa.algo.predictive_monitoring import factory as predictive_monitoring
     from ocpa.algo.predictive_monitoring import tabular

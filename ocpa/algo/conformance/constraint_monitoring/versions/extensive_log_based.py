@@ -2,7 +2,10 @@ from ocpa.objects.graph.extensive_constraint_graph.obj import ExtensiveConstrain
 from ocpa.objects.log.ocel import OCEL
 from typing import List, Dict
 from ocpa.algo.enhancement.event_graph_based_performance import algorithm as performance_factory
-from ocpa.algo.util.util import AGG_MAP
+from ocpa.util.util import AGG_MAP
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 
 def apply(pg: ExtensiveConstraintGraph, ocel: OCEL, parameters=None) -> List[str]:
@@ -19,6 +22,12 @@ def apply(pg: ExtensiveConstraintGraph, ocel: OCEL, parameters=None) -> List[str
         return False, ""
     else:
         return True, [eval for eval in evals if eval != False]
+    
+def calculate_metric(quantity: int, total: int):
+    if total > 0:
+        return quantity/total
+    else:
+        return 0
 
 
 def compare(a, op, b):
@@ -46,47 +55,54 @@ def compare(a, op, b):
 
 def evaluate_oa_edge(ocel, oa_edge):
     ot = oa_edge.source.name
+    op = oa_edge.operator
+    threshold = oa_edge.threshold
     act = oa_edge.target.name
     label = oa_edge.label.split("-")
     if len(label) == 1:
         label = label[0]
+        if label == 'exist':
+            metric = calculate_metric(len(ocel.obj.existence(ot, act)), len(ocel.obj.ot_objects[ot]))
+
+        elif label == 'absent':
+            metric = calculate_metric(len(ocel.obj.object_absence(ot, act)), len(ocel.obj.act_events[act]))
+
+        elif label == 'singular':
+            metric = calculate_metric(len(ocel.obj.object_singular(ot, act)), len(ocel.obj.act_events[act]))
+
+        elif label == 'multiple':
+            metric = calculate_metric(len(ocel.obj.object_multiple(ot, act)), len(ocel.obj.act_events[act]))
+
+        elif label == 'present':
+            metric = calculate_metric(len(ocel.obj.object_singular(ot, act))+len(ocel.obj.object_multiple(ot, act)), len(ocel.obj.act_events[act]))
+        else:
+            logging.error(f'Error in evaluating {oa_edge}: {label} is not defined. Returning False by default.')
     elif len(label) == 2:
         agg = label[0]
-        if agg not in AGG_MAP:
-            raise ValueError(f'Aggregation {agg} is not supported')
         label = label[1]
+        if agg not in AGG_MAP:
+            logging.error(f'Error in evaluating {oa_edge}: {agg} is not defined. Returning False by default.')
+            return False
+        if label not in ['pooling', 'lagging', 'rediness', 'obj_freq', 'act_freq']:
+            logging.error(f'Error in evaluating {oa_edge}: {label} is not defined. Returning False by default.')
+            return False
+        else:
+            perf_parameters = {'measure': label,
+                            'activity': act, 'aggregation': agg, 'object_type': ot}
+            metric = performance_factory.apply(
+                ocel, variant='event_object_graph_based', parameters=perf_parameters)
     else:
-        raise ValueError("Invalid label for the constraint graph edge")
-    op = oa_edge.operator
-    threshold = oa_edge.threshold
-    if label == 'exist':
-        metric = ocel.obj.existence_metric(ot, act)
+        logging.error(f'Error in evaluating {oa_edge}: {label} is not defined. Returning False by default.')
+        return False
 
-    elif label == 'non-exist':
-        metric = ocel.obj.non_existence_metric(ot, act)
-
-    elif label == 'absent':
-        metric = ocel.obj.object_absence_metric(ot, act)
-
-    elif label == 'singular':
-        metric = ocel.obj.object_singular_metric(ot, act)
-
-    elif label == 'multiple':
-        metric = ocel.obj.object_multiple_metric(ot, act)
-
-    elif label == 'present':
-        metric = ocel.obj.object_presence_metric(ot, act)
-
-    elif label in ['pooling', 'lagging', 'readying']:
-        perf_parameters = {'measure': label,
-                           'activity': act, 'aggregation': agg}
-        metric = performance_factory.apply(
-            ocel, variant='event_object_graph_based', parameters=perf_parameters)
-
+    logging.info(f'Evaluating {label} for ({ot, act}): {metric}, {op}, {threshold}')
     if compare(metric, op, threshold):
         return True
     else:
         return False
+    
+
+        
 
 
 def evaluate_aa_edge(ocel, aa_edge):
@@ -95,20 +111,27 @@ def evaluate_aa_edge(ocel, aa_edge):
     threshold = aa_edge.threshold
     label = aa_edge.label.split("-")
     if len(label) == 1:
-        label = label[0]
+        logging.error(f'Error in evaluating {aa_edge}: {label} is not defined. Returning False by default.')
+        return False
     elif len(label) == 2:
         agg = label[0]
-        if agg not in AGG_MAP:
-            raise ValueError(f'Aggregation {agg} is not supported')
         label = label[1]
+        if agg not in AGG_MAP:
+            logging.error(f'Error in evaluating {aa_edge}: {agg} is not defined. Returning False by default.')
+            return False
+        if label not in ['flow', 'sojourn', 'sync']:
+            logging.error(f'Error in evaluating {aa_edge}: {label} is not defined. Returning False by default.')
+            return False
+        else:
+            perf_parameters = {'measure': label,
+                            'activity': act, 'aggregation': agg}
+            metric = performance_factory.apply(
+                ocel, variant='event_object_graph_based', parameters=perf_parameters)
     else:
-        raise ValueError("Invalid label for the constraint graph edge")
-    if label in ['flow', 'sojourn', 'sync']:
-        perf_parameters = {'measure': label,
-                           'activity': act, 'aggregation': agg}
-        metric = performance_factory.apply(
-            ocel, variant='event_object_graph_based', parameters=perf_parameters)
-
+        logging.error(f'Error in evaluating {aa_edge}: {label} is not defined. Returning False by default.')
+        return False
+    
+    logging.info(f'Evaluating {label} for {act}: {metric}, {op}, {threshold}')
     if compare(metric, op, threshold):
         return True
     else:
@@ -122,30 +145,35 @@ def evaluate_aoa_edge(ocel, aoa_edge):
     label = aoa_edge.label
     op = aoa_edge.operator
     threshold = aoa_edge.threshold
-    if label == 'co-exist':
-        metric = ocel.obj.coexistence_metric(ot, act1, act2)
+    
+    if label == 'coexist':
+        metric = calculate_metric(len(ocel.obj.coexistence(ot, act1, act2)), len(ocel.obj.ot_objects[ot]))
 
     elif label == 'exclusive':
-        metric = ocel.obj.exclusiveness_metric(ot, act1, act2)
+        metric = calculate_metric(len(ocel.obj.exclusiveness(ot, act1, act2)), len(ocel.obj.ot_objects[ot]))
 
     elif label == 'choice':
-        metric = ocel.obj.choice_metric(ot, act1, act2)
+        metric = calculate_metric(len(ocel.obj.choice(ot, act1, act2)), len(ocel.obj.ot_objects[ot]))
 
-    elif label == 'xor-choice':
-        metric = ocel.obj.xor_choice_metric(ot, act1, act2)
+    elif label == 'xorChoice':
+        metric = calculate_metric(len(ocel.obj.xor_choice(ot, act1, act2)), len(ocel.obj.ot_objects[ot]))
 
-    elif label == 'followed_by':
-        metric = ocel.obj.followed_by_metric(ot, act1, act2)
+    elif label == 'cause':
+        metric = calculate_metric(len(ocel.obj.followed_by(ot, act1, act2)), len(ocel.obj.ot_objects[ot]))
 
-    elif label == 'directly_followed_by':
-        metric = ocel.obj.directly_followed_by_metric(ot, act1, act2)
+    elif label == 'directlyCause':
+        metric = calculate_metric(len(ocel.obj.directly_followed_by(ot, act1, act2)), len(ocel.obj.ot_objects[ot]))
 
     elif label == 'precede':
-        metric = ocel.obj.precedence_metric(ot, act1, act2)
+        metric = calculate_metric(len(ocel.obj.precedence(ot, act1, act2)), len(ocel.obj.ot_objects[ot]))
 
     elif label == 'block':
-        metric = ocel.obj.block_metric(ot, act1, act2)
-
+        metric = calculate_metric(len(ocel.obj.block(ot, act1, act2)), len(ocel.obj.ot_objects[ot]))
+    else:
+        logging.error(f'Error in evaluating {aoa_edge}: {label} is not defined. Returning False by default.')
+        return False
+    
+    logging.info(f'Evaluating {label} for ({act1, ot, act2}): {metric}, {op}, {threshold}')
     if compare(metric, op, threshold):
         return True
     else:

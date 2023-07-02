@@ -52,7 +52,7 @@ def binding_possible(ocpn, state, binding, object_types):
     input_places_tokens = []
     t = None
     for t_ in ocpn.transitions:
-        if t_.name == binding[0][0]:
+        if t_.label == binding[0][0]:
             t = t_
     if t == None:
         return False
@@ -71,7 +71,7 @@ def calculate_next_states_on_bindings(ocpn, state, binding, object_types):
     if binding_possible(ocpn, state, binding, object_types):
         t = None
         for t_ in ocpn.transitions:
-            if t_.name == binding[0][0]:
+            if t_.label == binding[0][0]:
                 t = t_
         in_places = {}
         out_places = {}
@@ -227,7 +227,7 @@ def calculate_single_event(context, binding, object_types, ocpn):
         if len(elem[1]) == 0:
             for t in ocpn.transitions:
                 if model_enabled(ocpn, elem[0], t) and not t.silent:
-                    result[1].add(t.name)
+                    result[1].add(t.label)
         times[0] += time.time() - ti
         ti = time.time()
         state_update_pairs, binding_possible = calculate_next_states_on_bindings(

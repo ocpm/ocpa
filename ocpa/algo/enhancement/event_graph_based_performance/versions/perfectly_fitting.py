@@ -1,7 +1,7 @@
 from ocpa.objects.oc_petri_net.obj import ObjectCentricPetriNet, Subprocess
 from ocpa.objects.graph.correlated_event_graph.obj import CorrelatedEventGraph
 from ocpa.objects.log.variants.obj import Event
-from ocpa.algo.util.util import AGG_MAP
+from ocpa.util.util import AGG_MAP
 from ocpa.util.vis_util import human_readable_stat
 from ocpa.algo.util.filtering.graph.event_graph import algorithm as event_graph_filtering_factory
 
@@ -213,61 +213,6 @@ def compute_sync_time(cegs: List[CorrelatedEventGraph], sp: Subprocess = None, s
     else:
         return all_sync_times
 
-
-# def compute_coherent_sync_time(cegs: List[CorrelatedEventGraph], ot, sp: Subprocess = None):
-#     all_coherent_sync_times = []
-#     for initial_ceg in cegs:
-#         if sp == None:
-#             filtered_ceg = initial_ceg
-#         else:
-#             filtered_ceg = event_graph_filtering_factory.apply(sp, initial_ceg)
-#             if filtered_ceg == None:
-#                 continue
-#         first_event = first(filtered_ceg.graph.nodes)
-#         if len([oi for oi in first_event.omap if ot == filtered_ceg.ovmap[oi].type]) < 2:
-#             continue
-#         last_ot_context_event = last(
-#             initial_ceg.get_event_context_per_object(first_event, ot))
-#         first_ot_context_event = first(
-#             initial_ceg.get_event_context_per_object(first_event, ot))
-#         if last_ot_context_event is not None and first_ot_context_event is not None:
-#             all_coherent_sync_times.append(
-#                 abs((last_ot_context_event.time - first_ot_context_event.time).total_seconds()))
-
-#     if len(all_coherent_sync_times) == 0:
-#         return [0]
-#     else:
-#         return all_coherent_sync_times
-
-
-# def compute_inherent_sync_time(cegs: List[CorrelatedEventGraph], ot, ot2, sp: Subprocess = None):
-#     all_inherent_sync_times = []
-#     for initial_ceg in cegs:
-#         if sp == None:
-#             filtered_ceg = initial_ceg
-#         else:
-#             filtered_ceg = event_graph_filtering_factory.apply(sp, initial_ceg)
-#             if filtered_ceg == None:
-#                 continue
-#         first_event = first(filtered_ceg.graph.nodes)
-#         obj_types = set(
-#             [filtered_ceg.ovmap[oi].type for oi in first_event.omap])
-#         if ot in obj_types and ot2 in obj_types:
-#             last_ot_context_event = last(
-#                 initial_ceg.get_event_context_per_object(first_event, ot))
-#             last_ot2_context_event = last(
-#                 initial_ceg.get_event_context_per_object(first_event, ot2))
-#             if last_ot_context_event is not None and last_ot2_context_event is not None:
-#                 all_inherent_sync_times.append(
-#                     abs((last_ot_context_event.time - last_ot2_context_event.time).total_seconds()))
-#         else:
-#             continue
-#     if len(all_inherent_sync_times) == 0:
-#         return [0]
-#     else:
-#         return all_inherent_sync_times
-
-
 def compute_absolute_frequency(cegs: List[CorrelatedEventGraph], sp: Subprocess = None):
     if sp == None:
         return len([initial_ceg for initial_ceg in cegs])
@@ -291,10 +236,6 @@ def compute_object_frequency_per_type(cegs: List[CorrelatedEventGraph], ot, sp: 
         return [0]
     else:
         return object_freqs
-
-
-# def compute_object_frequency_per_type(cegs: List[CorrelatedEventGraph], object_types, sp: Subprocess = None):
-#     return {ot: [compute_object_freq_in_ceg(ceg, ot) for ceg in cegs] for ot in object_types}
 
 
 def compute_object_type_freq(cegs: List[CorrelatedEventGraph], sp: Subprocess = None) -> Event:
@@ -346,13 +287,6 @@ def compute_inter_act_freq(cegs: List[CorrelatedEventGraph], sp: Subprocess = No
         return [0]
     else:
         return inter_act_freqs
-
-    # if sp == None:
-    #     return len(set(
-    #         [e.act for initial_ceg in cegs for e in initial_ceg.graph.nodes if len(e.omap) >= 2]))
-    # else:
-    #     return len(set(
-    #         [e.act for initial_ceg in cegs if event_graph_filtering_factory.apply(sp, initial_ceg) != None for e in event_graph_filtering_factory.apply(sp, initial_ceg).graph.nodes if len(e.omap) >= 2]))
 
 
 def compute_abs_inter_act_freq(cegs: List[CorrelatedEventGraph], sp: Subprocess = None) -> Event:
