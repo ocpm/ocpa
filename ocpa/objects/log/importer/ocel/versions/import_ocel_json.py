@@ -83,6 +83,12 @@ def parse_json(data: Dict[str, Any]) -> ObjectCentricEventLog:
     return data
 
 
+def parse_timestamp(t: str) -> datetime:
+    if t.endswith("Z"):
+        t = t[:-1]
+    return datetime.fromisoformat(t)
+
+
 def parse_events(data: Dict[str, Any], cfg: JsonParseParameters) -> Dict[str, Event]:
     # Transform events dict to list of events
     act_name = cfg.event_params['act']
@@ -97,13 +103,11 @@ def parse_events(data: Dict[str, Any], cfg: JsonParseParameters) -> Dict[str, Ev
                             act=item[1][act_name],
                             omap=item[1][omap_name],
                             vmap=item[1][vmap_name],
-                            time=datetime.fromisoformat(item[1][time_name]))
+                            time=parse_timestamp(item[1][time_name]))
         if "start_timestamp" not in item[1][vmap_name]:
-            events[eid].vmap["start_timestamp"] = datetime.fromisoformat(
-                item[1][time_name])
+            events[eid].vmap["start_timestamp"] = parse_timestamp(item[1][time_name])
         else:
-            events[eid].vmap["start_timestamp"] = datetime.fromisoformat(
-                events[eid].vmap["start_timestamp"])
+            events[eid].vmap["start_timestamp"] = parse_timestamp(events[eid].vmap["start_timestamp"])
 
         for oid in item[1][omap_name]:
             if oid in obj_event_mapping:
