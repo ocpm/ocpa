@@ -20,19 +20,14 @@ def apply(ocel, return_obj_df=True, parameters=None):
     eve_stream = []
     for ev in events:
         # print(events[ev])
-        # CHANGED
-        new_omap = {ot: set() for ot in ocel.meta.obj_types}
+        new_omap = {}
         for obj in events[ev].omap:
-            new_omap[obj_type[obj]].add(obj)
+            typ = obj_type[obj]
+            if not typ in new_omap:
+                new_omap[typ] = set()
+            new_omap[typ].add(obj)
         for typ in new_omap:
             new_omap[typ] = list(new_omap[typ])
-        # new_omap = {}
-        # for obj in events[ev].omap:
-        #     typ = obj_type[obj]
-        #     if not typ in new_omap:
-        #         new_omap[typ] = set()
-        #     new_omap[typ].add(obj)
-        # /CHANGED
         el = {}
         el["event_id"] = events[ev].id
         el["event_activity"] = events[ev].act
