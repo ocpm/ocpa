@@ -8,6 +8,11 @@ from ocpa import __author__ as ocpa_author
 from ocpa import __author_email__ as ocpa_authormail
 setuptools.setup(
     name=ocpa_name,
+    install_requires=[            # I get to this in a second
+            "pm4py==2.2.32",
+            "setuptools",
+            "jsonschema",
+    ],
     packages=setuptools.find_packages(),
     py_modules=[ocpa_name],
     include_package_data=True,
@@ -18,10 +23,5 @@ setuptools.setup(
     author=ocpa_author,
     author_email=ocpa_authormail,
     # Provide either the link to your github or to your website
-    url='https://github.com/ocpm/ocpa',
-    install_requires=[            # I get to this in a second
-            "pm4py==2.2.32",
-            "setuptools",
-            "jsonschema",
-    ]
+    url='https://github.com/ocpm/ocpa'
 )

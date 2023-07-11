@@ -1,8 +1,3 @@
-import ocpa.algo
-import ocpa.objects
-import ocpa.util
-import ocpa.visualization
-
 __version__ = '1.3.3'
 __doc__ = "Object-Centric Process Analysis (OCPA)"
 __author__ = 'Jan Niklas Adams and Gyunam Park'
