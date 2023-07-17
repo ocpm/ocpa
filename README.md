@@ -1,3 +1,7 @@
+# TODO:
+- change var name `ugly_boy` in `Feature_Storage`
+- remove `denormalize()` from `Feature_Storage` class
+
 Object-Centric Process Analysis
 ===========================
 ![Testing](https://github.com/ocpm/ocpa/actions/workflows/unittests.yml/badge.svg)
