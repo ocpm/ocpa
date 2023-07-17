@@ -360,11 +360,85 @@ class Feature_Storage:
 
         return self.scaler.inverse_transform(prepared_normalized_data)
 
-    def extract_normalized_train_test_split(
+    def _set_train_test_split(
         self,
         test_size: float,
         validation_size: float = 0,
-        scaler=StandardScaler,
+        state: int = None,
+    ):
+        """
+        Set up the train-validation-test split for the feature graphs.
+
+        Parameters:
+            test_size (float): The proportion of the data to include in the test set.
+            validation_size (float, optional): The proportion of the data to include in the validation set.
+                                               Default is 0, indicating no validation set.
+            state (int, optional): Random seed for shuffling the data. Default is None.
+
+        Raises:
+            ValueError: If validation_size is greater than or equal to the train_size.
+
+        Note:
+            The train_size is calculated as 1 - validation_size - test_size.
+
+        ################################################
+        ##      VISUALIZATION OF THE SPLITTING :)     ##
+        ##        train          val        test      ##
+        ##         50%           20%        30%       ##
+        ##  @@@@@@@@@@@@@@@@@@ $$$$$$$$ &&&&&&&&&&&&  ##
+        ##                    |        |              ##
+        ##                    v        v              ##
+        ##             train_spl_idx  val_spl_idx     ##
+        ################################################
+        """
+        # Derive train set size
+        train_size = 1 - validation_size - test_size
+        if validation_size >= train_size:
+            raise ValueError(
+                f"validation_size ({validation_size}) must be smaller than train_size (= 1-test_size = {train_size})"
+            )
+        # Generate a list of indices corresponding to the feature graphs
+        graph_indices = list(range(0, len(self.feature_graphs)))
+        # Shuffle the graph indices based on the provided random seed (state)
+        random.Random(state).shuffle(graph_indices)
+        # Calculate the indices to split the data into train, validation, and test sets
+        train_split_idx = int(train_size * len(graph_indices))
+        val_split_idx = int((train_size + validation_size) * len(graph_indices))
+        # Set the indices for train, validation, and test sets
+        self._set_train_indices(graph_indices[:train_split_idx])
+        self._set_validation_indices(graph_indices[train_split_idx:val_split_idx])
+        self._set_test_indices(graph_indices[val_split_idx:])
+
+    def _get_train_test_split(
+        self,
+    ) -> dict[str, list[Feature_Graph]]:
+        """
+        Get the train-validation-test split of the feature graphs.
+
+        Returns:
+            dict[str, list[Feature_Graph]]: A dictionary containing the train, validation, and test sets of feature graphs.
+
+        Note:
+            The feature graphs are obtained based on the indices previously set using `_set_train_test_split`.
+
+        Example:
+            {
+                "train": [Feature_Graph1, Feature_Graph2, ...],
+                "valid": [Feature_Graph3, Feature_Graph4, ...],
+                "test": [Feature_Graph5, Feature_Graph6, ...],
+            }
+        """
+        return {
+            "train": [self.feature_graphs[i] for i in self._train_indices],
+            "valid": [self.feature_graphs[i] for i in self._validation_indices],
+            "test": [self.feature_graphs[i] for i in self._test_indices],
+        }
+
+    def extract_normalized_train_test_split(
+        self,
+        scaler,
+        test_size: float,
+        validation_size: float = 0,
         scaling_exempt_features: list[tuple] = [],
         state: int = None,
     ) -> None:
@@ -389,35 +463,13 @@ class Feature_Storage:
         :param state: Random state of the splitting. Can be used to reproduce splits.
         :type state: int
         """
-        # Set train/val/test indices
-        train_size = 1 - validation_size - test_size
-        if validation_size >= train_size:
-            raise ValueError(
-                f"validation_size ({validation_size}) must be smaller than train_size (= 1-test_size = {train_size})"
-            )
-        graph_indices = list(range(0, len(self.feature_graphs)))
-        random.Random(state).shuffle(graph_indices)
-        ################################################
-        ##      VISUALIZATION OF THE SPLITTING :)     ##
-        ##        train          val        test      ##
-        ##         50%           20%        30%       ##
-        ##  @@@@@@@@@@@@@@@@@@ $$$$$$$$ &&&&&&&&&&&&  ##
-        ##                    |        |              ##
-        ##                    v        v              ##
-        ##             train_spl_idx  val_spl_idx     ##
-        ################################################
-        train_split_idx = int(train_size * len(graph_indices))
-        val_split_idx = int((train_size + validation_size) * len(graph_indices))
-        self._set_train_indices(graph_indices[:train_split_idx])
-        self._set_validation_indices(graph_indices[train_split_idx:val_split_idx])
-        self._set_test_indices(graph_indices[val_split_idx:])
-
-        # Get train/val/test graphs
-        train_graphs, val_graphs, test_graphs = (
-            [self.feature_graphs[i] for i in self._train_indices],
-            [self.feature_graphs[i] for i in self._validation_indices],
-            [self.feature_graphs[i] for i in self._test_indices],
+        # Set train/valid/test indices
+        self._set_train_test_split(
+            test_size=test_size, validation_size=validation_size, state=state
         )
+
+        # Get train/valid/test graphs
+        split_graphs_dict = self._get_train_test_split()
 
         # Prepare for normalization (ensure scaling_exempt_features are excluded)
         if scaling_exempt_features:
@@ -432,10 +484,12 @@ class Feature_Storage:
         scaler = scaler()  # initialize scaler object
 
         # Normalize training, validation, and testing set
-        self.__normalize_feature_graphs(train_graphs, scaler, train=True)
+        self.__normalize_feature_graphs(split_graphs_dict["train"], scaler, train=True)
         if validation_size:
-            self.__normalize_feature_graphs(val_graphs, scaler, train=False)
-        self.__normalize_feature_graphs(test_graphs, scaler, train=False)
+            self.__normalize_feature_graphs(
+                split_graphs_dict["valid"], scaler, train=False
+            )
+        self.__normalize_feature_graphs(split_graphs_dict["test"], scaler, train=False)
 
         # Store normalization information for reproducibility
         # self._set_scaler(scaler)
