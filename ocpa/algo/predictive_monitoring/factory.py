@@ -119,7 +119,7 @@ def _apply_to_process_execution(args):
             execution_feature,
             VERSIONS[EXECUTION_BASED][execution_function](case_graph, ocel, params),
         )
-        for (object_type, attr, fun) in execution_object_attributes:
+        for object_type, attr, fun in execution_object_attributes:
             feature_graph.add_attribute(
                 object_type + "_" + attr + fun.__name__, fun([object_type[attr]])
             )
@@ -136,7 +136,7 @@ def _apply_to_process_execution(args):
             )
         for attr in event_attributes:
             node.add_attribute(attr, ocel.get_value(node.event_id, attr))
-        for (object_type, attr, fun) in event_object_attributes:
+        for object_type, attr, fun in event_object_attributes:
             feature_graph.add_attribute(
                 object_type + "_" + attr + fun.__name__, fun([object_type[attr]])
             )
@@ -190,11 +190,31 @@ def apply(
     )
     ocel.log.create_efficiency_objects()
     feature_storage = Feature_Storage(
-        event_features=event_based_features, execution_features=execution_based_features, ocel=ocel)
+        event_features=event_based_features + event_attributes,
+        execution_features=execution_based_features,
+        ocel=ocel,
+    )
     pool = ThreadPool(workers)
-    parameter_space = [(c_id,ocel,event_based_features, execution_based_features, event_attributes, event_object_attributes, execution_object_attributes, multi_output_event_features ) for c_id in range(0,len(ocel.process_executions))]
+    parameter_space = [
+        (
+            c_id,
+            ocel,
+            event_based_features,
+            execution_based_features,
+            event_attributes,
+            event_object_attributes,
+            execution_object_attributes,
+            multi_output_event_features,
+        )
+        for c_id in range(0, len(ocel.process_executions))
+    ]
     print("Applying feature extraction to process executions")
-    results = list(tqdm.tqdm(pool.imap(_apply_to_process_execution, parameter_space), total=len(parameter_space)))
+    results = list(
+        tqdm.tqdm(
+            pool.imap(_apply_to_process_execution, parameter_space),
+            total=len(parameter_space),
+        )
+    )
     for f_g in results:
         feature_storage.add_feature_graph(f_g)
     del ocel.log.log["event_objects"]
