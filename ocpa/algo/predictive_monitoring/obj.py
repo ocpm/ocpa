@@ -225,14 +225,30 @@ class Feature_Storage:
     )  # : list[tuple]
 
     def _event_id_table(self, feature_graphs: list[Feature_Graph]) -> pd.DataFrame:
-        # features = self.event_features
-        # df = pd.DataFrame(columns=["event_id"] + [features])
+        """
+        Create an event ID table from a list of feature graphs.
+
+        Args:
+            feature_graphs (list[Feature_Graph]): A list of Feature_Graph objects containing event information.
+
+        Returns:
+            pd.DataFrame: A DataFrame representing the event ID table.
+
+        Example:
+            The DataFrame will have columns representing event information, such as event_id and attributes.
+
+            event_id | attribute_1 | attribute_2 | ... | attribute_n
+            -------------------------------------------------------
+            1        | value_1_1   | value_1_2   | ... | value_1_n
+            2        | value_2_1   | value_2_2   | ... | value_2_n
+            ...      | ...         | ...         | ... | ...
+            m        | value_m_1   | value_m_2   | ... | value_m_n
+        """
         dict_list = []
-        for g in feature_graphs:
-            for node in g.nodes:
+        for fg in feature_graphs:
+            for node in fg.nodes:
                 dict_list.append({**{"event_id": node.event_id}, **node.attributes})
         fg_table = pd.DataFrame(dict_list)
-        self.ugly_boy = fg_table
         return fg_table
 
     def _create_mapper(self, table: pd.DataFrame) -> dict:
