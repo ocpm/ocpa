@@ -11,5 +11,5 @@ VERSIONS = {OBJECT_TYPES: project_on_object_types.apply,
             HIDING: hide.apply}
 
 
-def apply(df, variant=OBJECT_TYPES, parameters=None):
-    return VERSIONS[variant](df, parameters=parameters)
+def apply(ocpn, variant=OBJECT_TYPES, parameters=None):
+    return VERSIONS[variant](ocpn, parameters=parameters)

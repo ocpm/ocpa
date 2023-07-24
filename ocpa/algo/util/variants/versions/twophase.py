@@ -121,5 +121,9 @@ def apply(ocel, parameters):
                 variant_event_map[e] = []
             variant_event_map[e] += [v_id]
     ocel.log.log["event_variant"] = ocel.log.log["event_id"].map(variant_event_map)
+<<<<<<< HEAD
     ocel.log.log.drop("event_objects", axis=1, inplace=True)
+=======
+    ocel.log.log.drop('event_objects', axis=1, inplace=True)
+>>>>>>> upstream/main
     return variants, v_freq_list, variant_graphs, variants_dict

@@ -30,7 +30,6 @@ parso==0.8.2
 pexpect==4.8.0
 pickleshare==0.7.5
 Pillow==8.2.0
-pm4py==2.2.7.2
 prompt-toolkit==3.0.18
 ptyprocess==0.7.0
 PuLP==2.1
@@ -41,7 +40,6 @@ pyrsistent==0.17.3
 python-dateutil==2.8.1
 pytz==2021.1
 pyvis==0.1.9
-scikit-learn==0.24.2
 scipy==1.6.3
 six==1.16.0
 sortedcontainers==2.4.0

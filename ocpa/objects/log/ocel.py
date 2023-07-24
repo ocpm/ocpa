@@ -1,6 +1,7 @@
 """Object-Centric Event Log"""
 
 from dataclasses import dataclass
+<<<<<<< HEAD
 from typing import Any
 
 import networkx as nx
@@ -11,6 +12,14 @@ from ocpa.objects.log.variants.graph import EventGraph
 from ocpa.objects.log.variants.obj import ObjectCentricEventLog
 from ocpa.objects.log.variants.table import Table
 
+=======
+from typing import Dict
+from ocpa.objects.log.variants.obj import ObjectCentricEventLog
+from ocpa.objects.log.variants.graph import EventGraph
+from ocpa.objects.log.variants.table import Table
+from ocpa.util.constants import CONN_COMP, LEAD_TYPE
+from ocpa.util.constants import ONE_PHASE, TWO_PHASE
+>>>>>>> upstream/main
 
 @dataclass
 class OCEL:
@@ -59,6 +68,7 @@ class OCEL:
         Returns
         -------
         None
+<<<<<<< HEAD
         """
         self._process_executions: list = None
         self._process_execution_objects: list = None
@@ -79,6 +89,21 @@ class OCEL:
             else variant_factory.TWO_PHASE
         )
 
+=======
+        '''
+        self._process_executions = None
+        self._process_execution_objects = None
+        self._process_execution_mappings = None
+        self._variants = None
+        self._variant_frequency = None
+        self._variant_graphs = None
+        self._variants_dict = None
+        self._object_types = self.log.object_types
+        self._execution_extraction = self.parameters["execution_extraction"] if "execution_extraction" in self.parameters.keys(
+        ) else CONN_COMP
+        self._variant_calculation = self.parameters["variant_calculation"] if "variant_calculation" in self.parameters.keys(
+        ) else TWO_PHASE
+>>>>>>> upstream/main
     # _get_process_execution_objects
 
     @property
@@ -263,6 +288,7 @@ class OCEL:
         """
         return self.graph.eog.subgraph(self.process_executions[process_exec_id])
 
+<<<<<<< HEAD
     def _calculate_process_execution_objects(self) -> None:
         (
             self._process_executions,
@@ -281,3 +307,14 @@ class OCEL:
         ) = variant_factory.apply(
             self, self._variant_calculation, parameters=self.parameters
         )
+=======
+    def _calculate_process_execution_objects(self):
+        from ocpa.algo.util.process_executions import factory as process_execution_factory
+        self._process_executions, self._process_execution_objects, self._process_execution_mappings = process_execution_factory.apply(
+            self, self._execution_extraction, parameters=self.parameters)
+
+    def _calculate_variants(self):
+        from ocpa.algo.util.variants import factory as variant_factory
+        self._variants, self._variant_frequency, self._variant_graphs, self._variants_dict = variant_factory.apply(
+            self, self._variant_calculation, parameters=self.parameters)
+>>>>>>> upstream/main

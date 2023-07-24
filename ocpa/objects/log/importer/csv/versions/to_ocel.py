@@ -1,5 +1,11 @@
+<<<<<<< HEAD
 import logging
 
+=======
+import pandas as pd
+from ocpa.objects.log.variants.table import Table
+from ocpa.objects.log.variants.graph import EventGraph
+>>>>>>> upstream/main
 import ocpa.objects.log.converter.versions.df_to_ocel as obj_converter
 import ocpa.objects.log.importer.csv.util as csv_importer_utils
 import ocpa.objects.log.importer.csv.versions.to_df as df_importer
@@ -10,10 +16,17 @@ from ocpa.objects.log.variants.graph import EventGraph
 from ocpa.objects.log.variants.table import Table
 
 
+<<<<<<< HEAD
 def apply(filepath, parameters: dict, file_path_object_attribute_table=None) -> OCEL:
     ev_df = df_importer.apply(filepath, parameters)
     obj_df = {}
     obj_converter_params = {}
+=======
+def apply(filepath, parameters: Dict, file_path_object_attribute_table=None):
+    from ocpa.objects.log.ocel import OCEL
+    df = df_importer.apply(filepath, parameters)
+    obj_df = None
+>>>>>>> upstream/main
     if file_path_object_attribute_table:
         delimiter = csv_importer_utils.get_csv_delimiter(
             file_path_object_attribute_table

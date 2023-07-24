@@ -1,15 +1,5 @@
-import statistics
 from ocpa.objects.log.importer.csv.util import succint_mdl_to_exploded_mdl
 from pm4py.objects.conversion.log import converter as log_conv_factory
-
-AGG_MAP = {
-    'avg': statistics.mean,
-    'med': statistics.median,
-    'std': statistics.stdev,
-    'sum': sum,
-    'min': min,
-    'max': max
-}
 
 
 def project_log(df, persp, parameters=None):

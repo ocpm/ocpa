@@ -138,7 +138,7 @@ def extract_sublog(ocel, start, end, strategy):
     return case_filtering.filter_process_executions(ocel, cases)
 
 
-def events(ocel, start, end):
+def events(ocel, start=None, end=None):
     '''
     Returns the sub event log for a time window.
 
@@ -160,8 +160,17 @@ def events(ocel, start, end):
     id_time = list(ocel.log.log.columns.values).index("event_timestamp")
     arr = ocel.log.log.to_numpy()
     for line in arr:
-        if (start <= line[id_time]) & (line[id_time] <= end):
-            events.append(line[id_index])
+        if start != None and end == None:
+            if start <= line[id_time]:
+                events.append(line[id_index])
+        elif start == None and end != None:
+            if line[id_time] <= end:
+                events.append(line[id_index])
+        elif start != None and end != None:
+            if (start <= line[id_time]) & (line[id_time] <= end):
+                events.append(line[id_index])
+        else:
+            raise ValueError('Specify either start or end timestamp')
     new_event_df = ocel.log.log[ocel.log.log['event_id'].isin(events)]
     new_ocel = log_util.copy_log_from_df(new_event_df, ocel.parameters)
     return new_ocel

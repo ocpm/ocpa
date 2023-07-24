@@ -28,11 +28,14 @@ def apply(df: pd.DataFrame, parameters: dict = {}) -> ObjectCentricEventLog:
     events = {}
     objects = {}
     acts = set()
+    
+    df.sort_values(by='event_timestamp', inplace=True)
     obj_names = set([x for x in df.columns if not x.startswith("event_")])
     val_names = set([x for x in df.columns if x.startswith("event_")]) - set(
         ["event_activity", "event_timestamp", "event_start_timestamp"]
     )
     obj_event_mapping = {}
+<<<<<<< HEAD
 
     for index, row in enumerate(df.itertuples(), 1):
         add_event(events, index, row, obj_names, val_names)
@@ -45,6 +48,17 @@ def apply(df: pd.DataFrame, parameters: dict = {}) -> ObjectCentricEventLog:
         )
         acts.add(getattr(row, "event_activity"))
     attr_typ = {attr: name_type(str(df.dtypes[attr])) for attr in val_names}
+=======
+    start = time.time()
+    for index, row in df.iterrows():
+        add_event(events, index, row, obj_names, val_names)
+        add_obj(objects, index, [(o, obj)
+                for obj in obj_names if obj in row for o in row[obj]], obj_event_mapping)
+        acts.add(row['event_activity'])
+    end = time.time()
+    attr_typ = {attr: name_type(str(df.dtypes[attr]))
+                for attr in val_names}
+>>>>>>> upstream/main
     attr_types = list(set(typ for typ in attr_typ.values()))
     act_attr = {act: val_names for act in acts}
     meta = MetaObjectCentricData(
@@ -135,6 +149,7 @@ def add_event(
 ) -> None:
     events[str(index)] = Event(
         id=str(index),
+<<<<<<< HEAD
         act=getattr(row, "event_activity"),
         time=pd.to_datetime(getattr(row, "event_timestamp")),
         omap=[o for obj in obj_names for o in getattr(row, obj)],
@@ -149,18 +164,36 @@ def add_event(
         events[str(index)].vmap["start_timestamp"] = pd.to_datetime(
             getattr(row, "event_timestamp")
         )
-
+=======
+        act=row['event_activity'],
+        time=to_datetime(row['event_timestamp']),
+        omap=[o for obj in obj_names if obj in row for o in row[obj]],
+        vmap={attr: row[attr] for attr in val_names})
+    # add start time if exists, otherwise None for performance analysis
+    if "event_start_timestamp" in val_names:
+        events[str(index)].vmap["start_timestamp"] = to_datetime(row['event_start_timestamp'])
+    else:
+        events[str(index)].vmap["start_timestamp"] = to_datetime(row['event_timestamp'])
+    end = time.time()
+    # print(f'Add event: f{end - start}')
+>>>>>>> upstream/main
 
 def safe_split(row_obj):
     try:
+<<<<<<< HEAD
         if "{" in row_obj:
             return [x.strip() for x in row_obj[1:-1].split(",")]
 
+=======
+        if '{' in row_obj:
+            return [x.strip() for x in row_obj[1:-1].split(',')]
+>>>>>>> upstream/main
         else:
             return row_obj.split(",")
     except TypeError:
         return []  # f'NA-{next(counter)}'
 
+<<<<<<< HEAD
 
 def add_obj(
     objects: dict[str, Obj],
@@ -169,6 +202,13 @@ def add_obj(
     obj_event_mapping: dict[str, list[str]],
 ) -> None:
     for obj_id, obj_typ in objs:
+=======
+def add_obj(objects: Dict[str, Obj], index, objs: List[str], obj_event_mapping: Dict[str, List[str]]) -> None:
+    start = time.time()
+    for obj_id_typ in objs:
+        obj_id = obj_id_typ[0]  # First entry is the id
+        obj_typ = obj_id_typ[1]  # second entry is the object type
+>>>>>>> upstream/main
         if obj_id not in objects:
             objects[obj_id] = Obj(id=obj_id, type=obj_typ, ovmap={})
         if obj_id in obj_event_mapping:
@@ -176,9 +216,9 @@ def add_obj(
         else:
             obj_event_mapping[obj_id] = [str(index)]
 
-
 def name_type(typ: str) -> str:
     if typ == "object":
         return "string"
     else:
         return typ
+

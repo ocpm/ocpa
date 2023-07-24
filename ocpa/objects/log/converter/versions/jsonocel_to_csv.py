@@ -32,12 +32,19 @@ def apply(
         obj_type[objects[obj].id] = objects[obj].type
     eve_stream = []
     for ev in events:
+<<<<<<< HEAD
         new_omap = {}
         for obj in events[ev].omap:
             typ = obj_type[obj]
             if typ not in new_omap:
                 new_omap[typ] = set()
             new_omap[typ].add(obj)
+=======
+        # print(events[ev])
+        new_omap = {ot: set() for ot in ocel.meta.obj_types}
+        for obj in events[ev].omap:
+            new_omap[obj_type[obj]].add(obj)
+>>>>>>> upstream/main
         for typ in new_omap:
             new_omap[typ] = list(new_omap[typ])
         el = {}

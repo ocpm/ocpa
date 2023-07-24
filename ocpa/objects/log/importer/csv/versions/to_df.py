@@ -9,7 +9,11 @@ def apply(
     if parameters is None:
         raise ValueError("Specify parsing parameters")
     df = pd.read_csv(filepath, sep=parameters["sep"])
+<<<<<<< HEAD
     obj_cols = parameters["obj_names"]
+=======
+    obj_cols = parameters['obj_names']
+>>>>>>> upstream/main
 
     def _eval(x):
         if x == "set()":
@@ -29,8 +33,16 @@ def apply(
     #     df_ocel["event_id"] = df["event_id"].astype(str)
     # else:
     df_ocel["event_id"] = [str(i) for i in range(len(df))]
+<<<<<<< HEAD
     df_ocel["event_activity"] = df[parameters["act_name"]]
     df_ocel["event_timestamp"] = pd.to_datetime(df[parameters["time_name"]])
+=======
+    df_ocel['event_activity'] = df[parameters['act_name']]
+    df_ocel['event_timestamp'] = pd.to_datetime(df[parameters['time_name']])
+
+    df_ocel.sort_values(by='event_timestamp', inplace=True)
+
+>>>>>>> upstream/main
     if "start_timestamp" in parameters:
         df_ocel["event_start_timestamp"] = pd.to_datetime(
             df[parameters["start_timestamp"]]

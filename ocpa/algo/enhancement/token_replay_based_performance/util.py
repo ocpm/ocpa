@@ -82,6 +82,26 @@ class NoConceptNameException(Exception):
     def __init__(self, message):
         self.message = message
 
+def execute_and_record(t, pn, m, token_visits, trace_id, prev_timestamp, timestamp):
+    if not semantics.is_enabled(t, pn, m):
+        return None
+
+    m_out = copy(m)
+    for a in t.in_arcs:
+        m_out[a.source] -= a.weight
+        if m_out[a.source] == 0:
+            del m_out[a.source]
+        # record token consumption
+        for _ in range(a.weight):
+            token_visits.append([(a.source, trace_id), prev_timestamp,timestamp])
+
+            
+    
+    for a in t.out_arcs:
+        m_out[a.target] += a.weight
+
+    return m_out, token_visits
+
 
 def add_missing_tokens(t, marking):
     """
@@ -237,7 +257,7 @@ def get_req_transitions_for_final_marking(marking, final_marking, places_shortes
 
 
 def enable_hidden_transitions(net, marking, activated_transitions, visited_transitions, all_visited_markings,
-                              hidden_transitions_to_enable, t):
+                              hidden_transitions_to_enable, t, trace_id, timestamp):
     """
     Actually enable hidden transitions on the Petri net
 
@@ -286,7 +306,7 @@ def enable_hidden_transitions(net, marking, activated_transitions, visited_trans
 
 def apply_hidden_trans(t, net, marking, places_shortest_paths_by_hidden, act_tr, rec_depth,
                        visit_trans,
-                       vis_mark):
+                       vis_mark, trace_id, timestamp):
     """
     Apply hidden transitions in order to enable a given transition
 
@@ -326,7 +346,7 @@ def apply_hidden_trans(t, net, marking, places_shortest_paths_by_hidden, act_tr,
                                                                              visit_trans,
                                                                              vis_mark,
                                                                              hidden_transitions_to_enable,
-                                                                             t)
+                                                                             t, trace_id, timestamp)
         if not semantics.is_enabled(t, net, marking):
             hidden_transitions_to_enable = get_hidden_transitions_to_enable(marking, places_with_missing,
                                                                             places_shortest_paths_by_hidden)
@@ -343,9 +363,9 @@ def apply_hidden_trans(t, net, marking, places_shortest_paths_by_hidden, act_tr,
                                                                                       act_tr,
                                                                                       rec_depth + 1,
                                                                                       visit_trans,
-                                                                                      vis_mark)
+                                                                                      vis_mark, trace_id, timestamp)
                             if semantics.is_enabled(t4, net, marking):
-                                marking = semantics.execute(t4, net, marking)
+                                marking = semantics.execute_and_record(t4, net, marking, trace_id, timestamp)
                                 act_tr.append(t4)
                                 visit_trans.add(t4)
                                 vis_mark.append(marking)
@@ -356,7 +376,7 @@ def apply_hidden_trans(t, net, marking, places_shortest_paths_by_hidden, act_tr,
                                                                       act_tr,
                                                                       rec_depth + 1,
                                                                       visit_trans,
-                                                                      vis_mark)
+                                                                      vis_mark, trace_id, timestamp)
 
     return [net, marking, act_tr, vis_mark]
 
@@ -445,15 +465,13 @@ def apply_trace(trace, net, initial_marking, final_marking, trans_map, enable_pl
     act_trans = []
     transitions_with_problems = []
     vis_mark = []
-    my_mark = {'history': [], 'start': [], 'end': []}
-    my_event_mark = []
+    token_visits = []
+    event_occurrences = []
     activating_transition_index = {}
     activating_transition_interval = []
     used_postfix_cache = False
     marking = copy(initial_marking)
     vis_mark.append(marking)
-    # my_mark['start'].append(
-    #     ["source", trace._attributes[xes_util.DEFAULT_TRACEID_KEY], 0])
     missing = 0
     consumed = 0
     sum_tokens_im = 0
@@ -497,6 +515,12 @@ def apply_trace(trace, net, initial_marking, final_marking, trans_map, enable_pl
                 marking = copy(this_end_marking)
             else:
                 if trace[i][activity_key] in trans_map:
+                    trace_id = trace._attributes[xes_util.DEFAULT_TRACEID_KEY]
+                    timestamp = trace[i][ocpa_constants.DEFAULT_TIMESTAMP_KEY]
+                    if i > 0:
+                        prev_timestamp = trace[i-1][ocpa_constants.DEFAULT_TIMESTAMP_KEY]
+                    else:
+                        prev_timestamp = trace[i][ocpa_constants.DEFAULT_TIMESTAMP_KEY]
                     current_event_map.update(trace[i])
                     # change 14/10/2020: to better support duplicate transitions with this approach, we check
                     # whether in the current marking there is at least one transition corresponding to the activity
@@ -520,30 +544,12 @@ def apply_trace(trace, net, initial_marking, final_marking, trans_map, enable_pl
                                                                                              0,
                                                                                              copy(
                                                                                                  visited_transitions),
-                                                                                             copy(vis_mark))
+                                                                                             copy(vis_mark), trace_id, timestamp)
                         for jj5 in range(len(act_trans), len(new_act_trans)):
                             tt5 = new_act_trans[jj5]
                             c, cmap = get_consumed_tokens(tt5)
-                            # TODO Double check the logic to handle silent transitions. It takes the timestamps from trace[i-1]
-                            for pl, count in cmap.items():
-                                for k in range(count):
-                                    if i > 0:
-                                        my_mark['end'].append(
-                                            [pl, trace._attributes[xes_util.DEFAULT_TRACEID_KEY], trace[i-1][ocpa_constants.DEFAULT_START_TIMESTAMP_KEY]])
-                                    else:
-                                        my_mark['end'].append(
-                                            [pl, trace._attributes[xes_util.DEFAULT_TRACEID_KEY], trace[i][ocpa_constants.DEFAULT_START_TIMESTAMP_KEY]])
-
                             p, pmap = get_produced_tokens(tt5)
-                            for pl, count in pmap.items():
-                                for k in range(count):
-                                    if i > 0:
-                                        my_mark['start'].append(
-                                            [pl, trace._attributes[xes_util.DEFAULT_TRACEID_KEY], trace[i-1][ocpa_constants.DEFAULT_TIMESTAMP_KEY]])
-                                    else:
-                                        my_mark['start'].append(
-                                            [pl, trace._attributes[xes_util.DEFAULT_TRACEID_KEY], trace[i][ocpa_constants.DEFAULT_TIMESTAMP_KEY]])
-
+                            
                             if enable_pltr_fitness:
                                 for pl2 in cmap:
                                     if pl2 in place_fitness:
@@ -582,17 +588,9 @@ def apply_trace(trace, net, initial_marking, final_marking, trans_map, enable_pl
                             transition_fitness[t]["fit_traces"][trace] = list()
                         transition_fitness[t]["fit_traces"][trace].append(
                             current_event_map)
-                    my_event_mark.append([t, trace[i]])
+                    event_occurrences.append([t, trace[i]])
                     c, cmap = get_consumed_tokens(t)
-                    for pl, count in cmap.items():
-                        for k in range(count):
-                            my_mark['end'].append(
-                                [pl, trace._attributes[xes_util.DEFAULT_TRACEID_KEY], trace[i][ocpa_constants.DEFAULT_START_TIMESTAMP_KEY]])
                     p, pmap = get_produced_tokens(t)
-                    for pl, count in pmap.items():
-                        for k in range(count):
-                            my_mark['start'].append(
-                                [pl, trace._attributes[xes_util.DEFAULT_TRACEID_KEY], trace[i][ocpa_constants.DEFAULT_TIMESTAMP_KEY]])
                     consumed = consumed + c
                     produced = produced + p
                     if enable_pltr_fitness:
@@ -605,7 +603,7 @@ def apply_trace(trace, net, initial_marking, final_marking, trans_map, enable_pl
                                 place_fitness[pl2]["p"] += pmap[pl2] * \
                                     trace_occurrences
                     if semantics.is_enabled(t, net, marking):
-                        marking = semantics.execute(t, net, marking)
+                        marking, token_visits = execute_and_record(t, net, marking, token_visits, trace_id, prev_timestamp, timestamp)
                         act_trans.append(t)
                         vis_mark.append(marking)
                     if not is_initially_enabled and cleaning_token_flood:
@@ -661,16 +659,7 @@ def apply_trace(trace, net, initial_marking, final_marking, trans_map, enable_pl
                             act_trans.append(t)
                             vis_mark.append(marking)
                             c, cmap = get_consumed_tokens(t)
-                            for pl, count in cmap.items():
-                                for k in range(count):
-                                    my_mark['end'].append(
-                                        [pl, trace._attributes[xes_util.DEFAULT_TRACEID_KEY], trace[i][ocpa_constants.DEFAULT_START_TIMESTAMP_KEY]])
-
                             p, pmap = get_produced_tokens(t)
-                            for pl, count in pmap.items():
-                                for k in range(count):
-                                    my_mark['start'].append(
-                                        [pl, trace._attributes[xes_util.DEFAULT_TRACEID_KEY], trace[i][ocpa_constants.DEFAULT_TIMESTAMP_KEY]])
                             if enable_pltr_fitness:
                                 for pl2 in cmap:
                                     if pl2 in place_fitness:
@@ -705,19 +694,10 @@ def apply_trace(trace, net, initial_marking, final_marking, trans_map, enable_pl
                         for z in range(len(connections_to_sink[j][1])):
                             t = connections_to_sink[j][1][z]
                             if semantics.is_enabled(t, net, marking):
-                                marking = semantics.execute(t, net, marking)
+                                marking, token_visits = execute_and_record(t, net, marking, token_visits, trace_id, prev_timestamp, timestamp)
                                 act_trans.append(t)
                                 c, cmap = get_consumed_tokens(t)
-                                for pl, count in cmap.items():
-                                    for k in range(count):
-                                        my_mark['end'].append(
-                                            [pl, trace._attributes[xes_util.DEFAULT_TRACEID_KEY], trace[i][ocpa_constants.DEFAULT_START_TIMESTAMP_KEY]])
-
                                 p, pmap = get_produced_tokens(t)
-                                for pl, count in pmap.items():
-                                    for k in range(count):
-                                        my_mark['start'].append(
-                                            [pl, trace._attributes[xes_util.DEFAULT_TRACEID_KEY], trace[i][ocpa_constants.DEFAULT_TIMESTAMP_KEY]])
                                 if enable_pltr_fitness:
                                     for pl2 in cmap:
                                         if pl2 in place_fitness:
@@ -833,24 +813,11 @@ def apply_trace(trace, net, initial_marking, final_marking, trans_map, enable_pl
                             "this_activated_transitions": this_activated_trans,
                             "this_visited_markings": this_visited_markings,
                             "previousActivity": previous_activity}
-    tvs = []
-    for start_token in my_mark['start']:
-        start_token_name = (start_token[0], start_token[1])
-        start = start_token[2]
-        for end_token in my_mark['end']:
-            end_token_name = (end_token[0], end_token[1])
-            if start_token_name == end_token_name:
-                end = end_token[2]
-                if start == 0:
-                    start = end
-                tvs.append([start_token_name, start, end])
-                my_mark['end'].remove(end_token)
-
     return [is_fit, trace_fitness, act_trans, transitions_with_problems, marking_before_cleaning,
             align_utils.get_visible_transitions_eventually_enabled_by_marking(
                 net, marking_before_cleaning), missing,
             consumed,
-            remaining, produced, tvs, my_event_mark]
+            remaining, produced, token_visits, event_occurrences]
 
 
 class ApplyTraceTokenReplay:
@@ -1076,11 +1043,11 @@ def run_timed_replay(log: EventLog, net: PetriNet, initial_marking: Marking, fin
     consider_remaining_in_fitness = exec_utils.get_param_value(Parameters.CONSIDER_REMAINING_IN_FITNESS, parameters,
                                                                True)
     try_to_reach_final_marking_through_hidden = exec_utils.get_param_value(
-        Parameters.TRY_TO_REACH_FINAL_MARKING_THROUGH_HIDDEN, parameters, True)
+        Parameters.TRY_TO_REACH_FINAL_MARKING_THROUGH_HIDDEN, parameters, False)
     stop_immediately_unfit = exec_utils.get_param_value(
         Parameters.STOP_IMMEDIATELY_UNFIT, parameters, False)
     walk_through_hidden_trans = exec_utils.get_param_value(
-        Parameters.WALK_THROUGH_HIDDEN_TRANS, parameters, True)
+        Parameters.WALK_THROUGH_HIDDEN_TRANS, parameters, False)
     is_reduction = exec_utils.get_param_value(
         Parameters.IS_REDUCTION, parameters, False)
     cleaning_token_flood = exec_utils.get_param_value(
@@ -1290,6 +1257,7 @@ def apply_traces(log, net, initial_marking, final_marking, enable_pltr_fitness=F
                 threads_results = {}
 
                 for idx, trace in enumerate(log):
+
                     threads[idx] = ApplyTraceTokenReplay(trace, net, initial_marking, final_marking,
                                                          trans_map, enable_pltr_fitness, place_fitness_per_trace,
                                                          transition_fitness_per_trace,
@@ -1311,13 +1279,15 @@ def apply_traces(log, net, initial_marking, final_marking, enable_pltr_fitness=F
                     if progress is not None:
                         progress.update()
                     t = threads[idx]
-                    threads_results[idx] = {"trace_is_fit": copy(t.t_fit),
-                                            "activated_transitions": copy(t.act_trans),
-                                            "reached_marking": copy(t.reached_marking),
-                                            "enabled_transitions_in_marking": copy(
-                        t.enabled_trans_in_mark),
+                    threads_results[idx] = {
+                        "trace_id": trace._attributes[xes_util.DEFAULT_TRACEID_KEY],
+                        "trace_is_fit": copy(t.t_fit),
+                        "activated_transitions": copy(t.act_trans),
+                        "reached_marking": (copy(t.reached_marking)),
+                        "enabled_transitions_in_marking": copy(
+                            t.enabled_trans_in_mark),
                         "transitions_with_problems": copy(
-                        t.trans_probl),
+                            t.trans_probl),
                         "token_visits": copy(t.tvs),
                         "event_occurrences": copy(t.ocs)}
 

@@ -2,10 +2,15 @@ import random
 from warnings import warn
 
 import pandas as pd
+<<<<<<< HEAD
 from sklearn.preprocessing import StandardScaler
 
 from ocpa.objects.log.ocel import OCEL
-
+=======
+# from sklearn.preprocessing import StandardScaler
+from ocpa.util.util import StandardScaler
+import random
+>>>>>>> upstream/main
 
 class Feature_Storage:
     """

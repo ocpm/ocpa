@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import logging
 import random
 from dataclasses import dataclass, field
@@ -5,10 +6,15 @@ from numbers import Number
 from typing import Union
 
 import pandas as pd
+=======
+from dataclasses import dataclass, field
+import random
+>>>>>>> upstream/main
 
 
 @dataclass
 class Table:
+<<<<<<< HEAD
     # __slots__ = (
     #     "variants_dict",
     #     "variants",
@@ -36,6 +42,12 @@ class Table:
         self._log["event_id"] = self._log["event_id"].astype(int)
         self._log["event_index"] = self._log["event_id"]
         self._log = self._log.set_index("event_index")
+=======
+    def __init__(self, log, parameters, object_attributes=None):
+        self._log = log.copy()
+        self._log.set_index("event_id", inplace=True)
+        self._log['event_id'] = self._log.index
+>>>>>>> upstream/main
         self._object_types = parameters["obj_names"]
         self._object_attributes = object_attributes
         # self._event_mapping =  dict(zip(ocel["event_id"], ocel["event_objects"]))
