@@ -1,6 +1,5 @@
 from dataclasses import dataclass, field
 from datetime import datetime
-<<<<<<< HEAD
 from typing import Any
 
 # Using slots for memory saving (and possibly faster attribute access)
@@ -8,8 +7,6 @@ from typing import Any
 #   - dynamically adding class attributes after instantiation
 #   - multiple inheritance (mixins)
 # Slots are available via dataclass as decorator parameter from Python 3.10
-=======
->>>>>>> upstream/main
 
 
 @dataclass
@@ -154,21 +151,13 @@ class ObjectCentricEventLog:
     def existence(self, ot: str, act: str):
         return [o for o in self.ot_objects[ot] if act in self.trace[o]]
 
-<<<<<<< HEAD
-    def existence_metric(self, ot: str, act: str):
-        return len(self.existence(ot, act)) / len(self.ot_objects[ot])
-
-=======
->>>>>>> upstream/main
     def non_existence(self, ot: str, act: str):
         return [o for o in self.ot_objects[ot] if act not in self.trace[o]]
 
     def non_existence_metric(self, ot: str, act: str):
-<<<<<<< HEAD
-        return len(self.non_existence(ot, act)) / len(self.ot_objects[ot])
-=======
-        return self.calculate_metric(len(self.non_existence(ot, act)), len(self.ot_objects[ot]))
->>>>>>> upstream/main
+        return self.calculate_metric(
+            len(self.non_existence(ot, act)), len(self.ot_objects[ot])
+        )
 
     def coexistence(self, ot: str, act1: str, act2: str):
         return [
@@ -179,23 +168,15 @@ class ObjectCentricEventLog:
         ]
 
     def coexistence_metric(self, ot: str, act1: str, act2: str):
-<<<<<<< HEAD
-        return len(self.coexistence(ot, act1, act2)) / len(self.ot_objects[ot])
-=======
-        return self.calculate_metric(len(self.coexistence(ot, act1, act2)), len(self.ot_objects[ot]))
->>>>>>> upstream/main
+        return self.calculate_metric(
+            len(self.coexistence(ot, act1, act2)), len(self.ot_objects[ot])
+        )
 
     def exclusiveness(self, ot: str, act1: str, act2: str):
         return [
             o for o in self.ot_objects[ot] if ~(set([act1, act2]) <= set(self.trace[o]))
         ]
 
-<<<<<<< HEAD
-    def exclusiveness_metric(self, ot: str, act1: str, act2: str):
-        return len(self.exclusiveness(ot, act1, act2)) / len(self.ot_objects[ot])
-
-=======
->>>>>>> upstream/main
     def choice(self, ot: str, act1: str, act2: str):
         return [
             o
@@ -203,12 +184,6 @@ class ObjectCentricEventLog:
             if act1 in self.trace[o] or act2 in self.trace[o]
         ]
 
-<<<<<<< HEAD
-    def choice_metric(self, ot: str, act1: str, act2: str):
-        return len(self.choice(ot, act1, act2)) / len(self.ot_objects[ot])
-
-=======
->>>>>>> upstream/main
     def xor_choice(self, ot: str, act1: str, act2: str):
         return [
             o
@@ -217,12 +192,6 @@ class ObjectCentricEventLog:
             and ~(set([act1, act2]) <= set(self.trace[o]))
         ]
 
-<<<<<<< HEAD
-    def xor_choice_metric(self, ot: str, act1: str, act2: str):
-        return len(self.xor_choice(ot, act1, act2)) / len(self.ot_objects[ot])
-
-=======
->>>>>>> upstream/main
     def followed_by(self, ot: str, act1: str, act2: str):
         O = []
         for oid in self.ot_objects[ot]:
@@ -236,12 +205,6 @@ class ObjectCentricEventLog:
                     O.append(oid)
         return O
 
-<<<<<<< HEAD
-    def followed_by_metric(self, ot: str, act1: str, act2: str):
-        return len(self.followed_by(ot, act1, act2)) / len(self.ot_objects[ot])
-
-=======
->>>>>>> upstream/main
     def directly_followed_by(self, ot: str, act1: str, act2: str):
         O = []
         for oid in self.ot_objects[ot]:
@@ -255,12 +218,6 @@ class ObjectCentricEventLog:
                     O.append(oid)
         return O
 
-<<<<<<< HEAD
-    def directly_followed_by_metric(self, ot: str, act1: str, act2: str):
-        return len(self.directly_followed_by(ot, act1, act2)) / len(self.ot_objects[ot])
-
-=======
->>>>>>> upstream/main
     def precedence(self, ot: str, act1: str, act2: str):
         O = []
         for oid in self.ot_objects[ot]:
@@ -273,12 +230,6 @@ class ObjectCentricEventLog:
                 if act1_idx < act2_idx:
                     O.append(oid)
         return O
-
-<<<<<<< HEAD
-    def precedence_metric(self, ot: str, act1: str, act2: str):
-        return len(self.precedence(ot, act1, act2)) / len(self.ot_objects[ot])
-=======
->>>>>>> upstream/main
 
     def block(self, ot: str, act1: str, act2: str):
         O = []
@@ -296,14 +247,7 @@ class ObjectCentricEventLog:
                         O.append(oid)
         return O
 
-<<<<<<< HEAD
-    def block_metric(self, ot: str, act1: str, act2: str):
-        return len(self.block(ot, act1, act2)) / len(self.ot_objects[ot])
-
     def object_absence(self, ot: str, act: str) -> list[str]:
-=======
-    def object_absence(self, ot: str, act: str) -> List[str]:
->>>>>>> upstream/main
         O = []
         for eid in self.act_events[act]:
             if (
@@ -319,14 +263,7 @@ class ObjectCentricEventLog:
                 O.append(eid)
         return O
 
-<<<<<<< HEAD
-    def object_absence_metric(self, ot: str, act: str) -> int:
-        return len(self.object_absence(ot, act)) / len(self.act_events[act])
-
     def object_singular(self, ot: str, act: str) -> list[str]:
-=======
-    def object_singular(self, ot: str, act: str) -> List[str]:
->>>>>>> upstream/main
         O = []
         for eid in self.act_events[act]:
             if (
@@ -342,14 +279,7 @@ class ObjectCentricEventLog:
                 O.append(eid)
         return O
 
-<<<<<<< HEAD
-    def object_singular_metric(self, ot: str, act: str) -> int:
-        return len(self.object_singular(ot, act)) / len(self.act_events[act])
-
     def object_multiple(self, ot: str, act: str) -> list[str]:
-=======
-    def object_multiple(self, ot: str, act: str) -> List[str]:
->>>>>>> upstream/main
         O = []
         for eid in self.act_events[act]:
             if (
@@ -365,23 +295,10 @@ class ObjectCentricEventLog:
                 O.append(eid)
         return O
 
-<<<<<<< HEAD
-    def object_multiple_metric(self, ot: str, act: str) -> int:
-        return len(self.object_multiple(ot, act)) / len(self.act_events[act])
-
-    def object_presence_metric(self, ot: str, act: str) -> int:
-        return (
-            len(self.object_singular(ot, act)) + len(self.object_multiple(ot, act))
-        ) / len(self.act_events[act])
-
     def ot_objects_of_an_event(self, eid: str, ot: str) -> list[str]:
         return [
             oid for oid in self.raw.events[eid].omap if self.raw.objects[oid].type == ot
         ]
-=======
-    def ot_objects_of_an_event(self, eid: str, ot: str) -> List[str]:
-        return [oid for oid in self.raw.events[eid].omap if self.raw.objects[oid].type == ot]
->>>>>>> upstream/main
 
     def num_ot_objects_containing_acts(self, ot: str, acts: list[str]) -> int:
         objects = []
@@ -503,14 +420,10 @@ class ObjectCentricEventLog:
     def multiple_involvement(self, ot: str, act: str):
         if len(self.act_events[act]) == 0:
             return 0
-<<<<<<< HEAD
         return self.num_events_relating_multiple_ot(ot, act) / len(self.act_events[act])
-=======
-        return self.num_events_relating_multiple_ot(ot, act)/len(self.act_events[act])
 
     def calculate_metric(self, quantity: int, total: int):
         if total > 0:
-            return quantity/total
+            return quantity / total
         else:
             return 0
->>>>>>> upstream/main

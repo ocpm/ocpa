@@ -1,26 +1,37 @@
 import json
-from typing import Dict, List, Any, Union
+from collections import OrderedDict
+from datetime import datetime
+from typing import Any, Dict, List, Union
+
+import pandas as pd
+
+import ocpa.objects.log.converter.factory as convert_factory
+import ocpa.objects.log.variants.util.table as table_utils
+from ocpa.objects.log.importer.ocel.parameters import JsonParseParameters
+from ocpa.objects.log.ocel import OCEL
+from ocpa.objects.log.variants.graph import EventGraph
+from ocpa.objects.log.variants.obj import (
+    Event,
+    MetaObjectCentricData,
+    Obj,
+    ObjectCentricEventLog,
+    RawObjectCentricData,
+)
+from ocpa.objects.log.variants.table import Table
 
 # import logging
 # import pickle
 
-import pandas as pd
-from datetime import datetime
-from collections import OrderedDict
 
-from ocpa.objects.log.importer.ocel.parameters import JsonParseParameters
-from ocpa.objects.log.variants.obj import (
-    Event,
-    Obj,
-    ObjectCentricEventLog,
-    MetaObjectCentricData,
-    RawObjectCentricData,
-)
-from ocpa.objects.log.ocel import OCEL
-import ocpa.objects.log.converter.factory as convert_factory
-from ocpa.objects.log.variants.table import Table
-from ocpa.objects.log.variants.graph import EventGraph
-import ocpa.objects.log.variants.util.table as table_utils
+"""
+Limitation of the current approach (ocpa v1.2 @25-04-2023):
+If an OCEL (JSON/XML) defines an object type as a global parameter,
+but this object type is never referenced by an event,
+the returned pd.DataFrame(s) will not have the object type as a column.
+As other pieces of code depend on this (i.e. the alignment of object types
+in the global-log parameters and returned columns here), this will propagate
+an error in some other places.
+"""
 
 
 def apply(filepath, parameters: dict, file_path_object_attribute_table=None) -> OCEL:
@@ -94,23 +105,20 @@ def parse_json(data: dict[str, Any]) -> ObjectCentricEventLog:
         act_attr=act_attr,
         attr_events=list(attr_events.keys()),
     )
-    data = ObjectCentricEventLog(
+    return ObjectCentricEventLog(
         meta, RawObjectCentricData(events, objects, obj_event_mapping)
     )
-    return data
 
 
-<<<<<<< HEAD
-def parse_events(data: dict[str, Any], cfg: JsonParseParameters) -> dict[str, Event]:
-=======
 def parse_timestamp(t: str) -> datetime:
     if t.endswith("Z"):
         t = t[:-1]
     return datetime.fromisoformat(t)
 
 
-def parse_events(data: Dict[str, Any], cfg: JsonParseParameters) -> Dict[str, Event]:
->>>>>>> upstream/main
+def parse_events(
+    data: dict[str, Any], cfg: JsonParseParameters
+) -> tuple[dict[str, Event], dict]:
     # Transform events dict to list of events
     act_name = cfg.event_params["act"]
     omap_name = cfg.event_params["omap"]
@@ -120,33 +128,19 @@ def parse_events(data: Dict[str, Any], cfg: JsonParseParameters) -> Dict[str, Ev
     obj_event_mapping = {}
     eid = 0
     for item in data.items():
-<<<<<<< HEAD
         events[eid] = Event(
             id=eid,
             act=item[1][act_name],
             omap=item[1][omap_name],
             vmap=item[1][vmap_name],
-            time=datetime.fromisoformat(item[1][time_name]),
+            time=parse_timestamp(item[1][time_name]),
         )
-        if "start_timestamp" not in item[1][vmap_name]:
-            events[eid].vmap["start_timestamp"] = datetime.fromisoformat(
-                item[1][time_name]
-            )
-        else:
-            events[eid].vmap["start_timestamp"] = datetime.fromisoformat(
-                events[eid].vmap["start_timestamp"]
-            )
-=======
-        events[eid] = Event(id=eid,
-                            act=item[1][act_name],
-                            omap=item[1][omap_name],
-                            vmap=item[1][vmap_name],
-                            time=parse_timestamp(item[1][time_name]))
         if "start_timestamp" not in item[1][vmap_name]:
             events[eid].vmap["start_timestamp"] = parse_timestamp(item[1][time_name])
         else:
-            events[eid].vmap["start_timestamp"] = parse_timestamp(events[eid].vmap["start_timestamp"])
->>>>>>> upstream/main
+            events[eid].vmap["start_timestamp"] = parse_timestamp(
+                events[eid].vmap["start_timestamp"]
+            )
 
         for oid in item[1][omap_name]:
             if oid in obj_event_mapping:
