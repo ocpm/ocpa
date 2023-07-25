@@ -9,10 +9,10 @@ from ocpa import __version__ as ocpa_version
 
 setuptools.setup(
     name=ocpa_name,
-    install_requires=[            # I get to this in a second
-            "pm4py==2.2.32",
-            "setuptools",
-            "jsonschema",
+    install_requires=[  # I get to this in a second
+        "pm4py==2.2.32",
+        "setuptools",
+        "jsonschema",
     ],
     packages=setuptools.find_packages(),
     py_modules=[ocpa_name],
@@ -24,25 +24,5 @@ setuptools.setup(
     author=ocpa_author,
     author_email=ocpa_authormail,
     # Provide either the link to your github or to your website
-<<<<<<< HEAD
     url="https://github.com/ocpm/ocpa",
-    install_requires=[  # I get to this in a second
-        "pm4py<2.3.0",
-        "scikit-learn<=0.24.2",
-        "setuptools",
-        "jsonschema",
-    ],
-    # classifiers=[
-    # 'Development Status :: 3 - Alpha',      # Chose either "3 - Alpha", "4 - Beta" or "5 - Production/Stable" as the current state of your package
-    # 'Intended Audience :: Developers',      # Define that your audience are developers
-    # 'Topic :: Software Development :: Build Tools',
-    # 'License :: OSI Approved :: MIT License',   # Again, pick a license
-    # 'Programming Language :: Python :: 3',      #Specify which python versions that you want to support
-    # 'Programming Language :: Python :: 3.4',
-    # 'Programming Language :: Python :: 3.5',
-    # 'Programming Language :: Python :: 3.6',
-    # ],
-=======
-    url='https://github.com/ocpm/ocpa'
->>>>>>> upstream/main
 )
