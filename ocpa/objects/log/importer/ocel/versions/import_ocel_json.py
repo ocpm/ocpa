@@ -101,7 +101,7 @@ def parse_events(data: Dict[str, Any], cfg: JsonParseParameters) -> Dict[str, Ev
     for item in data.items():
         events[eid] = Event(id=eid,
                             act=item[1][act_name],
-                            omap=item[1][omap_name],
+                            omap=[str(x) for x in item[1][omap_name]],
                             vmap=item[1][vmap_name],
                             time=parse_timestamp(item[1][time_name]))
         if "start_timestamp" not in item[1][vmap_name]:

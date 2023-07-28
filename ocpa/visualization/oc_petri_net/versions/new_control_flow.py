@@ -25,7 +25,7 @@ COLORS = ['#7f66ff',
           '#000000']
 
 
-def apply(obj, parameters=None):
+def apply(ocpn: ObjectCentricPetriNet, parameters=None):
     if parameters is None:
         parameters = {}
 
@@ -50,45 +50,40 @@ def apply(obj, parameters=None):
     # color = COLORS[index % len(COLORS)]
     color = "#05B202"
     color_mapping = dict()
-    object_types = obj.object_types
+    object_types = ocpn.object_types
     for index, ot in enumerate(object_types):
         color_mapping[ot] = COLORS[index % len(COLORS)]
 
-    for pl in obj.places:
+    for pl in ocpn.places:
         this_uuid = str(uuid.uuid4())
-        # this_uuid = "p%d" % (pl_count)
-        # pl_str = this_uuid
-        pl_label = ''.join(w[0].upper() for w in pl.name.split())
-        pl_label = pl.name
+        pl_label = pl.object_type
         pl_count += 1
         color = color_mapping[pl.object_type]
-        if pl.initial == True:
+        if pl.initial == True or pl.final == True:
             g.node(this_uuid, pl_label, shape="circle", style="filled", fillcolor=color, color=color,
-                   fontsize="13.0", labelfontsize="13.0")
-        elif pl.final == True:
-            g.node(this_uuid, pl_label, shape="circle", style="filled", color=color, fillcolor=color,
-                   fontsize="13.0", labelfontsize="13.0")
+                fontsize="13.0", labelfontsize="13.0", width="0.5", height="0.5")  # Smaller size
         else:
-            g.node(this_uuid, pl_label, shape="circle", color=color,
-                   fontsize="13.0", labelfontsize="13.0")
+            g.node(this_uuid, "", shape="circle", color=color,
+                fontsize="13.0", labelfontsize="13.0", width="0.5", height="0.5")  # Smaller size
         all_objs[pl] = this_uuid
 
-    for tr in obj.transitions:
+    for tr in ocpn.transitions:
         this_uuid = str(uuid.uuid4())
         tr_count += 1
         if tr.silent == True:
             g.node(this_uuid, "", fontcolor="#FFFFFF", shape="box",
-                   fillcolor="#000000", style="filled", xlabel="", labelfontsize="13.0")
+                fillcolor="#000000", style="filled", width="0.1", height="0.1")  # Even smaller size
             all_objs[tr] = this_uuid  # this_uuid
         elif tr.label not in trans_names:
             g.node(this_uuid, tr.label, shape="box", fontsize="13.0",
-                   labelfontsize="13.0")
+                labelfontsize="13.0", width="0.7", height="0.7")  # Larger size
             trans_names[tr.label] = tr.label  # this_uuid
             all_objs[tr] = this_uuid
         else:
             all_objs[tr] = this_uuid
 
-    for arc in obj.arcs:
+
+    for arc in ocpn.arcs:
         this_uuid = str(uuid.uuid4())
 
         if type(arc.source) == ObjectCentricPetriNet.Place:
