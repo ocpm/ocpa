@@ -4,6 +4,8 @@ from warnings import warn
 
 import pandas as pd
 
+from ocpa.objects.log.ocel import OCEL
+
 
 class Feature_Storage:
     """
