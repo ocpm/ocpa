@@ -214,8 +214,10 @@ def apply(
             pool.imap(_apply_to_process_execution, parameter_space),
             total=len(parameter_space),
         )
-    )
+    )  # BUG: some feature_graphs have empty attribute `Feature_Graph.objects`
     for f_g in results:
-        feature_storage.add_feature_graph(f_g)
+        # only add successful feature_graphs (when a p_exec is too short [I think] it doesn't fill the Feature_Graph.objects attribute)
+        if f_g.objects:
+            feature_storage.add_feature_graph(f_g)
     del ocel.log.log["event_objects"]
     return feature_storage
