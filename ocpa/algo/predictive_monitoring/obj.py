@@ -302,80 +302,6 @@ class Feature_Storage:
         mapper = self._create_mapper(table)  # for efficiency
         self.__map_graph_values(mapper, graphs)
 
-    def denormalize(
-        self, normalized_data: dict[str, list[float]] or pd.DataFrame
-    ) -> dict[str, list[float]]:
-        """
-        Returns denormalized data (in same format as input), when given a dictionary with
-        variable names as keys and lists of normalized floats as values.
-
-        :param normalized_data: Between 0 and 1, indicates the share of the data that should go to the test set.
-        :type normalized_data: dict[str, list[float]] or pd.DataFrame
-        """
-        # # For easy consistency checks:
-        # if type(normalized_data) == dict and all_keys_in_feature_storage:
-        #     normalized_data = pd.DataFrame(normalized_data)
-
-        # Consistency checks (both for if `normalized_data` is dict and pd.DataFrame)
-        if type(normalized_data) == dict:
-            all_values_have_equal_length = (
-                len(set([len(v) for v in normalized_data.values()])) == 1
-            )
-            assert (
-                all_values_have_equal_length
-            ), f"All values in `normalized_data` should be of equal length"
-            len_normalized_data = len(list(normalized_data.values())[0])
-        if type(normalized_data) == pd.DataFrame:
-            len_normalized_data = len(normalized_data)
-        num_event_features = len(self.event_features)
-
-        # all_keys_in_feature_storage = all(
-        #     [var_name in self.event_features for var_name in normalized_data.keys()]
-        # )
-        # assert (
-        #     all_keys_in_feature_storage
-        # ), f"All keys in `normalized_data` should exist as event features in Feature_Storage"
-
-        keys_not_in_event_features = set(normalized_data.keys()) - set(
-            self.event_features
-        )
-        warn(
-            f"Could not find keys '{keys_not_in_event_features}' as event features in Feature_Storage. They will be excluded from denormalization."
-        )
-        valid_keys = set(normalized_data.keys()) & set(self.event_features)
-
-        idxs_of_valid_keys_in_event_feats = {
-            self.event_features.index(key) for key in valid_keys
-        }
-        empty_dict = {
-            k: v
-            for (k, v) in zip(
-                range(num_event_features),
-                [[0] * len_normalized_data] * num_event_features,
-            )
-        }
-
-        for key_idx, key in zip(idxs_of_valid_keys_in_event_feats, valid_keys):
-            for k, _ in empty_dict.items():
-                if key_idx == k:
-                    empty_dict.update({key_idx: normalized_data[key]})
-            empty_dict[key] = empty_dict.pop(key_idx)
-        self.empty_dict = empty_dict
-        prepared_normalized_data = pd.DataFrame(empty_dict)
-        self.prepared_normalized_data = prepared_normalized_data
-        col_name_map = {k: v for k, v in enumerate(self.event_features)}
-        self.col_name_map = col_name_map
-        prepared_normalized_data.rename(columns=col_name_map, inplace=True)
-        # create dict with length that `X` requires (=len(self.event_features)+1)
-        # fill it with keys as index numbers, from 0 to n
-        # fill it with values as lists containing 0, and length equal to len(normalized_data.values()[0])
-
-        # look up which column belongs to which key,
-        # for column in `X` expected by scaler.inverse_transform()
-        # and replace these keys with the values that were given at that key-column-index in normalized_data
-
-        return self.scaler.inverse_transform(prepared_normalized_data)
-
     def _set_train_test_split(
         self,
         test_size: float,
@@ -414,7 +340,7 @@ class Feature_Storage:
                 f"validation_size ({validation_size}) must be smaller than train_size (= 1-test_size = {train_size})"
             )
         # Generate a list of indices corresponding to the feature graphs
-        graph_indices = list(range(0, len(self.feature_graphs)))
+        graph_indices = [fg.pexec_id for fg in self.feature_graphs]
         # Shuffle the graph indices based on the provided random seed (state)
         random.Random(state).shuffle(graph_indices)
         # Calculate the indices to split the data into train, validation, and test sets
@@ -446,7 +372,7 @@ class Feature_Storage:
         """
         return {
             "train": [self.feature_graphs[i] for i in self._train_indices],
-            "valid": [self.feature_graphs[i] for i in self._validation_indices],
+            "validation": [self.feature_graphs[i] for i in self._validation_indices],
             "test": [self.feature_graphs[i] for i in self._test_indices],
         }
 
@@ -479,12 +405,12 @@ class Feature_Storage:
         :param state: Random state of the splitting. Can be used to reproduce splits.
         :type state: int
         """
-        # Set train/valid/test indices
+        # Set train/validation/test indices
         self._set_train_test_split(
             test_size=test_size, validation_size=validation_size, state=state
         )
 
-        # Get train/valid/test graphs
+        # Get train/validation/test graphs
         split_graphs_dict = self._get_train_test_split()
 
         # Prepare for normalization (ensure scaling_exempt_features are excluded)
@@ -503,7 +429,7 @@ class Feature_Storage:
         self.__normalize_feature_graphs(split_graphs_dict["train"], scaler, train=True)
         if validation_size:
             self.__normalize_feature_graphs(
-                split_graphs_dict["valid"], scaler, train=False
+                split_graphs_dict["validation"], scaler, train=False
             )
         self.__normalize_feature_graphs(split_graphs_dict["test"], scaler, train=False)
 

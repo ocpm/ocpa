@@ -145,13 +145,14 @@ def _apply_to_process_execution(args):
 
 def apply(
     ocel: OCEL,
-    event_based_features=[],
-    execution_based_features=[],
-    event_attributes=[],
-    event_object_attributes=[],
-    execution_object_attributes=[],
-    workers=4,
-    multi_output_event_features=[],
+    event_based_features: list = [],
+    execution_based_features: list = [],
+    event_attributes: list = [],
+    event_object_attributes: list = [],
+    execution_object_attributes: list = [],
+    workers: int = 4,
+    multi_output_event_features: list = [],
+    min_execution_length: int = 1,
 ):
     """
     Creates a :class:`Feature Storage object <ocpa.algo.predictive_monitoring.obj.Feature_Storage>` from the object-centric
@@ -217,7 +218,7 @@ def apply(
     )  # BUG: some feature_graphs have empty attribute `Feature_Graph.objects`
     for f_g in results:
         # only add successful feature_graphs (when a p_exec is too short [I think] it doesn't fill the Feature_Graph.objects attribute)
-        if f_g.objects:
+        if f_g.size >= min_execution_length:  # and f_g.objects:
             feature_storage.add_feature_graph(f_g)
     del ocel.log.log["event_objects"]
     return feature_storage
