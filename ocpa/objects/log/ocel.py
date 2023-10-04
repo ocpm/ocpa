@@ -28,7 +28,7 @@ class OCEL:
     graph: EventGraph
     o2o_graph: ObjectGraph = None
     change_table: ObjectChangeTable = None
-    parameters: Dict
+    parameters: Dict = None
 
     def __post_init__(self):
         '''
@@ -46,10 +46,8 @@ class OCEL:
         self._variant_graphs = None
         self._variants_dict = None
         self._object_types = self.log.object_types
-        self._execution_extraction = self.parameters["execution_extraction"] if "execution_extraction" in self.parameters.keys(
-        ) else CONN_COMP
-        self._variant_calculation = self.parameters["variant_calculation"] if "variant_calculation" in self.parameters.keys(
-        ) else TWO_PHASE
+        self._execution_extraction = self.parameters["execution_extraction"] if "execution_extraction" in self.parameters else CONN_COMP
+        self._variant_calculation = self.parameters["variant_calculation"] if "variant_calculation" in self.parameters else TWO_PHASE
     # _get_process_execution_objects
 
     @property
