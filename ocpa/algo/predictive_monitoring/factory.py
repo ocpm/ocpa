@@ -156,7 +156,6 @@ def apply(ocel, event_based_features=[], execution_based_features=[], event_attr
     :rtype: :class:`Feature Storage <ocpa.algo.predictive_monitoring.obj.Feature_Storage>`
 
     '''
-
     ocel.log.log["event_objects"] = ocel.log.log.apply(
         lambda x: [(ot, o) for ot in ocel.object_types for o in x[ot]], axis=1)
     ocel.log.create_efficiency_objects()
@@ -170,3 +169,4 @@ def apply(ocel, event_based_features=[], execution_based_features=[], event_attr
         feature_storage.add_feature_graph(f_g)
     del ocel.log.log["event_objects"]
     return feature_storage
+

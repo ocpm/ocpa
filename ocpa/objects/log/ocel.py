@@ -6,6 +6,8 @@ from ocpa.objects.log.variants.obj import ObjectCentricEventLog
 from ocpa.objects.log.variants.graph import EventGraph
 from ocpa.objects.log.variants.object_graph import ObjectGraph
 from ocpa.objects.log.variants.object_change_table import ObjectChangeTable
+from ocpa.objects.log.variants.object_graph import ObjectGraph
+from ocpa.objects.log.variants.object_change_table import ObjectChangeTable
 from ocpa.objects.log.variants.table import Table
 from ocpa.util.constants import CONN_COMP, LEAD_TYPE
 from ocpa.util.constants import ONE_PHASE, TWO_PHASE
