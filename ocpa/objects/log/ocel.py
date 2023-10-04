@@ -1,6 +1,6 @@
 """Object-Centric Event Log"""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Dict
 from ocpa.objects.log.variants.obj import ObjectCentricEventLog
 from ocpa.objects.log.variants.graph import EventGraph
@@ -28,7 +28,7 @@ class OCEL:
     graph: EventGraph
     o2o_graph: ObjectGraph = None
     change_table: ObjectChangeTable = None
-    parameters: Dict = {}
+    parameters: Dict = field(default_factory=dict)
 
     def __post_init__(self):
         '''
