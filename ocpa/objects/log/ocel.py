@@ -4,9 +4,12 @@ from dataclasses import dataclass
 from typing import Dict
 from ocpa.objects.log.variants.obj import ObjectCentricEventLog
 from ocpa.objects.log.variants.graph import EventGraph
+from ocpa.objects.log.variants.object_graph import ObjectGraph
+from ocpa.objects.log.variants.object_change_table import ObjectChangeTable
 from ocpa.objects.log.variants.table import Table
 from ocpa.util.constants import CONN_COMP, LEAD_TYPE
 from ocpa.util.constants import ONE_PHASE, TWO_PHASE
+
 
 @dataclass
 class OCEL:
@@ -23,7 +26,9 @@ class OCEL:
     log: Table
     obj: ObjectCentricEventLog
     graph: EventGraph
-    parameters: Dict
+    o2o_graph: ObjectGraph = None
+    change_table: ObjectChangeTable = None
+    parameters: Dict = None
 
     def __post_init__(self):
         '''
@@ -230,6 +235,7 @@ class OCEL:
         '''
         return self.graph.eog.subgraph(self.process_executions[process_exec_id])
 
+    
     def _calculate_process_execution_objects(self):
         from ocpa.algo.util.process_executions import factory as process_execution_factory
         self._process_executions, self._process_execution_objects, self._process_execution_mappings = process_execution_factory.apply(
