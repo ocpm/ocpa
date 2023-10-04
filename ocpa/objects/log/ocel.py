@@ -28,7 +28,7 @@ class OCEL:
     graph: EventGraph
     o2o_graph: ObjectGraph = None
     change_table: ObjectChangeTable = None
-    parameters: Dict = None
+    parameters: Dict
 
     def __post_init__(self):
         '''
