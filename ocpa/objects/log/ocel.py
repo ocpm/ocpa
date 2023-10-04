@@ -47,8 +47,17 @@ class OCEL:
         self._variants_dict = None
         self._object_types = self.log.object_types
         if self.parameters is not None:
-            self._execution_extraction = self.parameters["execution_extraction"] if "execution_extraction" in self.parameters.keys() else CONN_COMP
-            self._variant_calculation = self.parameters["variant_calculation"] if "variant_calculation" in self.parameters.keys() else TWO_PHASE
+            if "execution_extraction" in self.parameters.keys():
+                self._execution_extraction = self.parameters["execution_extraction"] 
+            else:
+                self._execution_extraction = CONN_COMP
+            if "variant_calculation" in self.parameters.keys():
+                self._variant_calculation = self.parameters["variant_calculation"]
+            else:
+                self._variant_calculation = TWO_PHASE
+        else:
+            self._execution_extraction = CONN_COMP
+            self._variant_calculation = TWO_PHASE
     # _get_process_execution_objects
 
     @property
