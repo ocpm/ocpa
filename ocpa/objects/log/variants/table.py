@@ -20,7 +20,10 @@ class Table:
         # clean empty events
         # self.clean_empty_events()
         self.create_efficiency_objects()
-        #self._log = self._log[self._log.apply(lambda x: any([len(x[ot]) > 0 for ot in self._object_types]))]
+        print(self._log.columns)
+        print(self._object_types)
+        self._log = self._log[self._log.apply(lambda x: any([len(x[ot]) > 0 for ot in self._object_types]),axis = 1)]
+        
 
     def _get_log(self):
         return self._log
