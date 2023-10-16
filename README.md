@@ -43,6 +43,7 @@ object-centric process mining. It covers the following functionalities:
   * Import  
     * From CSV 
     * From JSONOCEL & JSONXML 
+    * From OCEL 2.0 Files
   * Export 
     - To JSONOCEL 
   - Process execution extraction (object-centric cases) 
@@ -109,6 +110,17 @@ ocel = ocel_import_factory.apply(file_path= filename,parameters = parameters)
 ``` {.python}
 from ocpa.objects.log.importer.ocel import factory as ocel_import_factory
 filename = "sample_logs/jsonocel/p2p-normal.jsonocel"
+ocel = ocel_import_factory.apply(filename)
+```
+
+**Importing OCEL 2.0 Files**
+
+There are different formats for OCEL 2.0 files. All of them are extensively documented at the ([OCEL
+standard](https://ocel-standard.org)) website. 
+
+``` {.python}
+from ocpa.objects.log.importer.ocel2.sqlite import factory as ocel_import_factory
+filename = "sample_logs/ocel2/sqlite/running-example.sqlite"
 ocel = ocel_import_factory.apply(filename)
 ```
 

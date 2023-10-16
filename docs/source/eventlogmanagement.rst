@@ -29,6 +29,16 @@ ___________________
     filename = "sample_logs/jsonocel/p2p-normal.jsonocel"
     ocel = ocel_import_factory.apply(filename)
 
+Importing OCEL 2.0 Files
+__________________
+
+There are different formats for OCEL 2.0 files. All of them are extensively documented at the (`OCEL standard <https://ocel-standard.org>`_) website.
+
+.. code-block:: python
+    from ocpa.objects.log.importer.ocel2.sqlite import factory as ocel_import_factory
+    filename = "sample_logs/ocel2/sqlite/running-example.sqlite"
+    ocel = ocel_import_factory.apply(filename)
+
 
 Exporting JSON OCEL Files
 ___________________
