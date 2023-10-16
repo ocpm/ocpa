@@ -86,7 +86,7 @@ Event Log Management
 
 OCPA offers several ways to import object-centric event data.
 Additionally to the two data formats introduced in the ([OCEL
-standard](https://ocel-standard.org)) we support the import of CSV
+standard](https://www.ocel-standard.org)) we support the import of CSV
 files. The importer is the key interface to pass parameters and settings
 to the event log. A full description can be found in the
 `importer's documentation <ocpa.objects.log.importer.csv.factory.apply>`.
@@ -116,7 +116,7 @@ ocel = ocel_import_factory.apply(filename)
 **Importing OCEL 2.0 Files**
 
 There are different formats for OCEL 2.0 files. All of them are extensively documented at the ([OCEL
-standard](https://ocel-standard.org)) website. 
+standard](https://www.ocel-standard.org)) website. 
 
 ``` {.python}
 from ocpa.objects.log.importer.ocel2.sqlite import factory as ocel_import_factory

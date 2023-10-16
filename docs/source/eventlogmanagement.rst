@@ -32,7 +32,7 @@ ___________________
 Importing OCEL 2.0 Files
 __________________
 
-There are different formats for OCEL 2.0 files. All of them are extensively documented at the (`OCEL standard <https://ocel-standard.org>`_) website.
+There are different formats for OCEL 2.0 files. All of them are extensively documented at the (`OCEL standard <https://www.ocel-standard.org>`_) website.
 
 .. code-block:: python
     from ocpa.objects.log.importer.ocel2.sqlite import factory as ocel_import_factory
