@@ -30,6 +30,7 @@ def apply(filepath, parameters: Dict, file_path_object_attribute_table=None) -> 
                         "time_name": "event_timestamp",
                         "sep": ","}
     table_parameters.update(parameters)
+    print(table_parameters)
     # TODO see here
     # print(table_parameters)
     log = Table(df, parameters=table_parameters, object_attributes=obj_df)
