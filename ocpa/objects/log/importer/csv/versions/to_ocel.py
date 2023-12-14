@@ -19,5 +19,5 @@ def apply(filepath, parameters: Dict, file_path_object_attribute_table=None):
     print("Object Format Successfully Imported")
     graph = EventGraph(table_utils.eog_from_log(log))
     print("Graph Format Successfully Imported")
-    ocel = OCEL(log, obj, graph, parameters)
+    ocel = OCEL(log, obj, graph, parameters=parameters)
     return ocel
