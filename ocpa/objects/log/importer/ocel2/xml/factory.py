@@ -180,5 +180,5 @@ def apply(file_path: str, parameters: Optional[Dict[Any, Any]] = None) -> OCEL:
     for object_type in object_type_changes:
         object_type_changes[object_type] = pd.DataFrame(object_type_changes[object_type])
     change_table = ObjectChangeTable(object_type_changes)
-    ocel = OCEL(log, obj, graph, o2o_graph, change_table, parameters)
+    ocel = OCEL(log, obj, graph, parameters, o2o_graph, change_table)
     return ocel

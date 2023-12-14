@@ -126,7 +126,7 @@ def apply(filepath, parameters: Dict = {}) -> OCEL:
     graph = EventGraph(table_utils.eog_from_log(log,qualifiers=qualifiers_from_file(filepath)))
     o2o_graph = ObjectGraph(o2o_graph_from_file(filepath))
     change_table = ObjectChangeTable(change_tables_from_file(filepath))
-    ocel = OCEL(log, obj, graph, o2o_graph, change_table, parameters)
+    ocel = OCEL(log, obj, graph, parameters, o2o_graph, change_table)
     return ocel
 
 

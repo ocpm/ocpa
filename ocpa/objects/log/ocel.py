@@ -28,9 +28,10 @@ class OCEL:
     log: Table
     obj: ObjectCentricEventLog
     graph: EventGraph
+    parameters: Dict
     o2o_graph: ObjectGraph = None
     change_table: ObjectChangeTable = None
-    parameters: Dict = field(default_factory=dict)
+     #= field(default_factory=dict)
 
     def __post_init__(self):
         '''
@@ -56,6 +57,8 @@ class OCEL:
             self._variant_calculation = self.parameters["variant_calculation"]
         else:
             self._variant_calculation = TWO_PHASE
+        #Remove events without any objects in the table
+        #self.log.log = self.log.log[self.log.log.apply(lambda x: any([len(x[ot]) > 0 for ot in self.object_types]))]
     # _get_process_execution_objects
 
     @property
