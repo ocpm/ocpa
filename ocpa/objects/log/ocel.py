@@ -29,36 +29,12 @@ class OCEL:
     Properties are lazily instantiated upon calling their getter functions.
     """
 
-    # Using slots for memory saving (and possibly faster attribute access)
-    # Using slots disables:
-    #   - dynamically adding class attributes after instantiation
-    #   - multiple inheritance (mixins)
-    # Slots are available via dataclass as decorator parameter from Python 3.10
-    __slots__ = (
-        "log",
-        "obj",
-        "graph",
-        "parameters",
-        "o2o_graph",
-        "change_table",
-        "_process_executions",
-        "_process_execution_objects",
-        "_process_execution_mappings",
-        "_variants",
-        "_variant_frequency",
-        "_variant_graphs",
-        "_variants_dict",
-        "_object_types",
-        "_execution_extraction",
-        "_variant_calculation",
-    )
-
     log: Table
     obj: ObjectCentricEventLog
     graph: EventGraph
     parameters: dict # =field(default_factory=dict)
-    o2o_graph: ObjectGraph
-    change_table: ObjectChangeTable
+    o2o_graph: ObjectGraph = None
+    change_table: ObjectChangeTable = None
 
     def __post_init__(self) -> None:
         """
@@ -68,9 +44,7 @@ class OCEL:
         -------
         None
         """
-        self.o2o_graph = None
-        self.change_table = None
-
+        
         self._process_executions: list = None
         self._process_execution_objects: list = None
         self._process_execution_mappings: dict = None
