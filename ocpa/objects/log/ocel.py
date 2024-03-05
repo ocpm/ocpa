@@ -56,10 +56,9 @@ class OCEL:
     log: Table
     obj: ObjectCentricEventLog
     graph: EventGraph
-    parameters: dict
-    o2o_graph: ObjectGraph = None
-    change_table: ObjectChangeTable = None
-     #= field(default_factory=dict)
+    parameters: dict # =field(default_factory=dict)
+    o2o_graph: ObjectGraph
+    change_table: ObjectChangeTable
 
     def __post_init__(self) -> None:
         """
@@ -69,6 +68,8 @@ class OCEL:
         -------
         None
         """
+        self.o2o_graph = None
+        self.change_table = None
 
         self._process_executions: list = None
         self._process_execution_objects: list = None
@@ -88,6 +89,7 @@ class OCEL:
             if "variant_calculation" in self.parameters.keys()
             else TWO_PHASE
         )
+        
 
     # _get_process_execution_objects
 
