@@ -41,23 +41,24 @@ abstract = {ocpa is a Python library supporting object-centric process mining. T
 object-centric process mining. It covers the following functionalities:
 * Object-centric event log management
   * Import  
-	* From CSV
-	* From JSONOCEL & JSONXML
-  * Export
-	- To JSONOCEL
-  - Process execution extraction (object-centric cases)
-- Object-centric process discovery
-  - Object-centric Petri nets
-  - Object-centric Variant calculation
-  - Control-flow visualization
-	- Object-centric Petri net
-	- Object-centric variants
-- Object-centric conformance checking
-  - Fitness & Precision
-  - Constraint monitoring
-- Object-centric process enhancement
-  - Performance analysis
-  - Model Analysis
+    * From CSV 
+    * From JSONOCEL & JSONXML 
+    * From OCEL 2.0 Files
+  * Export 
+    - To JSONOCEL 
+  - Process execution extraction (object-centric cases) 
+- Object-centric process discovery 
+  - Object-centric Petri nets 
+  - Object-centric Variant calculation 
+  - Control-flow visualization 
+    - Object-centric Petri net 
+    - Object-centric variants 
+- Object-centric conformance checking 
+  - Fitness & Precision 
+  - Constraint monitoring 
+- Object-centric process enhancement 
+  - Performance analysis 
+  - Model Analysis 
 - Object-centric predictive process monitoring
   - Feature extraction
   - Feature encoding
@@ -85,7 +86,7 @@ Event Log Management
 
 OCPA offers several ways to import object-centric event data.
 Additionally to the two data formats introduced in the ([OCEL
-standard](https://ocel-standard.org)) we support the import of CSV
+standard](https://www.ocel-standard.org)) we support the import of CSV
 files. The importer is the key interface to pass parameters and settings
 to the event log. A full description can be found in the
 `importer's documentation <ocpa.objects.log.importer.csv.factory.apply>`.
@@ -109,6 +110,17 @@ ocel = ocel_import_factory.apply(file_path= filename,parameters = parameters)
 ``` {.python}
 from ocpa.objects.log.importer.ocel import factory as ocel_import_factory
 filename = "sample_logs/jsonocel/p2p-normal.jsonocel"
+ocel = ocel_import_factory.apply(filename)
+```
+
+**Importing OCEL 2.0 Files**
+
+There are different formats for OCEL 2.0 files. All of them are extensively documented at the ([OCEL
+standard](https://www.ocel-standard.org)) website. 
+
+``` {.python}
+from ocpa.objects.log.importer.ocel2.sqlite import factory as ocel_import_factory
+filename = "sample_logs/ocel2/sqlite/running-example.sqlite"
 ocel = ocel_import_factory.apply(filename)
 ```
 

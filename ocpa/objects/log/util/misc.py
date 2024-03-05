@@ -17,7 +17,7 @@ def copy_log(ocel):
     log = Table(df, parameters=ocel.parameters)
     obj = obj_converter.apply(df)
     graph = EventGraph(table_utils.eog_from_log(log))
-    new_log = OCEL(log, obj, graph, ocel.parameters)
+    new_log = OCEL(log, obj, graph, parameters=ocel.parameters)
     return new_log
 
 
@@ -26,7 +26,7 @@ def copy_log_from_df(df, parameters):
     log = Table(df, parameters=parameters)
     obj = obj_converter.apply(df)
     graph = EventGraph(table_utils.eog_from_log(log))
-    new_log = OCEL(log, obj, graph, parameters)
+    new_log = OCEL(log, obj, graph, parameters=parameters)
     return new_log
 
 

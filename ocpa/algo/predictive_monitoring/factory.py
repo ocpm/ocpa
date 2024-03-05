@@ -222,3 +222,4 @@ def apply(
             feature_storage.add_feature_graph(f_g)
     del ocel.log.log["event_objects"]
     return feature_storage
+

@@ -7,6 +7,11 @@ import networkx as nx
 
 from ocpa.objects.log.variants.graph import EventGraph
 from ocpa.objects.log.variants.obj import ObjectCentricEventLog
+from ocpa.objects.log.variants.graph import EventGraph
+from ocpa.objects.log.variants.object_graph import ObjectGraph
+from ocpa.objects.log.variants.object_change_table import ObjectChangeTable
+from ocpa.objects.log.variants.object_graph import ObjectGraph
+from ocpa.objects.log.variants.object_change_table import ObjectChangeTable
 from ocpa.objects.log.variants.table import Table
 from ocpa.util.constants import CONN_COMP, LEAD_TYPE, ONE_PHASE, TWO_PHASE
 
@@ -34,6 +39,8 @@ class OCEL:
         "obj",
         "graph",
         "parameters",
+        "o2o_graph",
+        "change_table",
         "_process_executions",
         "_process_execution_objects",
         "_process_execution_mappings",
@@ -50,6 +57,9 @@ class OCEL:
     obj: ObjectCentricEventLog
     graph: EventGraph
     parameters: dict
+    o2o_graph: ObjectGraph = None
+    change_table: ObjectChangeTable = None
+     #= field(default_factory=dict)
 
     def __post_init__(self) -> None:
         """
@@ -263,6 +273,7 @@ class OCEL:
         """
         return self.graph.eog.subgraph(self.process_executions[process_exec_id])
 
+    
     def _calculate_process_execution_objects(self):
         from ocpa.algo.util.process_executions import (
             factory as process_execution_factory,

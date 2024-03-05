@@ -5,10 +5,12 @@ import networkx as nx
 # import pickle
 
 
-def eog_from_log(table_log: Table) -> nx.DiGraph:
+def eog_from_log(table_log: Table, qualifiers = None: Table) -> nx.DiGraph:
     ocel = table_log.log.copy()
     eog = nx.DiGraph()
     eog.add_nodes_from(ocel["event_id"].to_list())
+    if qualifiers:
+        nx.set_node_attributes(EOG,qualifiers)
     edge_list = []
 
     ot_index = {ot: ocel.columns.to_list().index(ot) for ot in table_log.object_types}
