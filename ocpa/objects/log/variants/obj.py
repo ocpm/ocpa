@@ -7,7 +7,6 @@ from typing import Any
 #   - dynamically adding class attributes after instantiation
 #   - multiple inheritance (mixins)
 # Slots are available via dataclass as decorator parameter from Python 3.10
-import time
 
 
 @dataclass
@@ -263,7 +262,7 @@ class ObjectCentricEventLog:
     def block_metric(self, ot: str, act1: str, act2: str):
         return len(self.block(ot, act1, act2))/len(self.ot_objects[ot])
 
-    def object_absence(self, ot: str, act: str) -> List[str]:
+    def object_absence(self, ot: str, act: str) -> list[str]:
         O = []
         for eid in self.act_events[act]:
             if (
@@ -282,7 +281,7 @@ class ObjectCentricEventLog:
     def object_absence_metric(self, ot: str, act: str) -> int:
         return len(self.object_absence(ot, act))/len(self.act_events[act])
 
-    def object_singular(self, ot: str, act: str) -> List[str]:
+    def object_singular(self, ot: str, act: str) -> list[str]:
         O = []
         for eid in self.act_events[act]:
             if (
@@ -301,7 +300,7 @@ class ObjectCentricEventLog:
     def object_singular_metric(self, ot: str, act: str) -> int:
         return len(self.object_singular(ot, act))/len(self.act_events[act])
 
-    def object_multiple(self, ot: str, act: str) -> List[str]:
+    def object_multiple(self, ot: str, act: str) -> list[str]:
         O = []
         for eid in self.act_events[act]:
             if (
@@ -323,7 +322,7 @@ class ObjectCentricEventLog:
     def object_presence_metric(self, ot: str, act: str) -> int:
         return (len(self.object_singular(ot, act))+len(self.object_multiple(ot, act)))/len(self.act_events[act])
 
-    def ot_objects_of_an_event(self, eid: str, ot: str) -> List[str]:
+    def ot_objects_of_an_event(self, eid: str, ot: str) -> list[str]:
         return [oid for oid in self.raw.events[eid].omap if self.raw.objects[oid].type == ot]
 
     def num_ot_objects_containing_acts(self, ot: str, acts: list[str]) -> int:
@@ -447,10 +446,3 @@ class ObjectCentricEventLog:
         if len(self.act_events[act]) == 0:
             return 0
         return self.num_events_relating_multiple_ot(ot, act)/len(self.act_events[act])
-        return self.num_events_relating_multiple_ot(ot, act) / len(self.act_events[act])
-
-    def calculate_metric(self, quantity: int, total: int):
-        if total > 0:
-            return quantity / total
-        else:
-            return 0
