@@ -1,16 +1,19 @@
+from ocpa.objects.log.variants.table import Table
 import networkx as nx
 
+# import logging
+# import pickle
 
-def eog_from_log(table_log, qualifiers = None):
+
+def eog_from_log(table_log: Table, qualifiers = None) -> nx.DiGraph:
     ocel = table_log.log.copy()
-    EOG = nx.DiGraph()
-    EOG.add_nodes_from(ocel["event_id"].to_list())
+    eog = nx.DiGraph()
+    eog.add_nodes_from(ocel["event_id"].to_list())
     if qualifiers:
-        nx.set_node_attributes(EOG,qualifiers)
+        nx.set_node_attributes(eog, qualifiers)
     edge_list = []
 
-    ot_index = {ot: list(ocel.columns.values).index(ot)
-                for ot in table_log.object_types}
+    ot_index = {ot: ocel.columns.to_list().index(ot) for ot in table_log.object_types}
     event_index = list(ocel.columns.values).index("event_id")
     arr = ocel.to_numpy()
     last_ev = {}
@@ -22,5 +25,5 @@ def eog_from_log(table_log, qualifiers = None):
                     edge_target = arr[i][event_index]
                     edge_list += [(edge_source, edge_target)]
                 last_ev[(ot, o)] = i
-    EOG.add_edges_from(edge_list)
-    return EOG
+    eog.add_edges_from(edge_list)
+    return eog
