@@ -104,12 +104,16 @@ def apply(filepath, parameters: Dict = {}) -> OCEL:
     event_object_merged = event_object_df.merge(object_df, left_on='ocel_object_id', right_on='object_id')
     event_object_merged = event_object_merged[['ocel_event_id', 'ocel_object_id', 'ocel_type']]
 
-    # Iterate through the rows in event_object_merged and populate the sets in event_df
-    for index, row in event_object_merged.iterrows():
-        event_id = row['ocel_event_id']
-        object_id = row['ocel_object_id']
-        object_type = row['ocel_type']
-        event_df.loc[event_df['event_id'] == event_id, object_type].apply(lambda x: x.add(object_id))
+    # Add the objects for each event and each object type
+    # Collect the objects of each type for each event
+    aggregated_data = event_object_merged.groupby(['ocel_event_id', 'ocel_type'])['ocel_object_id'].apply(set).unstack(
+        fill_value=set())
+
+    # Merge this aggregated data into event_df for each object type
+    for object_type in aggregated_data.columns:
+
+        # Update the event_df with the aggregated sets for each object type, merging on index event_it
+        event_df.update(aggregated_data[object_type])
 
     # Close the connection to the database
     connection.close()
