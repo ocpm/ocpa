@@ -20,7 +20,7 @@ def apply(ocel,ocpn,parameters=None):
                       'method': the method to detect superfluous tokens.
     'cache': a dictionary of caching parameters, including:
              'bst': whether to precompute BST for the resolution of backward replay.
-             'activity': whether to precompute activity.
+             'activity': whether to cache the replay results for activity executions.
     ====================
     Return: a dictionary of evaluation results, including:
 
