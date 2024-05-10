@@ -1,0 +1,408 @@
+{
+    "ocel:global-log": {
+        "ocel:attribute-names": [],
+        "ocel:object-types": [
+            "application",
+            "offer"
+        ],
+        "ocel:version": "1.0",
+        "ocel:ordering": "timestamp"
+    },
+    "ocel:events": {
+        "459343": {
+            "ocel:activity": "Create application",
+            "ocel:timestamp": "2016-06-10T14:56:41.390000",
+            "ocel:omap": [
+                "Application_287203067"
+            ],
+            "ocel:vmap": {}
+        },
+        "459344": {
+            "ocel:activity": "Submit",
+            "ocel:timestamp": "2016-06-10T14:56:41.518000",
+            "ocel:omap": [
+                "Application_287203067"
+            ],
+            "ocel:vmap": {}
+        },
+        "459348": {
+            "ocel:activity": "Complete",
+            "ocel:timestamp": "2016-06-10T15:00:01.570000",
+            "ocel:omap": [
+                "Application_287203067"
+            ],
+            "ocel:vmap": {}
+        },
+        "459361": {
+            "ocel:activity": "Accept",
+            "ocel:timestamp": "2016-06-14T12:03:41.408000",
+            "ocel:omap": [
+                "Application_287203067"
+            ],
+            "ocel:vmap": {}
+        },
+        "459363": {
+            "ocel:activity": "Create offer",
+            "ocel:timestamp": "2016-06-14T12:04:46.179000",
+            "ocel:omap": [
+                "Application_287203067",
+                "Offer_641203811"
+            ],
+            "ocel:vmap": {}
+        },
+        "459365": {
+            "ocel:activity": "Create offer",
+            "ocel:timestamp": "2016-06-14T12:06:19.450000",
+            "ocel:omap": [
+                "Application_287203067",
+                "Offer_1159275058"
+            ],
+            "ocel:vmap": {}
+        },
+        "459366": {
+            "ocel:activity": "Send (mail and online)",
+            "ocel:timestamp": "2016-06-14T12:23:56.568000",
+            "ocel:omap": [
+                "Offer_1159275058"
+            ],
+            "ocel:vmap": {}
+        },
+        "459367": {
+            "ocel:activity": "Send (mail and online)",
+            "ocel:timestamp": "2016-06-14T12:23:56.570000",
+            "ocel:omap": [
+                "Offer_641203811"
+            ],
+            "ocel:vmap": {}
+        },
+        "459370": {
+            "ocel:activity": "Call",
+            "ocel:timestamp": "2016-06-14T12:23:56.593000",
+            "ocel:omap": [
+                "Application_287203067",
+                "Offer_641203811"
+            ],
+            "ocel:vmap": {}
+        },
+        "459373": {
+            "ocel:activity": "Cancel offer",
+            "ocel:timestamp": "2016-06-14T18:31:31.035000",
+            "ocel:omap": [
+                "Application_287203067",
+                "Offer_1159275058"
+            ],
+            "ocel:vmap": {}
+        },
+        "459374": {
+            "ocel:activity": "Cancel offer",
+            "ocel:timestamp": "2016-06-14T18:31:31.050000",
+            "ocel:omap": [
+                "Application_287203067",
+                "Offer_641203811"
+            ],
+            "ocel:vmap": {}
+        },
+        "459376": {
+            "ocel:activity": "Create offer",
+            "ocel:timestamp": "2016-06-14T18:31:58.969000",
+            "ocel:omap": [
+                "Application_287203067",
+                "Offer_1200762899"
+            ],
+            "ocel:vmap": {}
+        },
+        "459378": {
+            "ocel:activity": "Create offer",
+            "ocel:timestamp": "2016-06-14T18:32:22.560000",
+            "ocel:omap": [
+                "Application_287203067",
+                "Offer_1600802345"
+            ],
+            "ocel:vmap": {}
+        },
+        "459380": {
+            "ocel:activity": "Create offer",
+            "ocel:timestamp": "2016-06-14T18:32:51.141000",
+            "ocel:omap": [
+                "Application_287203067",
+                "Offer_678158358"
+            ],
+            "ocel:vmap": {}
+        },
+        "459382": {
+            "ocel:activity": "Create offer",
+            "ocel:timestamp": "2016-06-14T18:34:05.144000",
+            "ocel:omap": [
+                "Application_287203067",
+                "Offer_1380707812"
+            ],
+            "ocel:vmap": {}
+        },
+        "459383": {
+            "ocel:activity": "Cancel offer",
+            "ocel:timestamp": "2016-06-14T18:34:27.846000",
+            "ocel:omap": [
+                "Application_287203067",
+                "Offer_1600802345"
+            ],
+            "ocel:vmap": {}
+        },
+        "459384": {
+            "ocel:activity": "Cancel offer",
+            "ocel:timestamp": "2016-06-14T18:34:27.875000",
+            "ocel:omap": [
+                "Application_287203067",
+                "Offer_1200762899"
+            ],
+            "ocel:vmap": {}
+        },
+        "459388": {
+            "ocel:activity": "Create offer",
+            "ocel:timestamp": "2016-06-27T17:38:19.408000",
+            "ocel:omap": [
+                "Application_287203067",
+                "Offer_1919504225"
+            ],
+            "ocel:vmap": {}
+        },
+        "459390": {
+            "ocel:activity": "Create offer",
+            "ocel:timestamp": "2016-06-27T17:38:57.232000",
+            "ocel:omap": [
+                "Application_287203067",
+                "Offer_1570822154"
+            ],
+            "ocel:vmap": {}
+        },
+        "459391": {
+            "ocel:activity": "Send (mail and online)",
+            "ocel:timestamp": "2016-06-27T17:41:16.776000",
+            "ocel:omap": [
+                "Offer_1570822154"
+            ],
+            "ocel:vmap": {}
+        },
+        "459392": {
+            "ocel:activity": "Send (mail and online)",
+            "ocel:timestamp": "2016-06-27T17:41:16.778000",
+            "ocel:omap": [
+                "Offer_1919504225"
+            ],
+            "ocel:vmap": {}
+        },
+        "459395": {
+            "ocel:activity": "Validate",
+            "ocel:timestamp": "2016-06-30T16:19:09.494000",
+            "ocel:omap": [
+                "Application_287203067"
+            ],
+            "ocel:vmap": {}
+        },
+        "459402": {
+            "ocel:activity": "Call incomplete files",
+            "ocel:timestamp": "2016-06-30T16:19:09.530000",
+            "ocel:omap": [
+                "Application_287203067"
+            ],
+            "ocel:vmap": {}
+        },
+        "459411": {
+            "ocel:activity": "Validate",
+            "ocel:timestamp": "2016-07-01T15:13:25.384000",
+            "ocel:omap": [
+                "Application_287203067"
+            ],
+            "ocel:vmap": {}
+        },
+        "459414": {
+            "ocel:activity": "Call incomplete files",
+            "ocel:timestamp": "2016-07-01T15:13:25.395000",
+            "ocel:omap": [
+                "Application_287203067"
+            ],
+            "ocel:vmap": {}
+        },
+        "459419": {
+            "ocel:activity": "Create offer",
+            "ocel:timestamp": "2016-07-01T16:57:21.169000",
+            "ocel:omap": [
+                "Application_287203067",
+                "Offer_2123064276"
+            ],
+            "ocel:vmap": {}
+        },
+        "459420": {
+            "ocel:activity": "Send (mail and online)",
+            "ocel:timestamp": "2016-07-01T16:57:41.371000",
+            "ocel:omap": [
+                "Offer_2123064276"
+            ],
+            "ocel:vmap": {}
+        },
+        "459423": {
+            "ocel:activity": "Create offer",
+            "ocel:timestamp": "2016-07-01T17:23:41.377000",
+            "ocel:omap": [
+                "Application_287203067",
+                "Offer_392169128"
+            ],
+            "ocel:vmap": {}
+        },
+        "459424": {
+            "ocel:activity": "Send (online)",
+            "ocel:timestamp": "2016-07-01T17:24:02.160000",
+            "ocel:omap": [
+                "Offer_392169128"
+            ],
+            "ocel:vmap": {}
+        },
+        "459433": {
+            "ocel:activity": "Validate",
+            "ocel:timestamp": "2016-07-28T10:00:22.420000",
+            "ocel:omap": [
+                "Application_287203067"
+            ],
+            "ocel:vmap": {}
+        },
+        "459442": {
+            "ocel:activity": "Call incomplete files",
+            "ocel:timestamp": "2016-07-28T10:00:22.434000",
+            "ocel:omap": [
+                "Application_287203067"
+            ],
+            "ocel:vmap": {}
+        },
+        "459449": {
+            "ocel:activity": "Validate",
+            "ocel:timestamp": "2016-08-01T09:23:25.820000",
+            "ocel:omap": [
+                "Application_287203067"
+            ],
+            "ocel:vmap": {}
+        },
+        "459452": {
+            "ocel:activity": "Return",
+            "ocel:timestamp": "2016-08-01T09:58:04.410000",
+            "ocel:omap": [
+                "Offer_392169128"
+            ],
+            "ocel:vmap": {}
+        },
+        "459455": {
+            "ocel:activity": "Call incomplete files",
+            "ocel:timestamp": "2016-08-01T10:04:11.556000",
+            "ocel:omap": [
+                "Application_287203067"
+            ],
+            "ocel:vmap": {}
+        },
+        "459466": {
+            "ocel:activity": "Accept offer",
+            "ocel:timestamp": "2016-08-02T11:36:50.603000",
+            "ocel:omap": [
+                "Application_287203067",
+                "Offer_392169128"
+            ],
+            "ocel:vmap": {}
+        },
+        "459467": {
+            "ocel:activity": "Pending",
+            "ocel:timestamp": "2016-08-02T11:36:50.615000",
+            "ocel:omap": [
+                "Application_287203067"
+            ],
+            "ocel:vmap": {}
+        },
+        "459469": {
+            "ocel:activity": "Cancel offer",
+            "ocel:timestamp": "2016-08-02T11:36:50.654000",
+            "ocel:omap": [
+                "Application_287203067",
+                "Offer_2123064276"
+            ],
+            "ocel:vmap": {}
+        },
+        "459470": {
+            "ocel:activity": "Cancel offer",
+            "ocel:timestamp": "2016-08-02T11:36:50.675000",
+            "ocel:omap": [
+                "Application_287203067",
+                "Offer_1570822154"
+            ],
+            "ocel:vmap": {}
+        },
+        "459471": {
+            "ocel:activity": "Cancel offer",
+            "ocel:timestamp": "2016-08-02T11:36:50.685000",
+            "ocel:omap": [
+                "Application_287203067",
+                "Offer_1919504225"
+            ],
+            "ocel:vmap": {}
+        },
+        "459472": {
+            "ocel:activity": "Cancel offer",
+            "ocel:timestamp": "2016-08-02T11:36:50.695000",
+            "ocel:omap": [
+                "Application_287203067",
+                "Offer_1380707812"
+            ],
+            "ocel:vmap": {}
+        },
+        "459473": {
+            "ocel:activity": "Cancel offer",
+            "ocel:timestamp": "2016-08-02T11:36:50.710000",
+            "ocel:omap": [
+                "Application_287203067",
+                "Offer_678158358"
+            ],
+            "ocel:vmap": {}
+        }
+    },
+    "ocel:objects": {
+        "Application_287203067": {
+            "ocel:type": "application",
+            "ocel:ovmap": {}
+        },
+        "Offer_641203811": {
+            "ocel:type": "offer",
+            "ocel:ovmap": {}
+        },
+        "Offer_1159275058": {
+            "ocel:type": "offer",
+            "ocel:ovmap": {}
+        },
+        "Offer_1200762899": {
+            "ocel:type": "offer",
+            "ocel:ovmap": {}
+        },
+        "Offer_1600802345": {
+            "ocel:type": "offer",
+            "ocel:ovmap": {}
+        },
+        "Offer_678158358": {
+            "ocel:type": "offer",
+            "ocel:ovmap": {}
+        },
+        "Offer_1380707812": {
+            "ocel:type": "offer",
+            "ocel:ovmap": {}
+        },
+        "Offer_1919504225": {
+            "ocel:type": "offer",
+            "ocel:ovmap": {}
+        },
+        "Offer_1570822154": {
+            "ocel:type": "offer",
+            "ocel:ovmap": {}
+        },
+        "Offer_2123064276": {
+            "ocel:type": "offer",
+            "ocel:ovmap": {}
+        },
+        "Offer_392169128": {
+            "ocel:type": "offer",
+            "ocel:ovmap": {}
+        }
+    }
+}

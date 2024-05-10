@@ -1,0 +1,12 @@
+--------New File--------
+-----Start /Users/jiao.shuai.1998.12.01outlook.com/Documents/ocpa/tests/sample_logs/filtered_BPI/BPI3to10executionprocess.jsonocel-----
+            evaluation:{'fitness': 0.886101485669393, 'p': 599, 'c': 595, 'r': 69, 'm': 67}
+            time:0.39540672302246094-----Start /Users/jiao.shuai.1998.12.01outlook.com/Documents/ocpa/tests/sample_logs/filtered_BPI/BPI10to50executionprocess.jsonocel-----
+            evaluation:{'fitness': 0.8773318318956359, 'p': 2828, 'c': 2796, 'r': 357, 'm': 333}
+            time:1.1047286987304688-----Start /Users/jiao.shuai.1998.12.01outlook.com/Documents/ocpa/tests/sample_logs/filtered_BPI/BPI50to150executionprocess.jsonocel-----
+            evaluation:{'fitness': 0.8469471475651389, 'p': 5833, 'c': 5797, 'r': 892, 'm': 888}
+            time:2.107867956161499-----Start /Users/jiao.shuai.1998.12.01outlook.com/Documents/ocpa/tests/sample_logs/filtered_BPI/BPI150to550executionprocess.jsonocel-----
+            evaluation:{'fitness': 0.8381739093528984, 'p': 19788, 'c': 19480, 'r': 3293, 'm': 3063}
+            time:7.426419019699097-----Start /Users/jiao.shuai.1998.12.01outlook.com/Documents/ocpa/tests/sample_logs/filtered_BPI/BPI550to1550executionprocess.jsonocel-----
+            evaluation:{'fitness': 0.8027985992769446, 'p': 40729, 'c': 39533, 'r': 8448, 'm': 7392}
+            time:15.159513711929321
