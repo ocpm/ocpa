@@ -36,7 +36,7 @@ def apply(ocel,ocpn,parameters=None):
     'frozen_tokens': the frozen tokens during the replay.
     'unenabled_transitions': the transitions unenabled for the execution during the replay.
 
-    Further information such as the problematic places or problematic objects for certain behaviors during the replay could be extracted from the results above.
+    Further insights such as problematic places or objects could be extracted from the results above.
     '''
     if parameters == None:
         token_flooding = {'handle':True,'method':'S_component'}
