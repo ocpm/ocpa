@@ -1,5 +1,8 @@
-def construct_sequence(feature_storage, index_list = "all"):
-    '''
+from ocpa.algo.predictive_monitoring.obj import Feature_Storage
+
+
+def construct_sequence(feature_storage: Feature_Storage, index_list: list[int] = "all"):
+    """
     Constructs a sequential respresentation of the feature_graphs of a feature storage.
 
     :param feature_storage: Feature storage to construct a sequential encoding from.
@@ -11,12 +14,12 @@ def construct_sequence(feature_storage, index_list = "all"):
     :return: List of sequential encodings: Each sequential encoding is a sequence of feature dicts.
     :rtype: list(list(dict))
 
-    '''
+    """
     sequences = []
     for g in feature_storage.feature_graphs:
         if index_list == "all" or g.pexec_id in index_list:
             sequence = []
-            #sort nodes on event time (through the event id)
+            # sort nodes on event time (through the event id)
             event_ids = [n.event_id for n in g.nodes]
             event_ids.sort()
             for e_id in event_ids:
@@ -26,7 +29,8 @@ def construct_sequence(feature_storage, index_list = "all"):
             sequences.append(sequence)
     return sequences
 
-def construct_k_dataset(sequences, k, features, target):
+
+def construct_k_dataset(sequences, k: int, features: list, target):
     X = []
     y = []
     for s in sequences:
