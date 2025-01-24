@@ -37,10 +37,10 @@ def succint_stream_to_exploded_stream(stream):
         basic_event = {k: ev[k] for k in event_keys}
 
         for k in object_keys:
-            if type(ev[k]) is str:
+            if type(ev[k]) is str and len(ev[k]) > 0:
                 if ev[k][0] == "{":
+                    # TODO: Remove eval - security risk
                     ev[k] = eval(ev[k])
-                    #ev[k] = ev[k][1:-1].split(",")
             values = ev[k]
             if values is not None:
                 # if values is not None and len(values) > 0:
