@@ -46,7 +46,6 @@ def apply(ocpn: ObjectCentricPetriNet, parameters=None):
 
     pl_count = 1
     tr_count = 1
-    arc_count = 1
 
     # color = COLORS[index % len(COLORS)]
     color = "#05B202"

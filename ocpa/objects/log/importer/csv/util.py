@@ -1,3 +1,6 @@
+import json
+from collections.abc import Iterable
+
 import pandas as pd
 from copy import deepcopy
 from pm4py.util.constants import PARAMETER_CONSTANT_CASEID_KEY, PARAMETER_CONSTANT_ATTRIBUTE_KEY, CASE_CONCEPT_NAME
@@ -6,11 +9,13 @@ import csv
 
 DEFAULT_NAME_KEY = "default name key"
 
-def get_csv_delimiter(file_path, bytes = 4096):
+
+def get_csv_delimiter(file_path, bytes=4096):
     sniffer = csv.Sniffer()
     data = open(file_path, "r").read(bytes)
     delimiter = sniffer.sniff(data).delimiter
     return delimiter
+
 
 def filter_by_timestamp(df, start_timestamp=None, end_timestamp=None):
     if start_timestamp is not None:
@@ -23,6 +28,18 @@ def filter_by_timestamp(df, start_timestamp=None, end_timestamp=None):
 def filter_object_df_by_object_ids(df, ids):
     df = df.loc[df["object_id"].isin(ids)]
     return df
+
+
+def _try_load_object(obj: str):
+    try:
+        return json.loads(obj)
+    except json.JSONDecodeError:
+        pass
+
+    try:
+        return map(lambda x: x.strip(), obj[1:-1].split(","))
+    except:
+        return obj
 
 
 def succint_stream_to_exploded_stream(stream):
@@ -39,16 +56,22 @@ def succint_stream_to_exploded_stream(stream):
         for k in object_keys:
             if type(ev[k]) is str and len(ev[k]) > 0:
                 if ev[k][0] == "{":
-                    # TODO: Remove eval - security risk
-                    ev[k] = eval(ev[k])
+                    ev[k] = _try_load_object(ev[k])
             values = ev[k]
-            if values is not None:
-                # if values is not None and len(values) > 0:
-                if not (str(values).lower() == "nan" or str(values).lower() == "nat"):
-                    for v in values:
-                        event = deepcopy(basic_event)
-                        event[k] = v
-                        new_stream.append(event)
+
+            if values is None:
+                continue
+
+            if str(values).lower() == "nan" or str(values).lower() == "nat":
+                continue
+
+            if not isinstance(values, Iterable):
+                continue
+
+            for v in values:
+                event = deepcopy(basic_event)
+                event[k] = v
+                new_stream.append(event)
 
     return new_stream
 
@@ -71,7 +94,7 @@ def clean_frequency(df, min_acti_freq=0):
     except:
         pass
     activ = dict(df.groupby("event_id").first()[
-                 "event_activity"].value_counts())
+                     "event_activity"].value_counts())
     activ = [x for x, y in activ.items() if y >= min_acti_freq]
     return df[df["event_activity"].isin(activ)]
 
@@ -117,7 +140,7 @@ def filter_paths(df, paths, parameters=None):
         str(col) + '_2' for col in filt_dif_shifted.columns]
     stacked_df = pd.concat([filt_df, filt_dif_shifted], axis=1)
     stacked_df["@@path"] = stacked_df[attribute_key] + \
-        "," + stacked_df[attribute_key + "_2"]
+                           "," + stacked_df[attribute_key + "_2"]
     stacked_df = stacked_df[stacked_df["@@path"].isin(paths)]
     i1 = df.set_index("event_id").index
     i2 = stacked_df.set_index("event_id").index
