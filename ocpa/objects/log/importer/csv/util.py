@@ -93,8 +93,7 @@ def clean_frequency(df, min_acti_freq=0):
             df = succint_mdl_to_exploded_mdl(df)
     except:
         pass
-    activ = dict(df.groupby("event_id").first()[
-                     "event_activity"].value_counts())
+    activ = dict(df.groupby("event_id").first()["event_activity"].value_counts())
     activ = [x for x, y in activ.items() if y >= min_acti_freq]
     return df[df["event_activity"].isin(activ)]
 
@@ -136,11 +135,9 @@ def filter_paths(df, paths, parameters=None):
     positive = parameters["positive"] if "positive" in parameters else True
     filt_df = df[[case_id_glue, attribute_key, "event_id"]]
     filt_dif_shifted = filt_df.shift(-1)
-    filt_dif_shifted.columns = [
-        str(col) + '_2' for col in filt_dif_shifted.columns]
+    filt_dif_shifted.columns = [str(col) + '_2' for col in filt_dif_shifted.columns]
     stacked_df = pd.concat([filt_df, filt_dif_shifted], axis=1)
-    stacked_df["@@path"] = stacked_df[attribute_key] + \
-                           "," + stacked_df[attribute_key + "_2"]
+    stacked_df["@@path"] = stacked_df[attribute_key] + "," + stacked_df[attribute_key + "_2"]
     stacked_df = stacked_df[stacked_df["@@path"].isin(paths)]
     i1 = df.set_index("event_id").index
     i2 = stacked_df.set_index("event_id").index
