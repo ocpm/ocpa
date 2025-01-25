@@ -42,22 +42,42 @@ def _try_load_object(obj: str):
         return obj
 
 
-def succint_stream_to_exploded_stream(stream):
+def succint_stream_to_exploded_stream(stream, parameters=None):
+    if parameters is None:
+        parameters = {}
+
+    event_activity_key = parameters.get("event_activity_key") or "event_activity"
+
+    # include events of the specified activity type. Default (empty set) allows all object types.
+    include_event_activity_types: set[str] = parameters.get("include_event_activity_types") or {}
+
+    # include events of the specified object type. Default (empty set) allows all object types.
+    include_object_types: set[str] = parameters.get("include_object_types") or {}
+
     new_stream = []
 
     for ev in stream:
         keys = set(ev.keys())
 
         event_keys = [k for k in keys if k.startswith("event_")]
-        object_keys = [k for k in keys if not k in event_keys]
+        object_types = [k for k in keys if not k in event_keys]
 
         basic_event = {k: ev[k] for k in event_keys}
 
-        for k in object_keys:
-            if type(ev[k]) is str and len(ev[k]) > 0:
-                if ev[k][0] == "{":
-                    ev[k] = _try_load_object(ev[k])
-            values = ev[k]
+        if include_event_activity_types and (basic_event[event_activity_key] not in include_event_activity_types):
+            # exclude event because it not in include_event_activity_types
+            continue
+
+        for object_type in object_types:
+
+            if include_object_types and (not object_type in include_object_types):
+                # exclude event because it not in include_object_types
+                continue
+
+            if type(ev[object_type]) is str and len(ev[object_type]) > 0:
+                if ev[object_type][0] == "{":
+                    ev[object_type] = _try_load_object(ev[object_type])
+            values = ev[object_type]
 
             if values is None:
                 continue
@@ -70,16 +90,19 @@ def succint_stream_to_exploded_stream(stream):
 
             for v in values:
                 event = deepcopy(basic_event)
-                event[k] = v
+                event[object_type] = v
                 new_stream.append(event)
 
     return new_stream
 
 
-def succint_mdl_to_exploded_mdl(df):
+def succint_mdl_to_exploded_mdl(df, parameters=None):
+    if parameters is None:
+        parameters = {}
+
     stream = df.to_dict('records')
 
-    exploded_stream = succint_stream_to_exploded_stream(stream)
+    exploded_stream = succint_stream_to_exploded_stream(stream, parameters)
 
     df = pd.DataFrame(exploded_stream)
     df.type = "exploded"
