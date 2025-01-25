@@ -110,6 +110,37 @@ def succint_mdl_to_exploded_mdl(df, parameters=None):
     return df
 
 
+def clean_normalized_frequency(df, threshold=0):
+    """
+    Filter out activities based on threshold.
+    0.0 = keep everything
+    1.0 = keep only important activities
+    """
+    if threshold == 0:
+        return df
+    try:
+        if df.type == "succint":
+            df = succint_mdl_to_exploded_mdl(df)
+    except:
+        pass
+
+    # Calculate activity frequencies
+    activity_counts = df.groupby("event_id").first()["event_activity"].value_counts(normalize=True)
+
+    # Get min and max values of the normalized activity counts
+    min_freq = activity_counts.min()
+    max_freq = activity_counts.max()
+
+    # Map threshold to the range between min and max
+    mapped_threshold = min_freq + (max_freq - min_freq) * threshold
+
+    # Determine important activities based on the mapped threshold
+    important_activities = activity_counts[activity_counts >= mapped_threshold].index.tolist()
+
+    # Filter dataframe to keep only important activities
+    return df[df["event_activity"].isin(important_activities)]
+
+
 def clean_frequency(df, min_acti_freq=0):
     try:
         if df.type == "succint":

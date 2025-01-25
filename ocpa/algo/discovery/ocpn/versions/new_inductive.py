@@ -5,7 +5,8 @@ from pm4py.objects.petri_net.utils.petri_utils import remove_place, remove_trans
 from pm4py.objects.petri_net.obj import PetriNet
 from ocpa.algo.util.util import project_log, project_log_with_object_count
 from ocpa.objects.oc_petri_net.obj import ObjectCentricPetriNet
-from ocpa.objects.log.importer.csv.util import succint_mdl_to_exploded_mdl, clean_frequency, clean_arc_frequency
+from ocpa.objects.log.importer.csv.util import succint_mdl_to_exploded_mdl, clean_frequency, clean_arc_frequency, \
+    clean_normalized_frequency
 import pandas as pd
 import time
 import networkx as nx
@@ -54,9 +55,11 @@ def discover_nets(df, discovery_algorithm=discover_inductive, parameters=None):
     if len(df) == 0:
         df = pd.DataFrame({"event_id": [], "event_activity": []})
 
+    activity_threshold: float = parameters["activity_threshold"] if "activity_threshold" in parameters else 0.0
     min_node_freq = parameters["min_node_freq"] if "min_node_freq" in parameters else 0
     min_edge_freq = parameters["min_edge_freq"] if "min_edge_freq" in parameters else 0
 
+    df = clean_normalized_frequency(df, activity_threshold)
     df = clean_frequency(df, min_node_freq)
     df = clean_arc_frequency(df, min_edge_freq)
 
