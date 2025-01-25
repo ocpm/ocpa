@@ -21,7 +21,10 @@ def _sample_dict(n: int, dy: dict, seed: int = 42) -> dict:
     return {k: dy[k] for k in keys}
 
 
-def apply(df: pd.DataFrame, parameters: dict = {}) -> ObjectCentricEventLog:
+def apply(df: pd.DataFrame, parameters: dict = None) -> ObjectCentricEventLog:
+    if parameters is None:
+        parameters = {}
+
     obj_df = pd.DataFrame()
     if "objects_table" in parameters:
         obj_df = parameters["objects_table"]
@@ -32,14 +35,13 @@ def apply(df: pd.DataFrame, parameters: dict = {}) -> ObjectCentricEventLog:
 
     df.sort_values(by="event_timestamp", inplace=True)
     obj_names = set([x for x in df.columns if not x.startswith("event_")])
-    val_names = set([x for x in df.columns if x.startswith("event_")]) - set(
-        ["event_activity", "event_timestamp", "event_start_timestamp"]
-    )
+    val_names = set([x for x in df.columns if x.startswith("event_")]) - {"event_activity", "event_timestamp",
+                                                                          "event_start_timestamp"}
     obj_event_mapping = {}
 
     for index, row in enumerate(df.itertuples(), 1):
         add_event(events, index, row, obj_names, val_names)
-        objs = [(oid, ot) for ot in obj_names for oid in getattr(row, ot)]
+        objs = [(oid, ot) for ot in obj_names if hasattr(row, ot) for oid in getattr(row, ot)]
         add_obj(
             objects=objects,
             index=index,
@@ -70,7 +72,7 @@ def apply(df: pd.DataFrame, parameters: dict = {}) -> ObjectCentricEventLog:
 
 
 def add_obj_attributes(
-    objects_found_in_event_references: dict[str, Obj], objects_table: pd.DataFrame
+        objects_found_in_event_references: dict[str, Obj], objects_table: pd.DataFrame
 ) -> dict[str, Obj]:
     """
     This function adds object attributes to an already existing dict of objects (of type Obj).
@@ -134,13 +136,13 @@ def add_obj_attributes(
 
 
 def add_event(
-    events: dict[str, Event], index: int, row, obj_names: set[str], val_names: set[str]
+        events: dict[str, Event], index: int, row, obj_names: set[str], val_names: set[str]
 ) -> None:
     events[str(index)] = Event(
         id=str(index),
         act=getattr(row, "event_activity"),
         time=pd.to_datetime(getattr(row, "event_timestamp")),
-        omap=[o for obj in obj_names for o in getattr(row, obj)],
+        omap=[o for obj in obj_names if hasattr(row, obj) for o in getattr(row, obj)],
         vmap={attr: getattr(row, attr) for attr in val_names},
     )
     # add start time if exists, otherwise None for performance analysis
@@ -166,10 +168,10 @@ def safe_split(row_obj):
 
 
 def add_obj(
-    objects: dict[str, Obj],
-    index: int,
-    objs: list[tuple[str, str]],
-    obj_event_mapping: dict[str, list[str]],
+        objects: dict[str, Obj],
+        index: int,
+        objs: list[tuple[str, str]],
+        obj_event_mapping: dict[str, list[str]],
 ) -> None:
     for obj_id, obj_typ in objs:
         if obj_id not in objects:
