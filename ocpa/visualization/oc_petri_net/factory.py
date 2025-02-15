@@ -2,7 +2,6 @@ from ocpa.visualization.oc_petri_net.versions import control_flow, annotated_wit
 from pm4py.visualization.common import gview
 from pm4py.visualization.common import save as gsave
 
-
 CONTROL_FLOW = "control_flow"
 NEW_CONTROL_FLOW = "new_control_flow"
 ANNOTATED_WITH_OPERA = "annotated_with_opera"
@@ -12,7 +11,8 @@ VERSIONS = {
     CONTROL_FLOW: control_flow.apply,
     NEW_CONTROL_FLOW: new_control_flow.apply,
     ANNOTATED_WITH_OPERA: annotated_with_opera.apply,
-    OCPI: ocpi.apply}
+    OCPI: ocpi.apply
+}
 
 
 def apply(obj, variant=NEW_CONTROL_FLOW, **kwargs):

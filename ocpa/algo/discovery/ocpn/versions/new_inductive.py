@@ -5,7 +5,8 @@ from pm4py.objects.petri_net.utils.petri_utils import remove_place, remove_trans
 from pm4py.objects.petri_net.obj import PetriNet
 from ocpa.algo.util.util import project_log, project_log_with_object_count
 from ocpa.objects.oc_petri_net.obj import ObjectCentricPetriNet
-from ocpa.objects.log.importer.csv.util import succint_mdl_to_exploded_mdl, clean_frequency, clean_arc_frequency
+from ocpa.objects.log.importer.csv.util import succint_mdl_to_exploded_mdl, clean_frequency, clean_arc_frequency, \
+    clean_normalized_frequency
 import pandas as pd
 import time
 import networkx as nx
@@ -47,19 +48,18 @@ def discover_nets(df, discovery_algorithm=discover_inductive, parameters=None):
     if parameters is None:
         parameters = {}
 
-    allowed_activities = parameters["allowed_activities"] if "allowed_activities" in parameters else None
-    debug = parameters["debug"] if "debug" in parameters else True
-
-    df = succint_mdl_to_exploded_mdl(df)
+    df = succint_mdl_to_exploded_mdl(df, parameters)
     if "event_variant" in df.columns.values:
         df = df.drop('event_variant', axis=1)
 
     if len(df) == 0:
         df = pd.DataFrame({"event_id": [], "event_activity": []})
 
+    activity_threshold: float = parameters["activity_threshold"] if "activity_threshold" in parameters else 0.0
     min_node_freq = parameters["min_node_freq"] if "min_node_freq" in parameters else 0
     min_edge_freq = parameters["min_edge_freq"] if "min_edge_freq" in parameters else 0
 
+    df = clean_normalized_frequency(df, activity_threshold)
     df = clean_frequency(df, min_node_freq)
     df = clean_arc_frequency(df, min_edge_freq)
 
@@ -72,45 +72,10 @@ def discover_nets(df, discovery_algorithm=discover_inductive, parameters=None):
     ret["nets"] = {}
     ret["object_count"] = {}
 
-    diff_log = 0
-
     for persp in persps:
-        aa = time.time()
-        if debug:
-            print(persp, "getting log")
         log = project_log(df, persp, parameters=parameters)
-        # print(log)
-        if debug:
-            print(log)
-            print(len(log))
-
-        # if allowed_activities is not None:
-        #     if persp not in allowed_activities:
-        #         continue
-        #     filtered_log = attributes_filter.apply_events(
-        #         log, allowed_activities[persp])
-        # else:
-        #     filtered_log = log
-        bb = time.time()
-
-        diff_log += (bb - aa)
-
-        if debug:
-            print(len(log))
-            print(persp, "got log")
-
-        cc = time.time()
         net, im, fm = discovery_algorithm(log)
-        dd = time.time()
-        diff_log += (dd - cc)
-
-        if debug:
-            print(len(log))
-            print(persp, "discovered net")
-
-        object_count = project_log_with_object_count(
-            df, persp, parameters=parameters)
-
+        object_count = project_log_with_object_count(df, persp, parameters=parameters)
         ret["nets"][persp] = [net, im, fm]
         ret["object_count"][persp] = object_count
 
@@ -166,7 +131,8 @@ def apply(df, discovery_algorithm=discover_inductive, parameters=None):
             if type(arc.source) == PetriNet.Transition:
                 t = transition_mapping[arc.source]
                 p = place_mapping[arc.target]
-                if arc.source.label in object_count and sum(object_count[arc.source.label]) != len(object_count[arc.source.label]):
+                if arc.source.label in object_count and sum(object_count[arc.source.label]) != len(
+                        object_count[arc.source.label]):
                     a = ObjectCentricPetriNet.Arc(t, p, variable=True)
                 else:
                     a = ObjectCentricPetriNet.Arc(t, p)
@@ -176,7 +142,8 @@ def apply(df, discovery_algorithm=discover_inductive, parameters=None):
             else:
                 t = transition_mapping[arc.target]
                 p = place_mapping[arc.source]
-                if arc.target.label in object_count and sum(object_count[arc.target.label]) != len(object_count[arc.target.label]):
+                if arc.target.label in object_count and sum(object_count[arc.target.label]) != len(
+                        object_count[arc.target.label]):
                     a = ObjectCentricPetriNet.Arc(p, t, variable=True)
                 else:
                     a = ObjectCentricPetriNet.Arc(p, t)
@@ -186,5 +153,6 @@ def apply(df, discovery_algorithm=discover_inductive, parameters=None):
                 arcs.append(a)
             arc_mapping[arc] = a
     ocpn = ObjectCentricPetriNet(
-        places=set(places), transitions=set(transitions), arcs=set(arcs), nets=nets, place_mapping=place_mapping, transition_mapping=transition_mapping, arc_mapping=arc_mapping)
+        places=set(places), transitions=set(transitions), arcs=set(arcs), nets=nets, place_mapping=place_mapping,
+        transition_mapping=transition_mapping, arc_mapping=arc_mapping)
     return ocpn
