@@ -730,5 +730,4 @@ class Subprocess(object):
 @ dataclass
 class EnhancedObjectCentricPetriNet(object):
     ocpn: ObjectCentricPetriNet
-    behavior: List[str]
     diagnostics: Dict[str, Any]

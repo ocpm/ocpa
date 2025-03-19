@@ -4,8 +4,6 @@ from ocpa.algo.conformance.constraint_monitoring.versions import extensive_log_b
 from ocpa.objects.log.ocel import OCEL
 from typing import Dict
 
-
-# MODEL_BASED = "model_based"
 LOG_BASED = "log_based"
 EXTENSIVE = "extensive_log_based"
 VERSIONS = {
