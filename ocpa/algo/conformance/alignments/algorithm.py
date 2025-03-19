@@ -134,8 +134,7 @@ def process_execution_net_from_process_execution(ocel, indirect_id, px, date_for
         event.event_id = event_id
         event.event_name = ocel.get_value(event_id, 'event_activity')
         event.objects = get_all_event_objects(ocel, event_id)
-        event.datetime = datetime.strptime(str(ocel.get_value(event_id, 'event_timestamp')),
-                                           date_format)  # XXX Dangerous hard coded
+        event.datetime = ocel.get_value(event_id, 'event_timestamp')
         px_graph.add_event(event)
 
     px_graph.update_dependencies()

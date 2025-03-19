@@ -30,7 +30,7 @@ def apply(ocel, parameters):
         'synchronization': synchronization_time,
         'pooling': pooling_time,
         'lagging': lagging_time,
-        'rediness': rediness_time,
+        'rediness': readiness_time,
         'elapsed': elapsed_time,
         'remaining': remaining_time,
         'object_freq': object_freq,
@@ -175,7 +175,7 @@ def lagging_time(ocel, act, ot):
     return lagging_times
 
 
-def rediness_time(ocel, act, ot):
+def readiness_time(ocel, act, ot):
     """
     Calculate rediness times for a given activity and object type in the ocel object.
 
@@ -184,7 +184,7 @@ def rediness_time(ocel, act, ot):
     :param ot: object type
     :return: list of rediness times
     """
-    rediness_times = []
+    readiness_times = []
     for node in ocel.graph.eog.nodes:
         if ocel.get_value(node, "event_activity") == act:
             in_edges = ocel.graph.eog.in_edges(node)
@@ -197,8 +197,8 @@ def rediness_time(ocel, act, ot):
             ot_end_timestamps = [ocel.get_value(
             e, "event_timestamp") for e in preset if len(ocel.get_value(e, ot)) > 0]
             duration = (min(ot_end_timestamps) - min(end_timestamps)).total_seconds()
-        rediness_times.append(duration)
-    return rediness_times
+        readiness_times.append(duration)
+    return readiness_times
 
 def object_freq(ocel, act, ot):
     """

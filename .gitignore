@@ -71,3 +71,4 @@ venv.bak/
 /dist
 
 /docs/build
+.python-version
