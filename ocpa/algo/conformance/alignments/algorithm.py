@@ -1,5 +1,6 @@
 import ocpa
 #from ocpa.algo.conformance.alignments import helperfunctions
+from ocpa.algo.conformance.alignments.helperfunctions import remove_transition_and_connected_arcs
 from ocpa.algo.conformance.alignments.helperfunctions import FrozenMarking
 
 # import logging
@@ -399,7 +400,7 @@ def preprocessing_dejure_net(ocel: OCEL, indirect_id, ocpn):
                                defined_cardinality)
         # break  # just testing
         # remove transition with variable arc
-        helperfunctions.remove_transition_and_connected_arcs(transition, ocpn)
+        remove_transition_and_connected_arcs(transition, ocpn)
     # XXX Optimization dissolve list that stores all the deleted transitions with variable arcs (they are not needed)
 
     # Create initial and final marking list
