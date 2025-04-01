@@ -1,5 +1,5 @@
 from typing import List, Set, Dict, Tuple, Optional
-
+from ocpa.algo.conformance.alignments import helperfunctions
 
 class Move:
     def __init__(self, model_move=None, log_move=None, objects=None, cost=0):
