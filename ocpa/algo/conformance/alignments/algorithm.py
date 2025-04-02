@@ -1,5 +1,5 @@
 import ocpa
-#from ocpa.algo.conformance.alignments import helperfunctions
+from ocpa.algo.conformance.alignments import helperfunctions
 from ocpa.algo.conformance.alignments.helperfunctions import remove_transition_and_connected_arcs
 from ocpa.algo.conformance.alignments.helperfunctions import FrozenMarking
 
