@@ -60,9 +60,6 @@ class OCEL:
             if "variant_calculation" in self.parameters.keys()
             else TWO_PHASE
         )
-        
-
-    # _get_process_execution_objects
 
     @property
     def process_execution_objects(self) -> list[list[tuple[str, str]]]:
