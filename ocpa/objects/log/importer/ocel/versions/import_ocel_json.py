@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Union
 
 import pandas as pd
+import networkx as nx
 
 import ocpa.objects.log.converter.factory as convert_factory
 import ocpa.objects.log.variants.util.table as table_utils
@@ -17,6 +18,7 @@ from ocpa.objects.log.variants.obj import (
     ObjectCentricEventLog,
     RawObjectCentricData,
 )
+from ocpa.objects.log.variants.object_graph import ObjectGraph
 from ocpa.objects.log.variants.table import Table
 
 # import logging
@@ -58,7 +60,10 @@ def apply(filepath, parameters: dict, file_path_object_attribute_table=None) -> 
     # TODO see here (table_parameters['val_names'] is concatenated incorrectly)
     log = Table(log=eve_df, parameters=table_parameters, object_attributes=obj_df)
     graph = EventGraph(table_utils.eog_from_log(log))
-    ocel = OCEL(log, obj, graph, parameters=table_parameters)
+    obj_event_mapping = obj.raw.obj_event_mapping
+    o2o_nx_graph = build_object_to_object_graph(obj_event_mapping)
+    o2o_graph = ObjectGraph(graph=o2o_nx_graph)
+    ocel = OCEL(log, obj, graph, parameters=table_parameters, o2o_graph=o2o_graph)
     return ocel
 
 
@@ -162,3 +167,27 @@ def parse_objects(data: dict[str, Any], cfg: JsonParseParameters) -> dict[str, O
         for item in data.items()
     }
     return objects
+
+
+def build_object_to_object_graph(obj_event_mapping: dict):
+    # Reverse mapping: event_idx -> list of objects in that event
+    event_to_objects = {}
+    for obj_id, event_indices in obj_event_mapping.items():
+        for event_idx in event_indices:
+            if event_idx not in event_to_objects:
+                event_to_objects[event_idx] = []
+            event_to_objects[event_idx].append(obj_id)
+
+    # Build graph (ordered pairs)
+    G = nx.DiGraph()
+    for event_idx, objects in event_to_objects.items():
+        for i in range(len(objects)):
+            for j in range(len(objects)):
+                if i != j:
+                    obj1 = objects[i]
+                    obj2 = objects[j]
+                    if G.has_edge(obj1, obj2):
+                        G[obj1][obj2]["weight"] += 1
+                    else:
+                        G.add_edge(obj1, obj2, weight=1)
+    return G
