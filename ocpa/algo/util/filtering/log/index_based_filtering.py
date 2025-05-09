@@ -30,14 +30,14 @@ def activity_filtering(ocel, activity_list):
     filtered_df = ocel.log.log[~ocel.log.log["event_activity"].isin(activity_list)].copy()
     filtered_log = Table(filtered_df, ocel.parameters)
 
-    # Step 2: Filter the event graph by removing corresponding nodes and edges
-    new_nodes = set(ocel.graph.eog.nodes) - set(removed_event_ids)
-    new_edges = {tup for tup in set(ocel.graph.eog.edges) if not any(x in set(removed_event_ids) for x in tup)}
-    ocel.graph.eog.nodes = new_nodes
-    ocel.graph.eog.edges = new_edges
+    # Step 2: Create a new graph with only the nodes and edges we want to keep
     G = nx.DiGraph()
-    G.add_nodes_from(ocel.graph.eog.nodes)
-    G.add_edges_from(ocel.graph.eog.edges)
+    # Add only the nodes we want to keep
+    nodes_to_keep = set(ocel.graph.eog.nodes) - set(removed_event_ids)
+    G.add_nodes_from(nodes_to_keep)
+    # Add only the edges that don't involve removed nodes
+    edges_to_keep = {tup for tup in set(ocel.graph.eog.edges) if not any(x in set(removed_event_ids) for x in tup)}
+    G.add_edges_from(edges_to_keep)
     filtered_graph = EventGraph(G)
 
     # Step 3: Filter the object-centric structure by updating raw events, objects, and object-event mappings
@@ -149,14 +149,14 @@ def object_type_filtering(ocel, object_type_list):
     filtered_log = Table(filtered_df, ocel.parameters)
     removed_eventIDs = ocel.log.log[~mask]['event_id'].tolist()
 
-    # Step 3: Update the event graph by removing the nodes and edges related to the removed events
-    new_nodes = set(ocel.graph.eog.nodes) - set(removed_eventIDs)
-    new_edges = {tup for tup in set(ocel.graph.eog.edges) if not any(x in set(removed_eventIDs) for x in tup)}
-    ocel.graph.eog.nodes = new_nodes
-    ocel.graph.eog.edges = new_edges
+    # Step 3: Create a new graph with only the nodes and edges we want to keep
     G = nx.DiGraph()
-    G.add_nodes_from(ocel.graph.eog.nodes)
-    G.add_edges_from(ocel.graph.eog.edges)
+    # Add only the nodes we want to keep
+    nodes_to_keep = set(ocel.graph.eog.nodes) - set(removed_eventIDs)
+    G.add_nodes_from(nodes_to_keep)
+    # Add only the edges that don't involve removed nodes
+    edges_to_keep = {tup for tup in set(ocel.graph.eog.edges) if not any(x in set(removed_eventIDs) for x in tup)}
+    G.add_edges_from(edges_to_keep)
     filtered_graph = EventGraph(G)
 
     # Step 4: Remove events and objects of the specified types from the object model
@@ -237,7 +237,6 @@ def object_freq_filtering(ocel, threshold):
     return filtered_ocel
 
 
-# there are multiple ways to filter by time (see time_filtering.py)
 def time_filtering(ocel, start_time, end_time, strategy_name="start"):
     '''
     Filters the OCEL based on the selected time-based strategy.
@@ -300,14 +299,14 @@ def time_filtering(ocel, start_time, end_time, strategy_name="start"):
         filtered_df = ocel.log.log[ocel.log.log['event_id'].isin(events)]
         filtered_log = Table(filtered_df, ocel.parameters)
 
-        # Filter the event graph (nodes and edges)
-        new_nodes = events
-        new_edges = {tup for tup in set(ocel.graph.eog.edges) if not any(x in set(removed_event_ids) for x in tup)}
-        ocel.graph.eog.nodes = new_nodes
-        ocel.graph.eog.edges = new_edges
+        # Create a new graph with only the nodes and edges we want to keep
         G = nx.DiGraph()
-        G.add_nodes_from(ocel.graph.eog.nodes)
-        G.add_edges_from(ocel.graph.eog.edges)
+        # Add only the nodes we want to keep
+        nodes_to_keep = set(ocel.graph.eog.nodes) - set(removed_event_ids)
+        G.add_nodes_from(nodes_to_keep)
+        # Add only the edges that don't involve removed nodes
+        edges_to_keep = {tup for tup in set(ocel.graph.eog.edges) if not any(x in set(removed_event_ids) for x in tup)}
+        G.add_edges_from(edges_to_keep)
         filtered_graph = EventGraph(G)
 
         # Filter raw event-object data
@@ -398,14 +397,14 @@ def time_filtering(ocel, start_time, end_time, strategy_name="start"):
     filtered_df = ocel.log.log.iloc[[i for i in range(len(ocel.log.log)) if i not in removed_event_ids]]
     filtered_log = Table(filtered_df, ocel.parameters)
 
-    # Filter the event graph (nodes and edges)
-    new_nodes = set(ocel.graph.eog.nodes) - set(removed_event_ids)
-    new_edges = {tup for tup in set(ocel.graph.eog.edges) if not any(x in set(removed_event_ids) for x in tup)}
-    ocel.graph.eog.nodes = new_nodes
-    ocel.graph.eog.edges = new_edges
+    # Create a new graph with only the nodes and edges we want to keep
     G = nx.DiGraph()
-    G.add_nodes_from(ocel.graph.eog.nodes)
-    G.add_edges_from(ocel.graph.eog.edges)
+    # Add only the nodes we want to keep
+    nodes_to_keep = set(ocel.graph.eog.nodes) - set(removed_event_ids)
+    G.add_nodes_from(nodes_to_keep)
+    # Add only the edges that don't involve removed nodes
+    edges_to_keep = {tup for tup in set(ocel.graph.eog.edges) if not any(x in set(removed_event_ids) for x in tup)}
+    G.add_edges_from(edges_to_keep)
     filtered_graph = EventGraph(G)
 
     # Return final filtered OCEL
@@ -449,14 +448,14 @@ def event_attribute_filtering(ocel, attr_filter):
     removed_event_ids = list(df.index.difference(df_filtered.index))
     filtered_log = Table(df_filtered, ocel.parameters)
 
-    # Step 2: Update the event graph by removing nodes and edges of the filtered-out events
-    new_nodes = set(ocel.graph.eog.nodes) - set(removed_event_ids)
-    new_edges = {tup for tup in set(ocel.graph.eog.edges) if not any(x in set(removed_event_ids) for x in tup)}
-    ocel.graph.eog.nodes = new_nodes
-    ocel.graph.eog.edges = new_edges
+    # Step 2: Create a new graph with only the nodes and edges we want to keep
     G = nx.DiGraph()
-    G.add_nodes_from(ocel.graph.eog.nodes)
-    G.add_edges_from(ocel.graph.eog.edges)
+    # Add only the nodes we want to keep
+    nodes_to_keep = set(ocel.graph.eog.nodes) - set(removed_event_ids)
+    G.add_nodes_from(nodes_to_keep)
+    # Add only the edges that don't involve removed nodes
+    edges_to_keep = {tup for tup in set(ocel.graph.eog.edges) if not any(x in set(removed_event_ids) for x in tup)}
+    G.add_edges_from(edges_to_keep)
     filtered_graph = EventGraph(G)
 
     # Step 3: Update the object-centric structure (events, objects, and object-event mapping)
@@ -552,14 +551,14 @@ def object_lifecycle_filtering(ocel, object_type, list_of_activities):
     removed_event_ids = list(original_event_ids - filtered_event_ids)
     filtered_log = Table(filtered_df, ocel.parameters)
 
-    # Step 5: Filter the event graph by removing removed event nodes and affected edges
-    new_nodes = set(ocel.graph.eog.nodes) - set(removed_event_ids)
-    new_edges = {tup for tup in set(ocel.graph.eog.edges) if not any(x in set(removed_event_ids) for x in tup)}
-    ocel.graph.eog.nodes = new_nodes
-    ocel.graph.eog.edges = new_edges
+    # Step 5: Create a new graph with only the nodes and edges we want to keep
     G = nx.DiGraph()
-    G.add_nodes_from(ocel.graph.eog.nodes)
-    G.add_edges_from(ocel.graph.eog.edges)
+    # Add only the nodes we want to keep
+    nodes_to_keep = set(ocel.graph.eog.nodes) - set(removed_event_ids)
+    G.add_nodes_from(nodes_to_keep)
+    # Add only the edges that don't involve removed nodes
+    edges_to_keep = {tup for tup in set(ocel.graph.eog.edges) if not any(x in set(removed_event_ids) for x in tup)}
+    G.add_edges_from(edges_to_keep)
     filtered_graph = EventGraph(G)
 
     # Step 6: Filter the object structure (events, objects, and object-event mapping)
@@ -644,19 +643,17 @@ def object_attribute_filtering(ocel, vmap):
     removed_event_ids = df.index[~mask].tolist()
     filtered_log = Table(filtered_df, ocel.parameters)
 
-    # Step 5: Filter the event graph (nodes and edges)
-    new_nodes = set(ocel.graph.eog.nodes) - set(removed_event_ids)
-    new_edges = {tup for tup in set(ocel.graph.eog.edges) if not any(x in set(removed_event_ids) for x in tup)}
-    ocel.graph.eog.nodes = new_nodes
-    ocel.graph.eog.edges = new_edges
-
-    # Step 6: Create the filtered graph
+    # Step 5: Create a new graph with only the nodes and edges we want to keep
     G = nx.DiGraph()
-    G.add_nodes_from(ocel.graph.eog.nodes)
-    G.add_edges_from(ocel.graph.eog.edges)
+    # Add only the nodes we want to keep
+    nodes_to_keep = set(ocel.graph.eog.nodes) - set(removed_event_ids)
+    G.add_nodes_from(nodes_to_keep)
+    # Add only the edges that don't involve removed nodes
+    edges_to_keep = {tup for tup in set(ocel.graph.eog.edges) if not any(x in set(removed_event_ids) for x in tup)}
+    G.add_edges_from(edges_to_keep)
     filtered_graph = EventGraph(G)
 
-    # Step 7: Update object-centric data (events, objects, and mappings)
+    # Step 6: Update object-centric data (events, objects, and mappings)
     new_events = ocel.obj.raw.events.copy()  # Shallow copy of events dict
     new_objects = ocel.obj.raw.objects.copy()  # Shallow copy of objects dict
     new_obj_event_mapping = {}  # Will build this from scratch
@@ -674,7 +671,7 @@ def object_attribute_filtering(ocel, vmap):
     for obj_id in removed_objects:
         new_objects.pop(obj_id, None)
 
-    # Step 8: Construct and return a new OCEL object using the filtered log, graph, and object data
+    # Step 7: Construct and return a new OCEL object using the filtered log, graph, and object data
     raw_new = RawObjectCentricData(
         events=new_events,
         objects=new_objects,
@@ -682,7 +679,7 @@ def object_attribute_filtering(ocel, vmap):
     )
     obj_new = ObjectCentricEventLog(meta=ocel.obj.meta, raw=raw_new)
 
-    # Step 9: Return the filtered OCEL object
+    # Step 8: Return the filtered OCEL object
     filtered_ocel = OCEL(
         log=filtered_log,
         graph=filtered_graph,
@@ -833,15 +830,14 @@ def event_performance_based_filtering(ocel, parameters):
     filtered_df = log_df.loc[filtered_event_ids]
     removed_event_ids = list(original_event_ids - set(filtered_event_ids))
 
-    # Step 9: Filter the event graph by removing the nodes and edges corresponding to removed event IDs
-    filtered_log = Table(filtered_df, ocel.parameters)
-    new_nodes = set(ocel.graph.eog.nodes) - set(removed_event_ids)
-    new_edges = {tup for tup in set(ocel.graph.eog.edges) if not any(x in set(removed_event_ids) for x in tup)}
-    ocel.graph.eog.nodes = new_nodes
-    ocel.graph.eog.edges = new_edges
+    # Step 9: Create a new graph with only the nodes and edges we want to keep
     G = nx.DiGraph()
-    G.add_nodes_from(ocel.graph.eog.nodes)
-    G.add_edges_from(ocel.graph.eog.edges)
+    # Add only the nodes we want to keep
+    nodes_to_keep = set(ocel.graph.eog.nodes) - set(removed_event_ids)
+    G.add_nodes_from(nodes_to_keep)
+    # Add only the edges that don't involve removed nodes
+    edges_to_keep = {tup for tup in set(ocel.graph.eog.edges) if not any(x in set(removed_event_ids) for x in tup)}
+    G.add_edges_from(edges_to_keep)
     filtered_graph = EventGraph(G)
 
     # Step 10: Filter the object-centric data structure (events, objects, obj_event_mapping)
