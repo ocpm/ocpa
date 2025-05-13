@@ -829,7 +829,8 @@ def event_performance_based_filtering(ocel, parameters):
     original_event_ids = set(log_df['event_id'].tolist())
     filtered_df = log_df.loc[filtered_event_ids]
     removed_event_ids = list(original_event_ids - set(filtered_event_ids))
-
+    filtered_log = Table(filtered_df, ocel.parameters)
+    
     # Step 9: Create a new graph with only the nodes and edges we want to keep
     G = nx.DiGraph()
     # Add only the nodes we want to keep
