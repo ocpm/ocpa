@@ -122,17 +122,17 @@ def object_type_filtering(ocel, object_type_list):
     '''
     Filters specified object types from an OCEL (Object-Centric Event Log).
 
-    This function removes all objects of the given types from the log,
-    along with their related events. It updates the event graph and
-    the object structure to maintain consistency.
+    This function retains only the objects of the given types in the log,
+    removing all other object types and their related events. It updates the
+    event graph and the object structure to maintain consistency.
 
     :param ocel: Object-centric event log to be filtered.
     :type ocel: :class:`OCEL <ocpa.objects.log.ocel.OCEL>`
 
-    :param object_type_list: List of object types to be removed from the OCEL.
+    :param object_type_list: List of object types to retain in the log.
     :type object_type_list: list[str]
 
-    :return: A new OCEL object with specified object types removed.
+    :return: A new OCEL object containing only the specified object types.
     :rtype: :class:`OCEL <ocpa.objects.log.ocel.OCEL>`
     '''
 
@@ -144,9 +144,15 @@ def object_type_filtering(ocel, object_type_list):
         ), axis=1)
 
     # Step 2: Filter the event log using the mask and collect the event IDs that are being removed
-    filtered_df = ocel.log.log[mask]
+    filtered_df = ocel.log.log[~mask]
+    # Step 2a: remove the columns that aren't requested by the user. 
+    drop_columns = []
+    for ot in ocel.obj.meta.obj_types:
+        if ot not in object_type_list:
+            drop_columns.append(ot)
+    filtered_df = filtered_df.drop(drop_columns, axis=1)
     filtered_log = Table(filtered_df, ocel.parameters)
-    removed_eventIDs = ocel.log.log[~mask]['event_id'].tolist()
+    removed_eventIDs = ocel.log.log[mask]['event_id'].tolist()
 
     # Step 3: Create a new graph with only the nodes and edges we want to keep
     G = nx.DiGraph()
@@ -160,7 +166,7 @@ def object_type_filtering(ocel, object_type_list):
 
     # Step 4: Remove events and objects of the specified types from the object model
     filtered_events = {k: v for k, v in ocel.obj.raw.events.items() if k not in removed_eventIDs}
-    keys_to_remove = {key for key, obj in ocel.obj.raw.objects.items() if obj.type in object_type_list}
+    keys_to_remove = {key for key, obj in ocel.obj.raw.objects.items() if obj.type not in object_type_list}
     filtered_objects = {key: obj for key, obj in ocel.obj.raw.objects.items() if key not in keys_to_remove}
 
     # Step 5: Update object-event mapping to reflect the removal of objects and events
@@ -171,7 +177,7 @@ def object_type_filtering(ocel, object_type_list):
     }
 
     # Step 6: Update the object-centric metadata (remove the object types from the meta info)
-    filtered_obj_types = [obj_type for obj_type in ocel.obj.meta.obj_types if obj_type not in object_type_list]
+    filtered_obj_types = [obj_type for obj_type in ocel.obj.meta.obj_types if obj_type in object_type_list]
     meta_new = MetaObjectCentricData(
         attr_names=ocel.obj.meta.attr_names,
         attr_types=ocel.obj.meta.attr_types,
@@ -229,9 +235,10 @@ def object_freq_filtering(ocel, threshold):
 
     # Step 4: Identify object types whose relative frequency is below the threshold
     object_types_to_remove = [k for k, v in freq_acc.items() if v < threshold]
-
+    object_types_to_keep = [ot for ot in all_object_types if ot not in object_types_to_remove]
+    
     # Step 5: Use object_type_filtering to remove the low-frequency object types
-    filtered_ocel = object_type_filtering(ocel, object_types_to_remove)
+    filtered_ocel = object_type_filtering(ocel, object_types_to_keep)
 
     return filtered_ocel
 
