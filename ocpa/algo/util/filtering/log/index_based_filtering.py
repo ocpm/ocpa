@@ -9,25 +9,25 @@ from ocpa.objects.log.variants.obj import MetaObjectCentricData, RawObjectCentri
 
 def activity_filtering(ocel, activity_list):
     '''
-    Filters specified activities from an OCEL (Object-Centric Event Log).
+    Filters an OCEL (Object-Centric Event Log) to retain only specified activities.
 
-    This function removes all events corresponding to the given activity list
-    from the OCEL log, updates the event graph by removing associated nodes and edges,
+    This function keeps only the events corresponding to the given list of activity names
+    in the OCEL log. It updates the event graph by preserving only the relevant nodes and edges,
     and filters the object-related data accordingly to maintain consistency.
 
     :param ocel: Object-centric event log to be filtered.
     :type ocel: :class:`OCEL <ocpa.objects.log.ocel.OCEL>`
 
-    :param activity_list: List of activity names to be removed from the log.
+    :param activity_list: List of activity names to retain in the log.
     :type activity_list: list[str]
 
-    :return: A new OCEL object with specified activities removed from log, graph, and object mapping.
+    :return: A new OCEL object with only specified activities removed from log, graph, and object mapping.
     :rtype: :class:`OCEL <ocpa.objects.log.ocel.OCEL>`
     '''
 
     # Step 1: Extract event IDs associated with activities to be removed and filter the event log DataFrame
-    removed_event_ids = ocel.log.log[ocel.log.log["event_activity"].isin(activity_list)]["event_id"].tolist()
-    filtered_df = ocel.log.log[~ocel.log.log["event_activity"].isin(activity_list)].copy()
+    removed_event_ids = ocel.log.log[~ocel.log.log["event_activity"].isin(activity_list)]["event_id"].tolist()
+    filtered_df = ocel.log.log[ocel.log.log["event_activity"].isin(activity_list)].copy()
     filtered_log = Table(filtered_df, ocel.parameters)
 
     # Step 2: Create a new graph with only the nodes and edges we want to keep
@@ -112,10 +112,9 @@ def activity_freq_filtering(ocel, threshold):
 
     # Step 4: Identify frequent vs. infrequent activities based on cutoff
     filtered_activities = activities[:last_filtered_activity + 1]
-    removed_activities = list(set(activity_distribution.keys()) - set(filtered_activities))
-
+    
     # Step 5: Use activity_filtering() to remove the infrequent activities
-    filtered_ocel = activity_filtering(ocel, removed_activities)
+    filtered_ocel = activity_filtering(ocel, filtered_activities)
     return filtered_ocel
 
 
