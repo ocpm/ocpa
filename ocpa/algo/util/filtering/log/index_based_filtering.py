@@ -1,4 +1,4 @@
-from collections import Counter
+from collections import Counter, defaultdict
 import networkx as nx
 import pandas as pd
 from ocpa.objects.log.ocel import OCEL
@@ -875,4 +875,105 @@ def event_performance_based_filtering(ocel, parameters):
         parameters=ocel.parameters,
         obj=obj_new,
     )
+    return filtered_ocel
+
+
+def variant_infrequent_filtering_done(ocel, threshold):
+    '''
+    Filters infrequent behavioral variants from an Object-Centric Event Log (OCEL) based on a cumulative frequency threshold.
+
+    This function retains only the most frequent variants whose combined frequency reaches a specified percentage
+    of the total frequency. It updates the log, event graph, and object mappings accordingly to ensure consistency.
+
+    :param ocel: Object-centric event log to be filtered.
+    :type ocel: :class:`OCEL <ocpa.objects.log.ocel.OCEL>`
+
+    :param threshold: Cumulative frequency threshold (between 0 and 1) for retaining frequent variants.
+    :type threshold: float
+
+    :return: A new OCEL object containing only events and objects from the retained frequent variants.
+    :rtype: :class:`OCEL <ocpa.objects.log.ocel.OCEL>`
+    '''
+
+    # Step 1: Retrieve variant information
+    variants = ocel.variants
+    frequencies = ocel.variant_frequencies
+    variant_dict = ocel.variants_dict
+
+    variant_info = []
+    for idx, variant_id in enumerate(variants):
+        pexec_indices = variant_dict[variant_id]
+        variant_info.append((
+            variant_id,
+            frequencies[idx],
+            len(pexec_indices)
+        ))
+
+    # Step 2: Sort variants by descending frequency
+    sorted_variants = sorted(variant_info, key=lambda x: -x[1])
+
+    # Step 3: Determine the cutoff index based on cumulative frequency threshold
+    total_freq = sum(frequencies)
+    cumulative = 0
+    cutoff = len(sorted_variants)
+    for i, (vid, freq, _) in enumerate(sorted_variants):
+        cumulative += freq
+        if cumulative > threshold * total_freq:
+            cutoff = i
+            break
+
+    # Step 4: Select the variants to keep
+    kept_variants = {vid for vid, _, _ in sorted_variants[:cutoff+1]}
+
+    # Step 5: Get all process executions corresponding to the kept variants
+    kept_pexecs = []
+    for vid in kept_variants:
+        kept_pexecs.extend(variant_dict[vid])
+
+    # Step 6: Extract event IDs associated with the kept process executions
+    kept_events = {e_id for pexec in kept_pexecs for e_id in ocel.process_executions[pexec]}
+
+    # Step 7: Filter events
+    new_events = {e_id: e for e_id, e in ocel.obj.raw.events.items() if e_id in kept_events}
+
+    # Step 8: Filter object-event mapping and keep only relevant objects
+    new_obj_event_mapping = {}
+    remaining_objects = set()
+    for obj_id, events in ocel.obj.raw.obj_event_mapping.items():
+        filtered = [e for e in events if e in kept_events]
+        if filtered:
+            new_obj_event_mapping[obj_id] = filtered
+            remaining_objects.add(obj_id)
+
+    # Step 9: Filter objects based on remaining ones
+    new_objects = {obj_id: obj for obj_id, obj in ocel.obj.raw.objects.items() if obj_id in remaining_objects}
+
+    # Step 10: Rebuild raw OCEL data
+    raw_new = RawObjectCentricData(
+        events=new_events,
+        objects=new_objects,
+        obj_event_mapping=new_obj_event_mapping
+    )
+
+    # Step 11: Filter the event log table
+    filtered_df = ocel.log.log[ocel.log.log['event_id'].isin(kept_events)]
+    filtered_log = Table(filtered_df, parameters=ocel.parameters)
+
+    # Step 12: Rebuild the event graph
+    G = nx.DiGraph()
+    G.add_nodes_from(kept_events)
+    edges_to_keep = [
+        (u, v) for u, v in ocel.graph.eog.edges()
+        if u in kept_events and v in kept_events
+    ]
+    G.add_edges_from(edges_to_keep)
+
+    # Step 13: Reassemble the filtered OCEL
+    filtered_ocel = OCEL(
+        log=filtered_log,
+        graph=EventGraph(G),
+        parameters=ocel.parameters,
+        obj=ObjectCentricEventLog(meta=ocel.obj.meta, raw=raw_new)
+    )
+
     return filtered_ocel
