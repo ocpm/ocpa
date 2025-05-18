@@ -878,7 +878,7 @@ def event_performance_based_filtering(ocel, parameters):
     return filtered_ocel
 
 
-def variant_infrequent_filtering_done(ocel, threshold):
+def variant_infrequent_filtering(ocel, threshold):
     '''
     Filters infrequent behavioral variants from an Object-Centric Event Log (OCEL) based on a cumulative frequency threshold.
 
@@ -969,6 +969,89 @@ def variant_infrequent_filtering_done(ocel, threshold):
     G.add_edges_from(edges_to_keep)
 
     # Step 13: Reassemble the filtered OCEL
+    filtered_ocel = OCEL(
+        log=filtered_log,
+        graph=EventGraph(G),
+        parameters=ocel.parameters,
+        obj=ObjectCentricEventLog(meta=ocel.obj.meta, raw=raw_new)
+    )
+
+    return filtered_ocel
+
+
+def variant_activity_sequence_filtering(ocel, act_seq_list):
+    '''
+    Filters an Object-Centric Event Log (OCEL) by excluding process executions that do NOT contain any of the specified activity transitions.
+
+    This function removes all events and associated objects from process executions that do not contain any of the given
+    activity transitions. It ensures consistency by updating the event log, event graph, and object mappings accordingly.
+
+    :param ocel: Object-centric event log to be filtered.
+    :type ocel: :class:`OCEL <ocpa.objects.log.ocel.OCEL>`
+
+    :param act_seq_list: List of activity transitions to retain (e.g., [('Place Order', 'Confirm Order')]).
+    :type act_seq_list: list[tuple[str, str]]
+
+    :return: A new OCEL object containing only events and objects from process executions that include the specified transitions.
+    :rtype: :class:`OCEL <ocpa.objects.log.ocel.OCEL>`
+    '''
+
+    process_executions = ocel.process_executions
+    act_seq_set = set(act_seq_list)  # Step 1: Speed up transition lookup
+    
+    process_executions_to_remove = []
+
+    # Step 2: Identify process executions that do NOT contain the specified transitions
+    for pe in process_executions:
+        sorted_events = sorted(pe, key=lambda e_id: ocel.get_value(e_id, 'event_timestamp'))
+        activities = [ocel.get_value(e_id, 'event_activity') for e_id in sorted_events]
+        pe_transitions = set((activities[i], activities[i+1]) for i in range(len(activities)-1))
+
+        if not pe_transitions.intersection(act_seq_set):
+            process_executions_to_remove.append(pe)
+
+    # Step 3: Gather event IDs to be removed
+    removed_event_ids = list({item for group in process_executions_to_remove for item in group})
+
+    # Step 4: Compute the set of events to keep
+    kept_events = set(ocel.obj.raw.events.keys()) - set(removed_event_ids)
+
+    # Step 5: Filter event data
+    new_events = {e_id: e for e_id, e in ocel.obj.raw.events.items() if e_id in kept_events}
+
+    # Step 6: Filter object-event mapping and track relevant object IDs
+    new_obj_event_mapping = {}
+    remaining_objects = set()
+    for obj_id, events in ocel.obj.raw.obj_event_mapping.items():
+        filtered = [e for e in events if e in kept_events]
+        if filtered:
+            new_obj_event_mapping[obj_id] = filtered
+            remaining_objects.add(obj_id)
+
+    # Step 7: Filter object metadata
+    new_objects = {obj_id: obj for obj_id, obj in ocel.obj.raw.objects.items() if obj_id in remaining_objects}
+
+    # Step 8: Rebuild raw OCEL structure
+    raw_new = RawObjectCentricData(
+        events=new_events,
+        objects=new_objects,
+        obj_event_mapping=new_obj_event_mapping
+    )
+
+    # Step 9: Filter the flat event log DataFrame
+    filtered_df = ocel.log.log[ocel.log.log['event_id'].isin(kept_events)]
+    filtered_log = Table(filtered_df, parameters=ocel.parameters)
+
+    # Step 10: Filter the event-object graph (EOG)
+    G = nx.DiGraph()
+    G.add_nodes_from(kept_events)
+    edges_to_keep = [
+        (u, v) for u, v in ocel.graph.eog.edges()
+        if u in kept_events and v in kept_events
+    ]
+    G.add_edges_from(edges_to_keep)
+
+    # Step 11: Build and return the new filtered OCEL
     filtered_ocel = OCEL(
         log=filtered_log,
         graph=EventGraph(G),
