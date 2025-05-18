@@ -1,6 +1,18 @@
 # Test functions
 from ocpa.objects.log.importer.ocel import factory as ocel_import_factory
-from ocpa.algo.util.filtering.log.index_based_filtering import activity_filtering, activity_freq_filtering, object_type_filtering, object_freq_filtering, time_filtering, event_attribute_filtering, object_attribute_filtering, object_lifecycle_filtering, event_performance_based_filtering
+from ocpa.algo.util.filtering.log.index_based_filtering import (
+    activity_filtering,
+    activity_freq_filtering,
+    object_type_filtering,
+    object_freq_filtering,
+    time_filtering,
+    event_attribute_filtering,
+    object_attribute_filtering,
+    object_lifecycle_filtering,
+    event_performance_based_filtering,
+    variant_infrequent_filtering,
+    variant_activity_sequence_filtering
+)
 
 filename = "../../sample_logs/jsonocel/exported-p2p-normal.jsonocel"
 ocel = ocel_import_factory.apply(filename)
@@ -70,3 +82,15 @@ parameters = {
     'condition': lambda x: x < 86400  # 24-hour threshold
 }
 filtered_using_event_performance = event_performance_based_filtering(ocel, parameters)
+
+# 10. Filter infrequent variants based on cumulative frequency threshold (e.g., top 80%)
+# Retains only the most frequent behavioral variants whose combined frequency reaches ≥80% of total variant occurrences
+filtered_ocel_variant_freq = variant_infrequent_filtering(ocel, 0.8)
+
+# 11. Filter log by keeping only process executions that include specified activity transitions
+# Retains only executions where the activity sequence ('Verify Material' → 'Plan Goods Issue') occurs
+# If multiple sequences are given, it retains executions that contain *any* (OR logic) of the specified transitions
+filtered_ocel_with_act_to_act = variant_activity_sequence_filtering(
+    ocel,
+    [('Verify Material', 'Plan Goods Issue')]
+)
