@@ -1,4 +1,4 @@
-from collections import Counter
+from collections import Counter, defaultdict
 import networkx as nx
 import pandas as pd
 from ocpa.objects.log.ocel import OCEL
@@ -9,25 +9,25 @@ from ocpa.objects.log.variants.obj import MetaObjectCentricData, RawObjectCentri
 
 def activity_filtering(ocel, activity_list):
     '''
-    Filters specified activities from an OCEL (Object-Centric Event Log).
+    Filters an OCEL (Object-Centric Event Log) to retain only specified activities.
 
-    This function removes all events corresponding to the given activity list
-    from the OCEL log, updates the event graph by removing associated nodes and edges,
+    This function keeps only the events corresponding to the given list of activity names
+    in the OCEL log. It updates the event graph by preserving only the relevant nodes and edges,
     and filters the object-related data accordingly to maintain consistency.
 
     :param ocel: Object-centric event log to be filtered.
     :type ocel: :class:`OCEL <ocpa.objects.log.ocel.OCEL>`
 
-    :param activity_list: List of activity names to be removed from the log.
+    :param activity_list: List of activity names to retain in the log.
     :type activity_list: list[str]
 
-    :return: A new OCEL object with specified activities removed from log, graph, and object mapping.
+    :return: A new OCEL object with only specified activities removed from log, graph, and object mapping.
     :rtype: :class:`OCEL <ocpa.objects.log.ocel.OCEL>`
     '''
 
     # Step 1: Extract event IDs associated with activities to be removed and filter the event log DataFrame
-    removed_event_ids = ocel.log.log[ocel.log.log["event_activity"].isin(activity_list)]["event_id"].tolist()
-    filtered_df = ocel.log.log[~ocel.log.log["event_activity"].isin(activity_list)].copy()
+    removed_event_ids = ocel.log.log[~ocel.log.log["event_activity"].isin(activity_list)]["event_id"].tolist()
+    filtered_df = ocel.log.log[ocel.log.log["event_activity"].isin(activity_list)].copy()
     filtered_log = Table(filtered_df, ocel.parameters)
 
     # Step 2: Create a new graph with only the nodes and edges we want to keep
@@ -112,10 +112,9 @@ def activity_freq_filtering(ocel, threshold):
 
     # Step 4: Identify frequent vs. infrequent activities based on cutoff
     filtered_activities = activities[:last_filtered_activity + 1]
-    removed_activities = list(set(activity_distribution.keys()) - set(filtered_activities))
-
+    
     # Step 5: Use activity_filtering() to remove the infrequent activities
-    filtered_ocel = activity_filtering(ocel, removed_activities)
+    filtered_ocel = activity_filtering(ocel, filtered_activities)
     return filtered_ocel
 
 
@@ -123,17 +122,17 @@ def object_type_filtering(ocel, object_type_list):
     '''
     Filters specified object types from an OCEL (Object-Centric Event Log).
 
-    This function removes all objects of the given types from the log,
-    along with their related events. It updates the event graph and
-    the object structure to maintain consistency.
+    This function retains only the objects of the given types in the log,
+    removing all other object types and their related events. It updates the
+    event graph and the object structure to maintain consistency.
 
     :param ocel: Object-centric event log to be filtered.
     :type ocel: :class:`OCEL <ocpa.objects.log.ocel.OCEL>`
 
-    :param object_type_list: List of object types to be removed from the OCEL.
+    :param object_type_list: List of object types to retain in the log.
     :type object_type_list: list[str]
 
-    :return: A new OCEL object with specified object types removed.
+    :return: A new OCEL object containing only the specified object types.
     :rtype: :class:`OCEL <ocpa.objects.log.ocel.OCEL>`
     '''
 
@@ -145,9 +144,15 @@ def object_type_filtering(ocel, object_type_list):
         ), axis=1)
 
     # Step 2: Filter the event log using the mask and collect the event IDs that are being removed
-    filtered_df = ocel.log.log[mask]
+    filtered_df = ocel.log.log[~mask]
+    # Step 2a: remove the columns that aren't requested by the user. 
+    drop_columns = []
+    for ot in ocel.obj.meta.obj_types:
+        if ot not in object_type_list:
+            drop_columns.append(ot)
+    filtered_df = filtered_df.drop(drop_columns, axis=1)
     filtered_log = Table(filtered_df, ocel.parameters)
-    removed_eventIDs = ocel.log.log[~mask]['event_id'].tolist()
+    removed_eventIDs = ocel.log.log[mask]['event_id'].tolist()
 
     # Step 3: Create a new graph with only the nodes and edges we want to keep
     G = nx.DiGraph()
@@ -161,7 +166,7 @@ def object_type_filtering(ocel, object_type_list):
 
     # Step 4: Remove events and objects of the specified types from the object model
     filtered_events = {k: v for k, v in ocel.obj.raw.events.items() if k not in removed_eventIDs}
-    keys_to_remove = {key for key, obj in ocel.obj.raw.objects.items() if obj.type in object_type_list}
+    keys_to_remove = {key for key, obj in ocel.obj.raw.objects.items() if obj.type not in object_type_list}
     filtered_objects = {key: obj for key, obj in ocel.obj.raw.objects.items() if key not in keys_to_remove}
 
     # Step 5: Update object-event mapping to reflect the removal of objects and events
@@ -172,7 +177,7 @@ def object_type_filtering(ocel, object_type_list):
     }
 
     # Step 6: Update the object-centric metadata (remove the object types from the meta info)
-    filtered_obj_types = [obj_type for obj_type in ocel.obj.meta.obj_types if obj_type not in object_type_list]
+    filtered_obj_types = [obj_type for obj_type in ocel.obj.meta.obj_types if obj_type in object_type_list]
     meta_new = MetaObjectCentricData(
         attr_names=ocel.obj.meta.attr_names,
         attr_types=ocel.obj.meta.attr_types,
@@ -230,9 +235,10 @@ def object_freq_filtering(ocel, threshold):
 
     # Step 4: Identify object types whose relative frequency is below the threshold
     object_types_to_remove = [k for k, v in freq_acc.items() if v < threshold]
-
+    object_types_to_keep = [ot for ot in all_object_types if ot not in object_types_to_remove]
+    
     # Step 5: Use object_type_filtering to remove the low-frequency object types
-    filtered_ocel = object_type_filtering(ocel, object_types_to_remove)
+    filtered_ocel = object_type_filtering(ocel, object_types_to_keep)
 
     return filtered_ocel
 
@@ -829,7 +835,8 @@ def event_performance_based_filtering(ocel, parameters):
     original_event_ids = set(log_df['event_id'].tolist())
     filtered_df = log_df.loc[filtered_event_ids]
     removed_event_ids = list(original_event_ids - set(filtered_event_ids))
-
+    filtered_log = Table(filtered_df, ocel.parameters)
+    
     # Step 9: Create a new graph with only the nodes and edges we want to keep
     G = nx.DiGraph()
     # Add only the nodes we want to keep
@@ -868,4 +875,188 @@ def event_performance_based_filtering(ocel, parameters):
         parameters=ocel.parameters,
         obj=obj_new,
     )
+    return filtered_ocel
+
+
+def variant_infrequent_filtering(ocel, threshold):
+    '''
+    Filters infrequent behavioral variants from an Object-Centric Event Log (OCEL) based on a cumulative frequency threshold.
+
+    This function retains only the most frequent variants whose combined frequency reaches a specified percentage
+    of the total frequency. It updates the log, event graph, and object mappings accordingly to ensure consistency.
+
+    :param ocel: Object-centric event log to be filtered.
+    :type ocel: :class:`OCEL <ocpa.objects.log.ocel.OCEL>`
+
+    :param threshold: Cumulative frequency threshold (between 0 and 1) for retaining frequent variants.
+    :type threshold: float
+
+    :return: A new OCEL object containing only events and objects from the retained frequent variants.
+    :rtype: :class:`OCEL <ocpa.objects.log.ocel.OCEL>`
+    '''
+
+    # Step 1: Retrieve variant information
+    variants = ocel.variants
+    frequencies = ocel.variant_frequencies
+    variant_dict = ocel.variants_dict
+
+    variant_info = []
+    for idx, variant_id in enumerate(variants):
+        pexec_indices = variant_dict[variant_id]
+        variant_info.append((
+            variant_id,
+            frequencies[idx],
+            len(pexec_indices)
+        ))
+
+    # Step 2: Sort variants by descending frequency
+    sorted_variants = sorted(variant_info, key=lambda x: -x[1])
+
+    # Step 3: Determine the cutoff index based on cumulative frequency threshold
+    total_freq = sum(frequencies)
+    cumulative = 0
+    cutoff = len(sorted_variants)
+    for i, (vid, freq, _) in enumerate(sorted_variants):
+        cumulative += freq
+        if cumulative > threshold * total_freq:
+            cutoff = i
+            break
+
+    # Step 4: Select the variants to keep
+    kept_variants = {vid for vid, _, _ in sorted_variants[:cutoff+1]}
+
+    # Step 5: Get all process executions corresponding to the kept variants
+    kept_pexecs = []
+    for vid in kept_variants:
+        kept_pexecs.extend(variant_dict[vid])
+
+    # Step 6: Extract event IDs associated with the kept process executions
+    kept_events = {e_id for pexec in kept_pexecs for e_id in ocel.process_executions[pexec]}
+
+    # Step 7: Filter events
+    new_events = {e_id: e for e_id, e in ocel.obj.raw.events.items() if e_id in kept_events}
+
+    # Step 8: Filter object-event mapping and keep only relevant objects
+    new_obj_event_mapping = {}
+    remaining_objects = set()
+    for obj_id, events in ocel.obj.raw.obj_event_mapping.items():
+        filtered = [e for e in events if e in kept_events]
+        if filtered:
+            new_obj_event_mapping[obj_id] = filtered
+            remaining_objects.add(obj_id)
+
+    # Step 9: Filter objects based on remaining ones
+    new_objects = {obj_id: obj for obj_id, obj in ocel.obj.raw.objects.items() if obj_id in remaining_objects}
+
+    # Step 10: Rebuild raw OCEL data
+    raw_new = RawObjectCentricData(
+        events=new_events,
+        objects=new_objects,
+        obj_event_mapping=new_obj_event_mapping
+    )
+
+    # Step 11: Filter the event log table
+    filtered_df = ocel.log.log[ocel.log.log['event_id'].isin(kept_events)]
+    filtered_log = Table(filtered_df, parameters=ocel.parameters)
+
+    # Step 12: Rebuild the event graph
+    G = nx.DiGraph()
+    G.add_nodes_from(kept_events)
+    edges_to_keep = [
+        (u, v) for u, v in ocel.graph.eog.edges()
+        if u in kept_events and v in kept_events
+    ]
+    G.add_edges_from(edges_to_keep)
+
+    # Step 13: Reassemble the filtered OCEL
+    filtered_ocel = OCEL(
+        log=filtered_log,
+        graph=EventGraph(G),
+        parameters=ocel.parameters,
+        obj=ObjectCentricEventLog(meta=ocel.obj.meta, raw=raw_new)
+    )
+
+    return filtered_ocel
+
+
+def variant_activity_sequence_filtering(ocel, act_seq_list):
+    '''
+    Filters an Object-Centric Event Log (OCEL) by excluding process executions that do NOT contain any of the specified activity transitions.
+
+    This function removes all events and associated objects from process executions that do not contain any of the given
+    activity transitions. It ensures consistency by updating the event log, event graph, and object mappings accordingly.
+
+    :param ocel: Object-centric event log to be filtered.
+    :type ocel: :class:`OCEL <ocpa.objects.log.ocel.OCEL>`
+
+    :param act_seq_list: List of activity transitions to retain (e.g., [('Place Order', 'Confirm Order')]).
+    :type act_seq_list: list[tuple[str, str]]
+
+    :return: A new OCEL object containing only events and objects from process executions that include the specified transitions.
+    :rtype: :class:`OCEL <ocpa.objects.log.ocel.OCEL>`
+    '''
+
+    process_executions = ocel.process_executions
+    act_seq_set = set(act_seq_list)  # Step 1: Speed up transition lookup
+    
+    process_executions_to_remove = []
+
+    # Step 2: Identify process executions that do NOT contain the specified transitions
+    for pe in process_executions:
+        sorted_events = sorted(pe, key=lambda e_id: ocel.get_value(e_id, 'event_timestamp'))
+        activities = [ocel.get_value(e_id, 'event_activity') for e_id in sorted_events]
+        pe_transitions = set((activities[i], activities[i+1]) for i in range(len(activities)-1))
+
+        if not pe_transitions.intersection(act_seq_set):
+            process_executions_to_remove.append(pe)
+
+    # Step 3: Gather event IDs to be removed
+    removed_event_ids = list({item for group in process_executions_to_remove for item in group})
+
+    # Step 4: Compute the set of events to keep
+    kept_events = set(ocel.obj.raw.events.keys()) - set(removed_event_ids)
+
+    # Step 5: Filter event data
+    new_events = {e_id: e for e_id, e in ocel.obj.raw.events.items() if e_id in kept_events}
+
+    # Step 6: Filter object-event mapping and track relevant object IDs
+    new_obj_event_mapping = {}
+    remaining_objects = set()
+    for obj_id, events in ocel.obj.raw.obj_event_mapping.items():
+        filtered = [e for e in events if e in kept_events]
+        if filtered:
+            new_obj_event_mapping[obj_id] = filtered
+            remaining_objects.add(obj_id)
+
+    # Step 7: Filter object metadata
+    new_objects = {obj_id: obj for obj_id, obj in ocel.obj.raw.objects.items() if obj_id in remaining_objects}
+
+    # Step 8: Rebuild raw OCEL structure
+    raw_new = RawObjectCentricData(
+        events=new_events,
+        objects=new_objects,
+        obj_event_mapping=new_obj_event_mapping
+    )
+
+    # Step 9: Filter the flat event log DataFrame
+    filtered_df = ocel.log.log[ocel.log.log['event_id'].isin(kept_events)]
+    filtered_log = Table(filtered_df, parameters=ocel.parameters)
+
+    # Step 10: Filter the event-object graph (EOG)
+    G = nx.DiGraph()
+    G.add_nodes_from(kept_events)
+    edges_to_keep = [
+        (u, v) for u, v in ocel.graph.eog.edges()
+        if u in kept_events and v in kept_events
+    ]
+    G.add_edges_from(edges_to_keep)
+
+    # Step 11: Build and return the new filtered OCEL
+    filtered_ocel = OCEL(
+        log=filtered_log,
+        graph=EventGraph(G),
+        parameters=ocel.parameters,
+        obj=ObjectCentricEventLog(meta=ocel.obj.meta, raw=raw_new)
+    )
+
     return filtered_ocel
