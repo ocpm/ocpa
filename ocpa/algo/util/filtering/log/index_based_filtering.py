@@ -878,7 +878,7 @@ def event_performance_based_filtering(ocel, parameters):
     return filtered_ocel
 
 
-def variant_infrequent_filtering(ocel, threshold):
+def variant_frequency_filtering(ocel, threshold):
     '''
     Filters infrequent behavioral variants from an Object-Centric Event Log (OCEL) based on a cumulative frequency threshold.
 

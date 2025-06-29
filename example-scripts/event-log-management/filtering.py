@@ -10,33 +10,36 @@ from ocpa.algo.util.filtering.log.index_based_filtering import (
     object_attribute_filtering,
     object_lifecycle_filtering,
     event_performance_based_filtering,
-    variant_infrequent_filtering,
+    variant_frequency_filtering,
     variant_activity_sequence_filtering
 )
 
 filename = "../../sample_logs/jsonocel/exported-p2p-normal.jsonocel"
 ocel = ocel_import_factory.apply(filename)
 
-# 1. Filter by explicitly removing specific activities from the log
-# Removes all events related to 'Create Purchase Requisition', 'Receive Goods', and 'Issue Goods Receipt'
+# 1. Inclusive activity filter: Retain all events belonging to specified activities
+# Preserves only 'Create Purchase Requisition', 'Receive Goods', and 'Issue Goods Receipt' activities
+# along with their associated objects and relationships. All other activities are permanently removed.
 filtered_using_list_of_activities = activity_filtering(
     ocel,
     ['Create Purchase Requisition', 'Receive Goods', 'Issue Goods Receipt']
 )
 
-# 2. Filter activities by frequency - keep most frequent activities until cumulative 20% threshold
-# Retains activities that together account for ≥20% of total activity occurrences
+# 2. Frequency-based activity filter: Maintain most common activities covering ≥20% event coverage
+# Keeps highest-frequency activities until cumulative frequency reaches 20% of total events
+# Removes low-frequency activities while preserving the majority of common business process steps
 filtered_using_activity_frequencies = activity_freq_filtering(ocel, 0.2)
 
-# 3. Filter by removing specific object types and their related events
-# Removes all PURCHORD and INVOICE objects and their associated events
+# 3. Object-centric filter: Preserve complete lifecycle of specified object types
+# Retains all events and relationships involving 'PURCHORD' (Purchase Orders) and 'INVOICE' objects
 filtered_using_list_of_object_types = object_type_filtering(
     ocel,
     ['PURCHORD', 'INVOICE']
 )
 
-# 4. Filter object types by participation frequency - remove types with <20% relative frequency
-# Eliminates object types that participate in less than 20% of total object-event relationships
+# 4. Participation threshold filter: Remove infrequently involved object types
+# Eliminates object types participating in <20% of object-event relationships
+# Maintains only object types with significant process involvement (≥20% relative frequency)
 filtered_using_object_type_frequencies = object_freq_filtering(ocel, 0.2)
 
 # 5. Temporal filtering using "start" strategy between 2021-05-04 and 2021-07-06
@@ -85,7 +88,7 @@ filtered_using_event_performance = event_performance_based_filtering(ocel, param
 
 # 10. Filter infrequent variants based on cumulative frequency threshold (e.g., top 80%)
 # Retains only the most frequent behavioral variants whose combined frequency reaches ≥80% of total variant occurrences
-filtered_ocel_variant_freq = variant_infrequent_filtering(ocel, 0.8)
+filtered_ocel_variant_freq = variant_frequency_filtering(ocel, 0.8)
 
 # 11. Filter log by keeping only process executions that include specified activity transitions
 # Retains only executions where the activity sequence ('Verify Material' → 'Plan Goods Issue') occurs
