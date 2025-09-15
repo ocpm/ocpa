@@ -80,15 +80,27 @@ class ObjectCentricPetriNet(object):
         def __deepcopy__(self, memodict={}):
             if id(self) in memodict:
                 return memodict[id(self)]
-            new_place = ObjectCentricPetriNet.Place(
-                self.name, self.object_type)
+            
+            name = getattr(self, "name", None)
+            object_type = getattr(self, "object_type", None)
+            initial = getattr(self, "initial", False)
+            final = getattr(self, "final", False)
+            
+            # copy initial and final flags as well
+            new_place = self.__class__(name, object_type, initial=initial, final=final)
+            # copy properties if they exist
+            if hasattr(self, 'properties'):
+                try:
+                    setattr(new_place, 'properties', deepcopy(getattr(self, 'properties'), memo=memodict))
+                except Exception:
+                    setattr(new_place, 'properties', getattr(self, 'properties'))
             memodict[id(self)] = new_place
-            for arc in self.in_arcs:
-                new_arc = deepcopy(arc, memo=memodict)
-                new_place.in_arcs.add(new_arc)
-            for arc in self.out_arcs:
-                new_arc = deepcopy(arc, memo=memodict)
-                new_place.out_arcs.add(new_arc)
+
+            # Init in_arcs and out_arcs if they do not exist
+            # No longer attach arcs during deepcopy of place, 
+            # do it when deepcopying the arcs instead to remove duplicated arcs
+            if not hasattr(new_place, "in_arcs"):  new_place.in_arcs  = set()
+            if not hasattr(new_place, "out_arcs"): new_place.out_arcs = set()
             return new_place
 
         object_type = property(__get_object_type)
@@ -186,15 +198,20 @@ class ObjectCentricPetriNet(object):
         def __deepcopy__(self, memodict={}):
             if id(self) in memodict:
                 return memodict[id(self)]
-            new_trans = ObjectCentricPetriNet.Transition(
-                self.name, self.label, properties=self.properties)
+            
+            name  = getattr(self, "name", None)
+            label = getattr(self, "label", None)
+            properties = getattr(self, "properties", None)
+            silent = getattr(self, "silent", False)
+
+            # copy silent flag as well
+            new_trans = self.__class__(name, label, properties=properties, silent=silent)
             memodict[id(self)] = new_trans
-            for arc in self.in_arcs:
-                new_arc = deepcopy(arc, memo=memodict)
-                new_trans.in_arcs.add(new_arc)
-            for arc in self.out_arcs:
-                new_arc = deepcopy(arc, memo=memodict)
-                new_trans.out_arcs.add(new_arc)
+
+            # No longer attach arcs during deepcopy of transition, 
+            # do it when deepcopying the arcs instead to remove duplicated arcs
+            if not hasattr(new_trans, "in_arcs"):  new_trans.in_arcs  = set()
+            if not hasattr(new_trans, "out_arcs"): new_trans.out_arcs = set()
             return new_trans
 
         def to_dict(self):
@@ -272,15 +289,22 @@ class ObjectCentricPetriNet(object):
         def __deepcopy__(self, memodict={}):
             if id(self) in memodict:
                 return memodict[id(self)]
-            new_source = memodict[id(self.source)] if id(self.source) in memodict else deepcopy(self.source,
-                                                                                                memo=memodict)
-            new_target = memodict[id(self.target)] if id(self.target) in memodict else deepcopy(self.target,
-                                                                                                memo=memodict)
-            memodict[id(self.source)] = new_source
-            memodict[id(self.target)] = new_target
-            new_arc = ObjectCentricPetriNet.Arc(
-                new_source, new_target, weight=self.weight, properties=self.properties)
+
+            new_source = deepcopy(getattr(self, "source", None), memo=memodict)
+            new_target = deepcopy(getattr(self, "target", None), memo=memodict)
+
+            weight   = getattr(self, "weight", 1)
+            variable = getattr(self, "variable", False)
+            properties = getattr(self, "properties", None)
+
+            new_arc = self.__class__(new_source, new_target, weight=weight, variable=variable, properties=properties)
             memodict[id(self)] = new_arc
+
+            # Attach the new arc to the new source and target
+            if hasattr(new_source, "out_arcs"):
+                new_source.out_arcs.add(new_arc)
+            if hasattr(new_target, "in_arcs"):
+                new_target.in_arcs.add(new_arc)
             return new_arc
         
         def to_dict(self):

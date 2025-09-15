@@ -314,8 +314,8 @@ def create_all_transitions(ocpn: ObjectCentricPetriNet,
                 signature_in[in_arc.source.object_type] += 1
 
         # add signature to transition
-        model_move = UndefinedModelMove(model_move=transition.name, objects=None, silent=transition.silent)
-        set_properties_of_transition(new_transition, TransitionSignature(transition.name, signature_in,
+        model_move = UndefinedModelMove(model_move=transition.label, objects=None, silent=transition.silent)
+        set_properties_of_transition(new_transition, TransitionSignature(transition.label, signature_in,
                                                                          signature_in, model_move))
         # trans_prop = get_properties_of_transition(new_transition)
         # #print(f"Transitions property: {get_properties_of_transition(new_transition)}")
@@ -381,8 +381,8 @@ def preprocessing_dejure_net(ocel: OCEL, indirect_id, ocpn):
                     card_signature_in.setdefault(in_arc.source.object_type, 0)
                     card_signature_in[in_arc.source.object_type] += 1
 
-            model_move = UndefinedModelMove(model_move=transition.name, objects=None, silent=transition.silent)
-            set_properties_of_transition(transition, TransitionSignature(transition.name, card_signature_in,
+            model_move = UndefinedModelMove(model_move=transition.label, objects=None, silent=transition.silent)
+            set_properties_of_transition(transition, TransitionSignature(transition.label, card_signature_in,
                                                                              card_signature_in, model_move))
             continue
 
